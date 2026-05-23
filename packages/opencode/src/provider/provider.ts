@@ -1285,6 +1285,26 @@ export const layer = Layer.effect(
         const catalog = mapValues(modelsDev, fromModelsDevProvider)
         const database = mapValues(catalog, toPublicInfo)
 
+        // Add local inference server providers to the database
+        // Models are populated on-demand via discoveryLoaders, but the provider
+        // itself needs to exist so the UI can show it before discovery runs.
+        const LOCAL_PROVIDERS = {
+          ollama: { name: "Ollama (local)", url: "http://127.0.0.1:11434/v1" },
+          lmstudio: { name: "LM Studio (local)", url: "http://127.0.0.1:1234/v1" },
+          vllm: { name: "vLLM (local)", url: "http://127.0.0.1:8000/v1" },
+          localai: { name: "LocalAI (local)", url: "http://127.0.0.1:8080/v1" },
+          llamacpp: { name: "llama.cpp (local)", url: "http://127.0.0.1:8081/v1" },
+        }
+        for (const [id, cfg] of Object.entries(LOCAL_PROVIDERS)) {
+          const pid = ProviderID.make(id)
+          if (!database[pid]) {
+            database[pid] = {
+              id: pid, name: cfg.name, source: "custom" as const, env: [], options: {},
+              models: {},
+            }
+          }
+        }
+
         const providers: Record<ProviderID, Info> = {} as Record<ProviderID, Info>
         const languages = new Map<string, LanguageModelV3>()
         const modelLoaders: {
