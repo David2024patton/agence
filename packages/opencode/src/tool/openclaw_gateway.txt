@@ -1,0 +1,10 @@
+Start the OpenClaw messaging gateway from within Agence. OpenClaw handles Telegram, Discord, Slack, WhatsApp, Signal, and iMessage — messages get routed through Agence's AI.
+
+## Setup
+1. Get a Telegram bot token from @BotFather on Telegram
+2. Call openclaw_gateway with your token
+3. Message your bot on Telegram — Agence responds
+
+## Requirements
+- npm install -g openclaw (one-time setup)
+- A Telegram bot token (free, 2 minutes on Telegram)
