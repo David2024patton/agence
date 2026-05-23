@@ -12,6 +12,7 @@ import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool
 import { ImageDescribeTool } from "./image_describe"
 import { OpenClawGatewayTool } from "./openclaw_gateway"
 import { PluginMarketplaceTool, PluginInstallTool } from "./plugin_marketplace"
+import { DailyBriefTool, TaskScheduleTool, SelfIterateTool, EvalRunTool } from "./agent"
 import {
   BrowserInspectTool,
   BrowserTutorialTool,
@@ -159,6 +160,10 @@ export const layer: Layer.Layer<
     const openclawGateway = yield* OpenClawGatewayTool
     const pluginMarketplace = yield* PluginMarketplaceTool
     const pluginInstall = yield* PluginInstallTool
+    const dailyBrief = yield* DailyBriefTool
+    const taskSchedule = yield* TaskScheduleTool
+    const selfIterate = yield* SelfIterateTool
+    const evalRun = yield* EvalRunTool
     const imageDescribe = yield* ImageDescribeTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
@@ -300,6 +305,10 @@ export const layer: Layer.Layer<
           openclaw_gateway: Tool.init(openclawGateway),
           plugin_marketplace: Tool.init(pluginMarketplace),
           plugin_install: Tool.init(pluginInstall),
+          daily_brief: Tool.init(dailyBrief),
+          task_schedule: Tool.init(taskSchedule),
+          self_iterate: Tool.init(selfIterate),
+          eval_run: Tool.init(evalRun),
           image_describe: Tool.init(imageDescribe),
           search: Tool.init(websearch),
           repo_clone: Tool.init(repoClone),
@@ -351,6 +360,10 @@ export const layer: Layer.Layer<
             tool.openclaw_gateway,
             tool.plugin_marketplace,
             tool.plugin_install,
+            tool.daily_brief,
+            tool.task_schedule,
+            tool.self_iterate,
+            tool.eval_run,
             tool.image_describe,
             tool.search,
             ...(flags.experimentalScout ? [tool.repo_clone, tool.repo_overview] : []),
