@@ -1,0 +1,7 @@
+Read the todo list for the current session or across all sessions. Returns tasks with IDs, subtask hierarchy, descriptions, statuses, and priorities. Use this to check what tasks exist, review progress, or inspect task details. Available via MCP for external clients to query the task board.
+
+## When to use
+- You need to see the current task state before planning
+- You want to check what's been completed or is still pending
+- An external client or MCP server connects and needs task visibility
+- You want to inspect task descriptions or subtask relationships

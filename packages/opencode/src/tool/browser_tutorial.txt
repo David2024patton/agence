@@ -1,0 +1,7 @@
+Create an interactive tutorial overlay on the current browser page. Highlights elements with visual guides: pulsing circles ("click here"), yellow glows ("read this passage"), arrows pointing to specific elements. The browser must already be open (use browser_inspect first). After creating overlays, takes an annotated screenshot showing the guides.
+
+Uses eval to inject CSS animations into the page. Supports:
+- "click" mode: red pulsing circle with number label
+- "read" mode: yellow highlighter glow around text
+- "arrow" mode: CSS arrow pointing to element
+- "note" mode: floating tooltip with text

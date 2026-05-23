@@ -1,0 +1,1 @@
+Get detailed system information: operating system, CPU, memory, hostname, platform, uptime, and architecture. Use this to understand the execution environment before running commands or diagnosing issues.

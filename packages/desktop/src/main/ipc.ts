@@ -11,6 +11,7 @@ import type {
   TitlebarTheme,
   WindowConfig,
   WslConfig,
+  ExternalServerConfig,
 } from "../preload/types"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { getStore } from "./store"
@@ -30,6 +31,8 @@ type Deps = {
   setDefaultServerUrl: (url: string | null) => Promise<void> | void
   getWslConfig: () => Promise<WslConfig>
   setWslConfig: (config: WslConfig) => Promise<void> | void
+  getExternalServerConfig: () => Promise<ExternalServerConfig>
+  setExternalServerConfig: (config: ExternalServerConfig) => Promise<void> | void
   getDisplayBackend: () => Promise<string | null>
   setDisplayBackend: (backend: string | null) => Promise<void> | void
   parseMarkdown: (markdown: string) => Promise<string> | string
@@ -59,6 +62,8 @@ export function registerIpcHandlers(deps: Deps) {
   )
   ipcMain.handle("get-wsl-config", () => deps.getWslConfig())
   ipcMain.handle("set-wsl-config", (_event: IpcMainInvokeEvent, config: WslConfig) => deps.setWslConfig(config))
+  ipcMain.handle("get-external-server-config", () => deps.getExternalServerConfig())
+  ipcMain.handle("set-external-server-config", (_event: IpcMainInvokeEvent, config: ExternalServerConfig) => deps.setExternalServerConfig(config))
   ipcMain.handle("get-display-backend", () => deps.getDisplayBackend())
   ipcMain.handle("set-display-backend", (_event: IpcMainInvokeEvent, backend: string | null) =>
     deps.setDisplayBackend(backend),

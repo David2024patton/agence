@@ -1,0 +1,1 @@
+Run linters and type-checkers on code files. Supports TypeScript (tsc), JavaScript (eslint), Python (ruff), Rust (cargo), and configuration files. Returns structured lint errors with file paths and line numbers. Use to verify code quality after making changes, before committing, or when debugging issues.

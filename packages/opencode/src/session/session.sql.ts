@@ -93,19 +93,46 @@ export const PartTable = sqliteTable(
 export const TodoTable = sqliteTable(
   "todo",
   {
+    id: text().notNull(),
     session_id: text()
       .$type<SessionID>()
       .notNull()
       .references(() => SessionTable.id, { onDelete: "cascade" }),
     content: text().notNull(),
+    description: text(),
     status: text().notNull(),
     priority: text().notNull(),
+    parent_id: text(),
+    depends_on: text({ mode: "json" }).$type<string[]>(),
+    tags: text({ mode: "json" }).$type<string[]>(),
     position: integer().notNull(),
     ...Timestamps,
   },
   (table) => [
-    primaryKey({ columns: [table.session_id, table.position] }),
+    primaryKey({ columns: [table.id, table.session_id] }),
     index("todo_session_idx").on(table.session_id),
+    index("todo_parent_idx").on(table.parent_id),
+    index("todo_status_idx").on(table.status),
+  ],
+)
+
+export const TaskHistoryTable = sqliteTable(
+  "task_history",
+  {
+    id: text().primaryKey(),
+    task_id: text().notNull(),
+    session_id: text()
+      .$type<SessionID>()
+      .notNull()
+      .references(() => SessionTable.id, { onDelete: "cascade" }),
+    field: text().notNull(),
+    old_value: text(),
+    new_value: text(),
+    ...Timestamps,
+  },
+  (table) => [
+    index("task_history_task_idx").on(table.task_id),
+    index("task_history_session_idx").on(table.session_id),
   ],
 )
 

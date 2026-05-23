@@ -1,0 +1,1 @@
+List all drives, filesystems, and mount points on the system. Returns drive letters (Windows) or mount points (Linux/macOS) with filesystem type, total size, and available space. Use to understand disk layout before working with files outside the project directory.

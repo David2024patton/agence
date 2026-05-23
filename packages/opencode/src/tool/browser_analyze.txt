@@ -1,0 +1,3 @@
+Analyze a website's technical architecture. Detects frameworks (React, Vue, Angular, Svelte, Next.js, etc.), build tools (webpack, Vite, esbuild), CSS approach (Tailwind, styled-components, CSS modules), state management (Redux, Zustand, MobX), and CDN/hosting. Returns a comprehensive technology stack report.
+
+Uses eval to inspect window globals, DOM attributes, script src patterns, and meta tags. The browser must already be open.

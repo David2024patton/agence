@@ -1,0 +1,1 @@
+Execute a PowerShell command on Windows. Returns stdout, stderr, and exit code. Use this when you need Windows-specific functionality like registry access, WMI queries, COM object manipulation, or .NET interop that is not available through bash or cmd shells. Automatically wraps in -NoLogo -NoProfile -NonInteractive for clean output.

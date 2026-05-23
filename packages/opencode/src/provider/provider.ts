@@ -8,6 +8,7 @@ import { Npm } from "@opencode-ai/core/npm"
 import { Hash } from "@opencode-ai/core/util/hash"
 import { Plugin } from "../plugin"
 import { serviceUse } from "@/effect/service-use"
+import type { LocalModel } from "./local-providers"
 import { type LanguageModelV3 } from "@ai-sdk/provider"
 import * as ModelsDev from "@opencode-ai/core/models-dev"
 import { Auth } from "../auth"
@@ -154,8 +155,85 @@ function selectAzureLanguageModel(sdk: any, modelID: string, useChat: boolean) {
   return sdk.languageModel(modelID)
 }
 
+function makeLocalProvider(id: string, name: string, cfg: { probeUrl: string; apiUrl: string; modelParser: (data: unknown) => LocalModel[] }): CustomLoader {
+  return Effect.fnUntraced(function* (_input: Info) {
+    return {
+      autoload: true,
+      options: { _displayName: name },
+      async discoverModels(): Promise<Record<string, Model>> {
+        try {
+          const res = await fetch(cfg.probeUrl, { signal: AbortSignal.timeout(3000) })
+          const text = await res.text()
+          if (!text) return {}
+          const data = JSON.parse(text)
+          const localModels = cfg.modelParser(data)
+          if (localModels.length === 0) return {}
+          const models: Record<string, Model> = {}
+          for (const m of localModels) {
+            const modelID = ModelID.make(`${id}/${m.id}`)
+            const caps = {
+              temperature: true, reasoning: false, attachment: false,
+              toolcall: modelID.includes("llama3") || modelID.includes("mistral") || modelID.includes("qwen") || modelID.includes("command-r") || modelID.includes("hermes"),
+              input: { text: true, image: modelID.includes("llava") || modelID.includes("minicpm") || modelID.includes("bakllava") || modelID.includes("vision"), audio: false, video: false, pdf: false },
+              output: { text: true, image: false, audio: false, video: false, pdf: false },
+              interleaved: false,
+            }
+            models[modelID] = {
+              id: modelID, providerID: ProviderID.make(id), name: `${m.name}`,
+              api: { id: m.id, url: cfg.apiUrl, npm: "@ai-sdk/openai-compatible" },
+              status: "active", headers: {}, options: {},
+              cost: { input: 0, output: 0, cache: { read: 0, write: 0 } },
+              limit: { context: m.contextLength ?? 128000, output: 4096 },
+              capabilities: caps, release_date: "", variants: {},
+            }
+          }
+          return models
+        } catch { return {} }
+      },
+    }
+  })
+}
+
+const LOCAL_SERVERS: Record<string, { name: string; probeUrl: string; apiUrl: string; modelParser: (data: unknown) => LocalModel[] }> = {
+  ollama: {
+    name: "Ollama (local)",
+    probeUrl: "http://127.0.0.1:11434/api/tags",
+    apiUrl: "http://127.0.0.1:11434/v1",
+    modelParser: (data: unknown) => ((data as { models?: Array<{ name: string }> })?.models ?? []).map((m) => ({ id: m.name, name: m.name })),
+  },
+  lmstudio: {
+    name: "LM Studio (local)",
+    probeUrl: "http://127.0.0.1:1234/v1/models",
+    apiUrl: "http://127.0.0.1:1234/v1",
+    modelParser: (data: unknown) => ((data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => ({ id: m.id, name: m.id })),
+  },
+  vllm: {
+    name: "vLLM (local)",
+    probeUrl: "http://127.0.0.1:8000/v1/models",
+    apiUrl: "http://127.0.0.1:8000/v1",
+    modelParser: (data: unknown) => ((data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => ({ id: m.id, name: m.id })),
+  },
+  localai: {
+    name: "LocalAI (local)",
+    probeUrl: "http://127.0.0.1:8080/v1/models",
+    apiUrl: "http://127.0.0.1:8080/v1",
+    modelParser: (data: unknown) => ((data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => ({ id: m.id, name: m.id })),
+  },
+  llamacpp: {
+    name: "llama.cpp (local)",
+    probeUrl: "http://127.0.0.1:8081/v1/models",
+    apiUrl: "http://127.0.0.1:8081/v1",
+    modelParser: (data: unknown) => ((data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => ({ id: m.id, name: m.id })),
+  },
+}
+
 function custom(dep: CustomDep): Record<string, CustomLoader> {
+  const local: Record<string, CustomLoader> = {}
+  for (const [id, cfg] of Object.entries(LOCAL_SERVERS)) {
+    local[id] = makeLocalProvider(id, cfg.name, cfg)
+  }
   return {
+    ...local,
     anthropic: () =>
       Effect.succeed({
         autoload: false,
@@ -851,7 +929,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
   }
 }
 
-const ProviderApiInfo = Schema.Struct({
+  const ProviderApiInfo = Schema.Struct({
   id: Schema.String,
   url: Schema.String,
   npm: Schema.String,
@@ -1236,7 +1314,19 @@ export const layer = Layer.effect(
             return
           }
           const match = database[providerID]
-          if (!match) return
+          if (!match) {
+            // Create provider from partial info (e.g. auto-discovered local servers)
+            // @ts-expect-error
+            providers[providerID] = mergeDeep({
+              id: providerID,
+              name: providerID + "",
+              source: "custom",
+              env: [],
+              options: {},
+              models: {},
+            }, provider)
+            return
+          }
           // @ts-expect-error
           providers[providerID] = mergeDeep(match, provider)
         }
@@ -1427,17 +1517,21 @@ export const layer = Layer.effect(
           const providerID = ProviderID.make(id)
           if (disabled.has(providerID)) continue
           const data = database[providerID]
-          if (!data) {
-            log.error("Provider does not exist in model list " + providerID)
-            continue
-          }
-          const result = yield* fn(data)
+          const result = yield* fn(data ?? {
+            id: providerID,
+            name: "",
+            source: "custom",
+            env: [],
+            options: {},
+            models: {},
+          } as Info)
           if (result && (result.autoload || providers[providerID])) {
             if (result.getModel) modelLoaders[providerID] = result.getModel
             if (result.vars) varsLoaders[providerID] = result.vars
             if (result.discoverModels) discoveryLoaders[providerID] = result.discoverModels
             const opts = result.options ?? {}
-            const patch: Partial<Info> = providers[providerID] ? { options: opts } : { source: "custom", options: opts }
+            const dispName = opts._displayName
+            const patch: Partial<Info> = providers[providerID] ? { options: opts } : { source: "custom", options: opts, ...(dispName ? { name: dispName } : {}) }
             mergeProvider(providerID, patch)
           }
         }
@@ -1452,20 +1546,22 @@ export const layer = Layer.effect(
           mergeProvider(providerID, partial)
         }
 
-        const gitlab = ProviderID.make("gitlab")
-        if (discoveryLoaders[gitlab] && providers[gitlab] && isProviderAllowed(gitlab)) {
-          yield* Effect.promise(async () => {
-            try {
-              const discovered = await discoveryLoaders[gitlab]()
-              for (const [modelID, model] of Object.entries(discovered)) {
-                if (!providers[gitlab].models[modelID]) {
-                  providers[gitlab].models[modelID] = model
+        for (const [id, discoverFn] of Object.entries(discoveryLoaders)) {
+          const providerID = ProviderID.make(id)
+          if (providers[providerID] && isProviderAllowed(providerID)) {
+            yield* Effect.promise(async () => {
+              try {
+                const discovered = await discoverFn()
+                for (const [modelID, model] of Object.entries(discovered)) {
+                  if (!providers[providerID].models[modelID]) {
+                    providers[providerID].models[modelID] = model
+                  }
                 }
+              } catch (e) {
+                log.warn("state discovery error", { id, error: e })
               }
-            } catch (e) {
-              log.warn("state discovery error", { id: "gitlab", error: e })
-            }
-          })
+            })
+          }
         }
 
         for (const [id, provider] of Object.entries(providers)) {

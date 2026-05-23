@@ -1,0 +1,1 @@
+Take a screenshot of the entire desktop or a specific window. Returns the screenshot as a base64-encoded PNG image attachment. Uses platform-native tools: PowerShell/.NET on Windows, screencapture on macOS, and import/gnome-screenshot on Linux. Use to capture visual state for debugging, documentation, or visual verification.

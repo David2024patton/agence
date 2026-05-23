@@ -1,0 +1,1 @@
+Set an environment variable in the project's .env file. Creates the file if it doesn't exist. Use this to store API keys, tokens, or configuration values persistently. Values are written to the .env file directly. Never use this to commit secrets to the repository.

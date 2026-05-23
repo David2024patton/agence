@@ -1,0 +1,3 @@
+<system-reminder>
+Page content has been truncated for display. The full text has been saved to a file. For the full text, use the read tool to read the file content. Do NOT use this text in your response — your response should summarize the content and reference it by file path.
+</system-reminder>

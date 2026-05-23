@@ -1,0 +1,19 @@
+Reflect on completed work and create a reusable skill file. This is the core of the self-learning loop. After finishing a complex multi-step task, the agent should use reflect to extract patterns, techniques, and lessons learned into a SKILL.md file. Future sessions will auto-discover this skill and inject its knowledge into the conversation.
+
+## When to use
+- After completing a complex multi-step task (3+ steps)
+- When you discover a reusable pattern, technique, or workflow
+- At the end of a session to capture knowledge for next time
+- When the user says "remember this for next time" or "create a skill"
+- After debugging something tricky — capture the debugging approach
+
+## What it creates
+- A SKILL.md file in skills/<name>/ with YAML frontmatter
+- The skill is auto-discovered by the agent in future sessions
+- Includes a summary, discovered patterns, and usage history
+
+## Self-learning loop
+1. Complete work → call reflect to create a SKILL.md
+2. Next session → skill auto-loads, agent has your patterns
+3. Agent improves skill → edits the SKILL.md during use
+4. Cross-session recall → task_search finds related past work

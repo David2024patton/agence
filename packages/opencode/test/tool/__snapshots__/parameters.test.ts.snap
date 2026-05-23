@@ -365,13 +365,39 @@ exports[`tool parameters JSON Schema (wire shape) todo 1`] = `
             "description": "Brief description of the task",
             "type": "string",
           },
+          "dependsOn": {
+            "description": "Task IDs that must be completed before this one",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "description": {
+            "description": "Optional detailed description or notes",
+            "type": "string",
+          },
+          "id": {
+            "description": "Auto-generated unique ID for this task.",
+            "type": "string",
+          },
+          "parentId": {
+            "description": "Parent task ID for subtasks",
+            "type": "string",
+          },
           "priority": {
-            "description": "Priority level of the task: high, medium, low",
+            "description": "Priority: high, medium, low",
             "type": "string",
           },
           "status": {
-            "description": "Current status of the task: pending, in_progress, completed, cancelled",
+            "description": "Current status: pending, in_progress, completed, cancelled",
             "type": "string",
+          },
+          "tags": {
+            "description": "Labels: bug, feature, refactor, docs, test, etc.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
         },
         "required": [

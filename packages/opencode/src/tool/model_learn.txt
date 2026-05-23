@@ -1,0 +1,15 @@
+Teach the agent a concept, pattern, or relationship for future reference. Builds a concept map from task patterns and session learnings. Stored as JSONL in .agence/model/concepts.jsonl. This is the dialectic user modeling layer — the agent builds a deepening understanding of the project, its concepts, and how they relate.
+
+## When to use
+- After discovering a new project concept or term
+- When you notice a relationship between two ideas
+- After the user explains something about their domain
+- To capture user preferences or conventions
+- When building up the agent's understanding of the codebase
+
+## Concept map structure
+- concept: short name for the idea
+- description: what was learned
+- relatedTo: connected concepts or task IDs
+- confidence: low / medium / high
+- timestamp: when it was learned

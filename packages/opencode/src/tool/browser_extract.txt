@@ -1,0 +1,3 @@
+Extract CSS styles, design tokens, and element structure from the current browser page. Returns computed styles for specified elements, color palette used on the page, typography (fonts, sizes), spacing patterns, and the full CSS for any element. Use to clone design elements, analyze visual patterns, or extract style guides from websites.
+
+Uses eval to collect computed styles, getComputedStyle, and CSSStyleSheet analysis. The browser must already be open.

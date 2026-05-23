@@ -8,11 +8,29 @@ import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { TaskTool } from "./task"
 import { TaskStatusTool } from "./task_status"
-import { TodoWriteTool } from "./todo"
+import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool, ModelLearnTool } from "./todo"
+import { ImageDescribeTool } from "./image_describe"
+import {
+  BrowserInspectTool,
+  BrowserTutorialTool,
+  BrowserExtractTool,
+  BrowserAnalyzeTool,
+  BrowserCloseTool,
+  BrowserScreenshotTool,
+} from "./browser"
 import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
+import { SystemInfoTool } from "./system_info"
+import { WeatherTool } from "./weather"
+import { DrivesTool } from "./drives"
+import { OsOpenTool } from "./os_open"
+import { EnvReadTool } from "./env_read"
+import { EnvWriteTool } from "./env_write"
+import { LintTool } from "./lint"
+import { ScreenshotTool } from "./screenshot"
+import { PowerShellTool } from "./powershell"
 import * as Tool from "./tool"
 import { Config } from "@/config/config"
 import { type ToolContext as PluginToolContext, type ToolDefinition } from "@opencode-ai/plugin"
@@ -123,6 +141,18 @@ export const layer: Layer.Layer<
     const read = yield* ReadTool
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
+    const todoread = yield* TodoReadTool
+    const taskSearch = yield* TaskSearchTool
+    const todoCarry = yield* TodoCarryTool
+    const reflect = yield* ReflectTool
+    const modelLearn = yield* ModelLearnTool
+    const browserInspect = yield* BrowserInspectTool
+    const browserTutorial = yield* BrowserTutorialTool
+    const browserExtract = yield* BrowserExtractTool
+    const browserAnalyze = yield* BrowserAnalyzeTool
+    const browserClose = yield* BrowserCloseTool
+    const browserScreenshot = yield* BrowserScreenshotTool
+    const imageDescribe = yield* ImageDescribeTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
     const webfetch = yield* WebFetchTool
@@ -137,6 +167,15 @@ export const layer: Layer.Layer<
     const patchtool = yield* ApplyPatchTool
     const skilltool = yield* SkillTool
     const agent = yield* Agent.Service
+    const systemInfo = yield* SystemInfoTool
+    const weather = yield* WeatherTool
+    const drives = yield* DrivesTool
+    const osOpen = yield* OsOpenTool
+    const envRead = yield* EnvReadTool
+    const envWrite = yield* EnvWriteTool
+    const lint = yield* LintTool
+    const screenshot = yield* ScreenshotTool
+    const powershell = yield* PowerShellTool
 
     const state = yield* InstanceState.make<State>(
       Effect.fn("ToolRegistry.state")(function* (ctx) {
@@ -238,6 +277,18 @@ export const layer: Layer.Layer<
           task_status: Tool.init(taskStatus),
           fetch: Tool.init(webfetch),
           todo: Tool.init(todo),
+          todoread: Tool.init(todoread),
+          task_search: Tool.init(taskSearch),
+          todo_carry: Tool.init(todoCarry),
+          reflect: Tool.init(reflect),
+          model_learn: Tool.init(modelLearn),
+          browser_inspect: Tool.init(browserInspect),
+          browser_tutorial: Tool.init(browserTutorial),
+          browser_extract: Tool.init(browserExtract),
+          browser_analyze: Tool.init(browserAnalyze),
+          browser_close: Tool.init(browserClose),
+          browser_screenshot: Tool.init(browserScreenshot),
+          image_describe: Tool.init(imageDescribe),
           search: Tool.init(websearch),
           repo_clone: Tool.init(repoClone),
           repo_overview: Tool.init(repoOverview),
@@ -246,6 +297,15 @@ export const layer: Layer.Layer<
           question: Tool.init(question),
           lsp: Tool.init(lsptool),
           plan: Tool.init(plan),
+          system_info: Tool.init(systemInfo),
+          weather: Tool.init(weather),
+          drives: Tool.init(drives),
+          os_open: Tool.init(osOpen),
+          env_read: Tool.init(envRead),
+          env_write: Tool.init(envWrite),
+          lint: Tool.init(lint),
+          screenshot: Tool.init(screenshot),
+          powershell: Tool.init(powershell),
         })
 
         return {
@@ -263,12 +323,33 @@ export const layer: Layer.Layer<
             ...(flags.experimentalBackgroundSubagents ? [tool.task_status] : []),
             tool.fetch,
             tool.todo,
+            tool.todoread,
+            tool.task_search,
+            tool.todo_carry,
+            tool.reflect,
+            tool.model_learn,
+            tool.browser_inspect,
+            tool.browser_tutorial,
+            tool.browser_extract,
+            tool.browser_analyze,
+            tool.browser_close,
+            tool.browser_screenshot,
+            tool.image_describe,
             tool.search,
             ...(flags.experimentalScout ? [tool.repo_clone, tool.repo_overview] : []),
             tool.skill,
             tool.patch,
             ...(flags.experimentalLspTool ? [tool.lsp] : []),
             ...(flags.experimentalPlanMode && flags.client === "cli" ? [tool.plan] : []),
+            tool.system_info,
+            tool.weather,
+            tool.drives,
+            tool.os_open,
+            tool.env_read,
+            tool.env_write,
+            tool.lint,
+            tool.screenshot,
+            tool.powershell,
           ],
           task: tool.task,
           read: tool.read,

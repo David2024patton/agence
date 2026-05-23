@@ -1,8 +1,9 @@
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { exec } from "node:child_process"
 import { app, utilityProcess } from "electron"
 import type { Details } from "electron"
-import { DEFAULT_SERVER_URL_KEY, WSL_ENABLED_KEY } from "./constants"
+import { DEFAULT_SERVER_URL_KEY, WSL_ENABLED_KEY, EXTERNAL_SERVER_KEY } from "./constants"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import type { SqliteMigrationProgress } from "../preload/types"
@@ -19,7 +20,7 @@ type SidecarMessage =
 
 export type SidecarListener = { stop: () => Promise<void> }
 
-const SIDECAR_SERVICE_NAME = "opencode server"
+const SIDECAR_SERVICE_NAME = "agence server"
 const SIDECAR_START_STALL_TIMEOUT = 60_000
 const SIDECAR_STOP_TIMEOUT = 6_000
 
@@ -55,13 +56,22 @@ export function setWslConfig(config: WslConfig) {
   getStore().set(WSL_ENABLED_KEY, config.enabled)
 }
 
+export function getExternalServerConfig(): { enabled: boolean } {
+  const value = getStore().get(EXTERNAL_SERVER_KEY)
+  return { enabled: typeof value === "boolean" ? value : false }
+}
+
+export function setExternalServerConfig(config: { enabled: boolean }) {
+  getStore().set(EXTERNAL_SERVER_KEY, config.enabled)
+}
+
 export function preferAppEnv(userDataPath: string) {
   const shell = process.platform === "win32" ? null : getUserShell()
   Object.assign(process.env, {
     ...(shell ? loadShellEnv(shell) : null),
-    OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
-    OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
-    OPENCODE_CLIENT: "desktop",
+    AGENCE_EXPERIMENTAL_ICON_DISCOVERY: "true",
+    AGENCE_EXPERIMENTAL_FILEWATCHER: "true",
+    AGENCE_CLIENT: "desktop",
     XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
   })
 }
@@ -72,6 +82,22 @@ export async function spawnLocalServer(
   password: string,
   options: SpawnLocalServerOptions,
 ) {
+  // If external server mode is enabled, launch the server in a separate terminal
+  // window so it survives the desktop app being closed
+  const externalConfig = getExternalServerConfig()
+  if (externalConfig.enabled) {
+    if (process.platform === "win32") {
+      const fullCmd = `set AGENCE_CLIENT=desktop&&set AGENCE_SERVER_PASSWORD=${password}&&bun run --cwd ..\\..\\..\\opencode src\\index.ts serve --port ${port}`
+      exec(`start "Agence Server" cmd /k "${fullCmd}"`)
+    } else if (process.platform === "darwin") {
+      const script = `tell application "Terminal" to do script "AGENCE_CLIENT=desktop AGENCE_SERVER_PASSWORD=${password} bun run src/index.ts serve --port ${port}"`
+      exec(`osascript -e '${script}'`)
+    } else {
+      exec(`x-terminal-emulator -e "AGENCE_CLIENT=desktop AGENCE_SERVER_PASSWORD=${password} bun run src/index.ts serve --port ${port}"`)
+    }
+    return { stop: async () => {}, health: { wait: Promise.resolve() }, kill: async () => {} } as any
+  }
+
   const sidecar = join(dirname(fileURLToPath(import.meta.url)), "sidecar.js")
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
@@ -211,7 +237,7 @@ export async function checkHealth(url: string, password?: string | null): Promis
 
   const headers = new Headers()
   if (password) {
-    const auth = Buffer.from(`opencode:${password}`).toString("base64")
+    const auth = Buffer.from(`agence:${password}`).toString("base64")
     headers.set("authorization", `Basic ${auth}`)
   }
 

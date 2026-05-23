@@ -1,4 +1,11 @@
-Create and maintain a structured task list for the current coding session. Tracks progress, organizes multi-step work, and surfaces status to the user.
+Create and maintain a structured task list with subtask support for the current coding session. Tracks progress, organizes multi-step work, and surfaces status to the user. Tasks auto-generate unique IDs that can be used as parentId for subtasks.
+
+## Task fields
+- `content` (required): Brief task description
+- `description` (optional): Detailed notes, context, or acceptance criteria
+- `status`: pending | in_progress | completed | cancelled
+- `priority`: high | medium | low
+- `parentId` (optional): Set to another task's `id` to make it a subtask. Subtasks nest under their parent in the display.
 
 ## When to use
 Use proactively when:
@@ -8,6 +15,7 @@ Use proactively when:
 - New instructions arrive - capture them as todos
 - You start a task - mark it `in_progress` (only one at a time) before working
 - You finish a task - mark it `completed` and add any follow-ups discovered during the work
+- A complex task needs subtasks - use parentId to create hierarchy
 
 ## When NOT to use
 Skip when:
@@ -28,6 +36,7 @@ Skip when:
 - If blocked or partial, keep it `in_progress` and add a follow-up todo describing the blocker
 - Preserve user-provided commands verbatim (flags, args, order)
 - Items should be specific and actionable; break large work into smaller steps
+- Subtasks automatically roll up under their parent; move them independently
 
 ## Examples
 
@@ -35,6 +44,7 @@ Use it:
 - "Add a dark mode toggle and run the tests" -> multi-step feature + explicit verification
 - "Rename getCwd -> getCurrentWorkingDirectory across the repo" -> grep reveals 15 occurrences in 8 files
 - "Implement registration, catalog, cart, checkout" -> multiple complex features
+- "Refactor the auth module" -> subtasks: "audit current code", "write new interface", "migrate callers", "write tests"
 
 Skip it:
 - "How do I print Hello World in Python?" -> informational

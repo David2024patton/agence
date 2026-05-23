@@ -1,0 +1,1 @@
+Read environment variables from the project's .env file. Returns key-value pairs of all configured environment variables. Use when the agent needs to check API keys, tokens, or configuration that may be stored in .env files. Never exposes values to external services — only returns them to the agent for local use.

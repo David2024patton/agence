@@ -1,0 +1,7 @@
+Carry incomplete tasks from a previous session into the current session. Tasks are copied with status reset to "pending" and marked "(carried forward)". Use when starting a new session that continues prior work, or when the user returns to an ongoing project.
+
+## When to use
+- Starting a new session on an existing project with unfinished work
+- The user says "continue where we left off"
+- After context compaction, to bring forward remaining tasks
+- Migrating tasks when a session closes but work is incomplete

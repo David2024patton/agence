@@ -199,6 +199,12 @@ export const SettingsGeneral: Component = () => {
     { initialValue: false },
   )
 
+  const [externalServer, { mutate: setExternalServer }] = createResource(
+    () => (desktop() && platform.getExternalServerConfig ? true : false),
+    () => Promise.resolve(platform.getExternalServerConfig?.().then((r) => r.enabled) ?? false).catch(() => false),
+    { initialValue: false },
+  )
+
   onMount(() => {
     void theme.loadThemes()
   })
@@ -250,6 +256,13 @@ export const SettingsGeneral: Component = () => {
     const update = platform.setPinchZoomEnabled?.(checked)
     if (!update) return
     void update.catch(() => setPinchZoom(!checked))
+  }
+
+  const onExternalServerChange = (checked: boolean) => {
+    setExternalServer(checked)
+    const update = platform.setExternalServerConfig?.({ enabled: checked })
+    if (!update) return
+    void update.catch(() => setExternalServer(false))
   }
 
   const colorSchemeOptions = createMemo((): { value: ColorScheme; label: string }[] => [
@@ -754,6 +767,15 @@ export const SettingsGeneral: Component = () => {
           >
             <div data-action="settings-pinch-zoom">
               <Switch checked={pinchZoom.latest} onChange={onPinchZoomChange} />
+            </div>
+          </SettingsRow>
+
+          <SettingsRow
+            title={language.t("settings.general.row.externalServer.title")}
+            description={language.t("settings.general.row.externalServer.description")}
+          >
+            <div data-action="settings-external-server">
+              <Switch checked={externalServer.latest} onChange={onExternalServerChange} />
             </div>
           </SettingsRow>
 

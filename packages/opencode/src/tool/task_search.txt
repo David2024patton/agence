@@ -1,0 +1,7 @@
+Search across all sessions for tasks matching a query. Searches task content and descriptions. Use to find past work, recall patterns, or check if a task was previously completed. Essential for the self-learning loop — lets the agent discover similar past tasks to inform current work.
+
+## When to use
+- You completed something and want to check if it was done before
+- You need to find tasks related to a specific topic across sessions
+- The self-learning loop triggers and searches for patterns
+- A user asks "have we done this before?"

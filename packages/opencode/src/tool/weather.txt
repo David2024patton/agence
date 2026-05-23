@@ -1,0 +1,1 @@
+Get current weather conditions for a location using wttr.in. Returns temperature, conditions, humidity, wind, and forecast. Use when the user asks about weather or when weather context would help with decisions.

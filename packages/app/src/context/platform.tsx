@@ -99,6 +99,12 @@ export type Platform = {
   /** Allow native pinch/Ctrl-scroll zoom gestures (desktop only) */
   setPinchZoomEnabled?(enabled: boolean): Promise<void> | void
 
+  /** Get whether external server mode is enabled (desktop only) */
+  getExternalServerConfig?(): Promise<{ enabled: boolean }>
+
+  /** Enable/disable external server mode (desktop only) */
+  setExternalServerConfig?(config: { enabled: boolean }): Promise<void>
+
   /** Run a desktop-only menu action from the app chrome */
   runDesktopMenuAction?(action: DesktopMenuAction): Promise<void> | void
 

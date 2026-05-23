@@ -1,0 +1,8 @@
+Describe what's in an image file and return text that non-vision LLMs can understand. Uses a cascade of strategies:
+
+1. Cloud OCR (OCR.space API, free 25K req/month) - best accuracy, cross-platform
+2. Local OCR fallback (PowerShell on Windows, tesseract on Mac/Linux)  
+3. Local vision model (Ollama with llava/minicpm-v) - full AI description
+4. Metadata fallback - filename, type, size
+
+Set AGENCE_OCR_API_KEY env var to enable cloud OCR. Get a free key at https://ocr.space/OCRAPI

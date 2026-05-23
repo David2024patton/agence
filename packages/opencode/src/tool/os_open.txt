@@ -1,0 +1,1 @@
+Open a file, directory, or URL with the operating system's default application. Uses the `open` library for cross-platform support. Use when the user wants to view a file in its native application, open a folder in the file manager, or launch a URL in the default browser.

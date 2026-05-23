@@ -1,0 +1,3 @@
+Open a URL in the browser and get a full analysis of the page. Launches Chrome, navigates to the URL, and returns the accessibility tree snapshot, page title, URL, detected frameworks (React, Next.js, etc.), stylesheets, scripts, and meta tags. Use to inspect any website's structure, design, or behavior.
+
+Commands used: open, snapshot -i -u, eval (to detect frameworks), get title, console

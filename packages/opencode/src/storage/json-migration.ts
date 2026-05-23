@@ -339,6 +339,7 @@ export async function run(db: SQLiteBunDatabase<any, any> | NodeSQLiteDatabase<a
         const todo = data[position]
         if (!todo?.content || !todo?.status || !todo?.priority) continue
         values.push({
+          id: Math.random().toString(36).slice(2, 10),
           session_id: sessionID,
           content: todo.content,
           status: todo.status,

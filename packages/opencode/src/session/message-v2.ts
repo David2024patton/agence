@@ -656,6 +656,18 @@ export const toModelMessagesEffect = Effect.fnUntraced(function* (
     return false
   }
 
+  // Check if the model can see images at all (not just in tool results)
+  const supportsImageInput = () => {
+    const id = (model.api.id + model.providerID).toLowerCase()
+    if (id.includes("claude-3") || id.includes("claude-4") || id.includes("claude-sonnet") || id.includes("claude-opus")) return true
+    if (id.includes("gpt-4o") || id.includes("gpt-4-turbo") || id.includes("gpt-4-vision") || id.includes("gpt-5") || id.includes("o1") || id.includes("o3") || id.includes("o4")) return true
+    if (id.includes("gemini")) return true
+    if (id.includes("llava") || id.includes("bakllava") || id.includes("cogvlm") || id.includes("pixtral") || id.includes("minicpm-v")) return true
+    const npm = model.api.npm
+    if (npm === "@ai-sdk/anthropic" || npm === "@ai-sdk/openai" || npm === "@ai-sdk/google" || npm === "@ai-sdk/google-vertex") return true
+    return false
+  }
+
   const toModelOutput = (options: { toolCallId: string; input: unknown; output: unknown }) => {
     const output = options.output
     if (typeof output === "string") {
@@ -708,7 +720,7 @@ export const toModelMessagesEffect = Effect.fnUntraced(function* (
           })
         // text/plain and directory files are converted into text parts, ignore them
         if (part.type === "file" && part.mime !== "text/plain" && part.mime !== "application/x-directory") {
-          if (options?.stripMedia && isMedia(part.mime)) {
+          if ((options?.stripMedia || !supportsImageInput()) && isMedia(part.mime)) {
             userMessage.parts.push({
               type: "text",
               text: `[Attached ${part.mime}: ${part.filename ?? "file"}]`,
@@ -878,20 +890,28 @@ export const toModelMessagesEffect = Effect.fnUntraced(function* (
         // Inject pending media as a user message for providers that don't support
         // media (images, PDFs) in tool results
         if (media.length > 0) {
+          const canSeeImages = supportsImageInput()
           result.push({
             id: MessageID.ascending(),
             role: "user",
             parts: [
               {
                 type: "text" as const,
-                text: SYNTHETIC_ATTACHMENT_PROMPT,
+                text: canSeeImages
+                  ? SYNTHETIC_ATTACHMENT_PROMPT
+                  : "Tool produced media that this model cannot view. Content summary:",
               },
-              ...media.map((attachment) => ({
-                type: "file" as const,
-                url: attachment.url,
-                mediaType: attachment.mime,
-                filename: attachment.filename,
-              })),
+              ...(canSeeImages
+                ? media.map((attachment) => ({
+                    type: "file" as const,
+                    url: attachment.url,
+                    mediaType: attachment.mime,
+                    filename: attachment.filename,
+                  }))
+                : media.map((attachment) => ({
+                    type: "text" as const,
+                    text: `[${attachment.mime} attachment: ${attachment.filename ?? "unnamed"} (${(attachment.url.length / 1024).toFixed(0)}KB)]`,
+                  }))),
             ],
           })
         }
