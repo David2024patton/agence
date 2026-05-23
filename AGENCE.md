@@ -266,15 +266,32 @@ See `packages/console/core/src/subscription.ts` for the full implementation.
 
 ## OpenClaw Plugin System (Vendored at vendor/openclaw/)
 
-OpenClaw has a mature plugin architecture we can learn from or reuse:
+OpenClaw has a mature plugin architecture:
 
 - **137 bundled plugins** in `extensions/`: Telegram, Discord, WhatsApp, Slack, Signal, iMessage, etc.
 - **Plugin SDK** (`@openclaw/plugin-sdk`): public API with typed channel/provider/utility contracts
 - **Plugin lifecycle**: discovery → manifest loading → registry assembly → activation planning → runtime loading
 - **Channel plugins**: implement outbound/inbound/setup/probe/status/security adapters
-- **Cron system**: `src/cron/` — full scheduler with delivery to any channel
-- **Heartbeat system**: `src/auto-reply/heartbeat.ts` — periodic agent wake-ups
+- **Cron system** (reference): `vendor/openclaw/src/cron/` — full scheduler with delivery to any channel
+- **Heartbeat system** (reference): `vendor/openclaw/src/auto-reply/heartbeat.ts`
 - **Skills**: 58 SKILL.md files contributed by plugins
+
+## LobeHub System (Vendored at vendor/lobehub/)
+
+LobeHub is a Next.js multi-agent platform with features worth porting:
+
+- **Multi-layer memory**: Activity, Context, Experience, Identity, Preference — 5 layers with LLM extraction
+- **Agent Groups**: Multi-agent orchestration with supervisor + parallel execution
+- **GraphAgent**: DAG-based agent execution with conditional branching
+- **Task Scheduler**: Cron + heartbeat with QStash backend
+- **IM Gateway**: Slack, Discord, Telegram, WeChat, QQ, Line, Feishu adapters
+- **Skill Store**: Full plugin marketplace with search, categories, one-click install
+- **Self-Iteration**: Agent reflection and improvement loops
+- **Eval/Benchmark**: Dataset-based evaluation with rubric scoring
+- **Daily Brief**: Scheduled AI-generated daily summaries
+- **Page Editor**: Collaborative document editing with AI copilot
+
+## Vendored Dependencies
 
 ### How to integrate into Agence
 
