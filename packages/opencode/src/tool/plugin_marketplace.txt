@@ -1,0 +1,10 @@
+Browse and install plugins from the bundled marketplace or any URL. Plugins add messaging platforms (Telegram, Discord), AI providers, tools, and automations.
+
+## Sources
+- **Marketplace**: Plugins bundled with Agence (137 available)
+- **URL**: Any GitHub repo or npm package with a plugin manifest
+
+## Categories
+- Channels: Telegram, Discord, WhatsApp, Slack, Signal, iMessage, Matrix, IRC, Twitch
+- Providers: Anthropic, OpenAI, Google, DeepSeek, Mistral, Groq, etc.
+- Utilities: Browser automation, memory, web search, image generation, speech

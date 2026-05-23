@@ -11,6 +11,7 @@ import { TaskStatusTool } from "./task_status"
 import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool, ModelLearnTool, QualityGateTool, VectorSearchTool } from "./todo"
 import { ImageDescribeTool } from "./image_describe"
 import { OpenClawGatewayTool } from "./openclaw_gateway"
+import { PluginMarketplaceTool, PluginInstallTool } from "./plugin_marketplace"
 import {
   BrowserInspectTool,
   BrowserTutorialTool,
@@ -156,6 +157,8 @@ export const layer: Layer.Layer<
     const browserClose = yield* BrowserCloseTool
     const browserScreenshot = yield* BrowserScreenshotTool
     const openclawGateway = yield* OpenClawGatewayTool
+    const pluginMarketplace = yield* PluginMarketplaceTool
+    const pluginInstall = yield* PluginInstallTool
     const imageDescribe = yield* ImageDescribeTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
@@ -295,6 +298,8 @@ export const layer: Layer.Layer<
           browser_close: Tool.init(browserClose),
           browser_screenshot: Tool.init(browserScreenshot),
           openclaw_gateway: Tool.init(openclawGateway),
+          plugin_marketplace: Tool.init(pluginMarketplace),
+          plugin_install: Tool.init(pluginInstall),
           image_describe: Tool.init(imageDescribe),
           search: Tool.init(websearch),
           repo_clone: Tool.init(repoClone),
@@ -344,6 +349,8 @@ export const layer: Layer.Layer<
             tool.browser_close,
             tool.browser_screenshot,
             tool.openclaw_gateway,
+            tool.plugin_marketplace,
+            tool.plugin_install,
             tool.image_describe,
             tool.search,
             ...(flags.experimentalScout ? [tool.repo_clone, tool.repo_overview] : []),
