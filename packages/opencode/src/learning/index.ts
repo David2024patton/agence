@@ -35,6 +35,9 @@ function uid() {
   return Math.random().toString(36).slice(2, 10)
 }
 
+// Helper to cast projectId for Drizzle queries (branded type vs DB column type)
+function pid(id: string) { return id as any }
+
 export function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0, na = 0, nb = 0
   for (let i = 0; i < a.length; i++) {
@@ -107,7 +110,7 @@ export const storeLearning = (input: {
       Database.transaction((db) => {
         db.insert(LearningTable).values({
           id,
-          project_id: input.projectId,
+          project_id: pid(input.projectId),
           source: input.source, concept: input.concept, description: input.description,
           embedding: embeddingJson, confidence: input.confidence ?? "medium",
           related_to: input.relatedTo ? JSON.stringify(input.relatedTo) : null,
@@ -129,7 +132,7 @@ export const searchLearnings = (params: { projectId: string; query: string; limi
     const rows = yield* Effect.sync(() =>
       Database.use((db) =>
         db.select().from(LearningTable)
-          .where(eq(LearningTable.project_id, params.projectId as any))
+          .where(eq(LearningTable.project_id, pid(params.projectId)))
           .orderBy(asc(LearningTable.time_created)).all(),
       ),
     )
@@ -154,10 +157,10 @@ export const recentLearnings = (params: { projectId: string; source?: string; li
     const limit = params.limit ?? 10
     const rows = yield* Effect.sync(() =>
       Database.use((db) => {
-        let q = db.select().from(LearningTable).where(eq(LearningTable.project_id, params.projectId as any))
+        let q = db.select().from(LearningTable).where(eq(LearningTable.project_id, pid(params.projectId)))
         if (params.source) {
           q = db.select().from(LearningTable)
-            .where(eq(LearningTable.project_id, params.projectId as any))
+            .where(eq(LearningTable.project_id, pid(params.projectId)))
         }
         return q.orderBy(asc(LearningTable.time_created)).limit(limit).all()
       }),

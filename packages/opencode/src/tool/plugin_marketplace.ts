@@ -2,12 +2,27 @@ import { Effect, Schema } from "effect"
 import { AppFileSystem } from "@opencode-ai/core/filesystem"
 import { InstanceState } from "@/effect/instance-state"
 import path from "path"
-import os from "os"
 import fs from "fs"
 import * as Tool from "./tool"
 import DESC from "./plugin_marketplace.txt"
 
-const VENDOR_DIR = path.join(os.homedir(), "AI", "smart-hub", "opencode01", "vendor", "openclaw", "extensions")
+const VENDOR_DIR = (() => {
+  // Check env var first, then common locations
+  const envDir = process.env.AGENCE_VENDOR_DIR
+  if (envDir) return envDir
+
+  const candidates = [
+    path.join(process.cwd(), "vendor", "openclaw", "extensions"),
+    path.join(process.cwd(), "..", "vendor", "openclaw", "extensions"),
+    path.join(__dirname, "..", "..", "..", "..", "vendor", "openclaw", "extensions"),
+    path.join(__dirname, "..", "..", "..", "..", "..", "vendor", "openclaw", "extensions"),
+  ]
+
+  for (const c of candidates) {
+    try { if (fs.statSync(c).isDirectory()) return c } catch { /* try next */ }
+  }
+  return candidates[0] // fallback
+})()
 
 interface PluginMeta {
   id: string

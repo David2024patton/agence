@@ -1,4 +1,4 @@
-import { Effect, Schema, Stream, Scope } from "effect"
+import { Effect, Schema, Stream } from "effect"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ChildProcess } from "effect/unstable/process"
 import { AppFileSystem } from "@opencode-ai/core/filesystem"
