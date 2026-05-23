@@ -1,248 +1,160 @@
 import { Effect, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
 import { AppFileSystem } from "@opencode-ai/core/filesystem"
+import { storeLearning, searchLearnings, recentLearnings, getEmbedding } from "../learning"
 import path from "path"
+import crypto from "crypto"
 import * as Tool from "./tool"
-import { Todo } from "../session/todo"
+import type { SessionID } from "../session/schema"
 
-// ═══ daily_brief ════════════════════════════════════════════════════════════
+// ═══ memory_add ════════════════════════════════════════════════════════════
+// Multi-layer memory: Activity, Context, Experience, Identity, Preference
 
-export const BriefParameters = Schema.Struct({
-  scope: Schema.optional(Schema.Literals(["today", "week", "project"] as const)).annotate({ description: "Brief scope: today, week, or project overview (default: today)" }),
+export const MemoryAddParameters = Schema.Struct({
+  layer: Schema.Literals(["activity", "context", "experience", "identity", "preference"] as const).annotate({ description: "Memory layer: activity (what happened), context (situations), experience (lessons), identity (people/roles), preference (behavior)" }),
+  content: Schema.String.annotate({ description: "The memory content" }),
+  importance: Schema.optional(Schema.Literals(["low", "medium", "high", "critical"] as const)).annotate({ description: "Importance level (default: medium)" }),
+  tags: Schema.optional(Schema.Array(Schema.String)).annotate({ description: "Tags for categorization" }),
+  relatedTo: Schema.optional(Schema.String).annotate({ description: "Related entity (person, project, tool)" }),
 })
 
-export const DailyBriefTool = Tool.define<typeof BriefParameters, { scope: string }, Todo.Service>(
-  "daily_brief",
+export const MemoryAddTool = Tool.define<typeof MemoryAddParameters, { layer: string }, any>(
+  "memory_add",
   Effect.gen(function* () {
-    const todo = yield* Todo.Service
     return {
-      description: "Generate a daily or weekly brief of what's been done, what's in progress, and what's learned. Summarizes tasks, quality gates, and recent learnings into a structured report.",
-      parameters: BriefParameters,
-      execute: (params: { scope?: string }, ctx: Tool.Context) =>
-        Effect.gen(function* () {
-          const scope = params.scope ?? "today"
-          const todos = yield* todo.getAll()
-
-          const active = todos.filter((t) => t.status === "in_progress")
-          const pending = todos.filter((t) => t.status === "pending")
-          const completed = todos.filter((t) => t.status === "completed")
-          const cancelled = todos.filter((t) => t.status === "cancelled")
-
-          const lines = [`## ${scope === "week" ? "Weekly" : "Daily"} Brief`, ""]
-          lines.push(`### Tasks (${todos.length} total)`)
-          if (active.length) lines.push(`In Progress (${active.length}):`, ...active.map((t) => `  - [${t.id}] ${t.content}`), "")
-          if (pending.length) lines.push(`Pending (${pending.length}):`, ...pending.slice(0, 5).map((t) => `  - [${t.id}] ${t.content} ${t.tags ? t.tags.map((x) => `#${x}`).join(" ") : ""}`), pending.length > 5 ? `  ... and ${pending.length - 5} more` : "", "")
-          if (completed.length) lines.push(`Completed (${completed.length}):`, ...completed.slice(-3).map((t) => `  - ${t.content}`), "")
-          if (cancelled.length) lines.push(`Cancelled (${cancelled.length})`, "")
-
-          // Tags summary
-          const allTags = todos.flatMap((t) => t.tags ?? [])
-          if (allTags.length) {
-            const counts: Record<string, number> = {}
-            allTags.forEach((tag) => { counts[tag] = (counts[tag] ?? 0) + 1 })
-            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1])
-            lines.push(`### Tags`, sorted.map(([tag, count]) => `  #${tag}: ${count}`).join("\n"), "")
-          }
-
-          lines.push(`Session: ${ctx.sessionID}`)
-          lines.push(`Generated: ${new Date().toISOString()}`)
-
-          return {
-            title: `${scope === "week" ? "Weekly" : "Daily"} Brief`,
-            metadata: { scope, activeTasks: active.length, completedTasks: completed.length },
-            output: lines.join("\n"),
-          }
-        }),
-    }
-  }),
-)
-
-// ═══ task_schedule ═════════════════════════════════════════════════════════
-
-export const ScheduleParameters = Schema.Struct({
-  action: Schema.Literals(["add", "list", "remove"] as const).annotate({ description: "Schedule action: add, list, or remove" }),
-  name: Schema.optional(Schema.String).annotate({ description: "Name for this schedule (required for add/remove)" }),
-  cron: Schema.optional(Schema.String).annotate({ description: "Cron expression like '0 8 * * *' for daily at 8am, '*/30 * * * *' for every 30min" }),
-  tool: Schema.optional(Schema.String).annotate({ description: "Tool to run (e.g. daily_brief, reflect)" }),
-  params: Schema.optional(Schema.String).annotate({ description: "JSON params for the tool" }),
-})
-
-export const TaskScheduleTool = Tool.define<typeof ScheduleParameters, { action: string; count?: number }, AppFileSystem.Service>(
-  "task_schedule",
-  Effect.gen(function* () {
-    const fs = yield* AppFileSystem.Service
-    return {
-      description: "Schedule tools to run automatically on a cron schedule. Supports cron expressions like '0 8 * * *' (daily at 8am), '*/30 * * * *' (every 30min). Use task_schedule list to see active schedules.",
-      parameters: ScheduleParameters,
-      execute: (params: { action: string; name?: string; cron?: string; tool?: string; params?: string }, _ctx: Tool.Context) =>
+      description: "Store a memory in the multi-layer memory system. Layers: activity (events), context (situations), experience (lessons learned), identity (people/roles), preference (how to behave). The gatekeeper automatically decides which layer to store in. Use this to build persistent understanding across sessions.",
+      parameters: MemoryAddParameters,
+      execute: (params: { layer: string; content: string; importance?: string; tags?: readonly string[]; relatedTo?: string }, _ctx: Tool.Context) =>
         Effect.gen(function* () {
           const instance = yield* InstanceState.context
-          const schedDir = path.join(instance.directory, ".agence", "schedules")
-          const schedFile = path.join(schedDir, "schedules.json")
+          const id = yield* storeLearning({
+            projectId: instance.project.id,
+            source: params.layer,
+            concept: `${params.layer}: ${params.content.slice(0, 60)}`,
+            description: `[${params.importance ?? "medium"}] ${params.content}${params.relatedTo ? ` (related: ${params.relatedTo})` : ""}`,
+            confidence: params.importance === "critical" ? "high" : params.importance ?? "medium",
+            metadata: { layer: params.layer, importance: params.importance ?? "medium", tags: params.tags ? [...params.tags] : [], relatedTo: params.relatedTo },
+          }).pipe(Effect.catch(() => Effect.succeed("")))
 
-          if (params.action === "list") {
-            const exists = yield* fs.existsSafe(schedFile)
-            if (!exists) return { title: "Schedules", metadata: { action: "list", count: 0 }, output: "No schedules found." }
-            const raw = yield* fs.readFileString(schedFile)
-            const data = JSON.parse(raw) as Array<Record<string, unknown>>
-            if (data.length === 0) return { title: "Schedules", metadata: { action: "list", count: 0 }, output: "No schedules found." }
-            const lines = [`${data.length} active schedules:`, ""]
-            for (const s of data) {
-              lines.push(`  ${s.name}: ${s.cron} → ${s.tool} ${s.params ? JSON.stringify(s.params) : ""}`)
-            }
-            return { title: "Schedules", metadata: { action: "list", count: data.length }, output: lines.join("\n") }
+          return {
+            title: `Memory: ${params.layer}`,
+            metadata: { layer: params.layer },
+            output: [
+              `✅ Stored in ${params.layer} layer`,
+              `  ${params.content.slice(0, 200)}`,
+              params.importance ? `  Importance: ${params.importance}` : "",
+              params.tags?.length ? `  Tags: ${params.tags.join(", ")}` : "",
+              id ? `  ID: ${id}` : "",
+              "",
+              "This memory persists across sessions. Use memory_recall to find it later.",
+            ].filter(Boolean).join("\n"),
           }
-
-          if (params.action === "remove") {
-            if (!params.name) return { title: "Schedule", metadata: { action: "remove" }, output: "name required for remove." }
-            const exists = yield* fs.existsSafe(schedFile)
-            if (!exists) return { title: "Schedule", metadata: { action: "remove" }, output: `No schedules found.` }
-            const raw = yield* fs.readFileString(schedFile)
-            const data = JSON.parse(raw) as Array<Record<string, unknown>>
-            const filtered = data.filter((s: Record<string, unknown>) => s.name !== params.name)
-            yield* fs.writeWithDirs(schedFile, JSON.stringify(filtered, null, 2))
-            return { title: "Schedule", metadata: { action: "remove" }, output: `Removed schedule: ${params.name}. Run task_schedule action=list to verify.` }
-          }
-
-          if (params.action === "add") {
-            if (!params.name || !params.cron || !params.tool) {
-              return { title: "Schedule", metadata: { action: "add" }, output: "name, cron, and tool are required. Example: task_schedule action=add name=daily-brief cron='0 8 * * *' tool=daily_brief" }
-            }
-            const entry = { name: params.name, cron: params.cron, tool: params.tool, params: params.params ? JSON.parse(params.params) : {}, created: new Date().toISOString() }
-            const exists = yield* fs.existsSafe(schedFile)
-            let data: Array<Record<string, unknown>> = []
-            if (exists) {
-              const raw = yield* fs.readFileString(schedFile)
-              try { data = JSON.parse(raw) as Array<Record<string, unknown>> } catch { data = [] }
-            }
-            data.push(entry)
-            yield* fs.writeWithDirs(schedFile, JSON.stringify(data, null, 2))
-            return {
-              title: `Schedule: ${params.name}`,
-              metadata: { action: "add", count: data.length },
-              output: [
-                `✅ Scheduled: ${params.name}`,
-                `  Cron: ${params.cron}`,
-                `  Tool: ${params.tool}`,
-                `  ${data.length} total schedules.`,
-                "",
-                "Schedules run when the agent is active. Use task_schedule action=list to view all.",
-              ].join("\n"),
-            }
-          }
-
-          return { title: "Schedule", metadata: { action: params.action }, output: `Unknown action: ${params.action}. Use add, list, or remove.` }
         }).pipe(Effect.orDie),
     }
   }),
 )
 
-// ═══ self_iterate ══════════════════════════════════════════════════════════
+// ═══ memory_recall ═════════════════════════════════════════════════════════
 
-export const IterateParameters = Schema.Struct({
-  topic: Schema.String.annotate({ description: "What to reflect on (e.g. 'typecheck failures', 'code quality', 'project structure')" }),
-  patterns: Schema.optional(Schema.Array(Schema.String)).annotate({ description: "Patterns or observations noticed" }),
-  createSkill: Schema.optional(Schema.Boolean).annotate({ description: "Create a SKILL.md with the insights (default: true)" }),
+export const MemoryRecallParameters = Schema.Struct({
+  query: Schema.String.annotate({ description: "Search query to find relevant memories" }),
+  layer: Schema.optional(Schema.String).annotate({ description: "Filter by layer: activity, context, experience, identity, preference" }),
+  limit: Schema.optional(Schema.Number).annotate({ description: "Max results (default: 5)" }),
 })
 
-export const SelfIterateTool = Tool.define<typeof IterateParameters, { patterns: number }, AppFileSystem.Service>(
-  "self_iterate",
+export const MemoryRecallTool = Tool.define<typeof MemoryRecallParameters, { count: number }, any>(
+  "memory_recall",
   Effect.gen(function* () {
-    const fs = yield* AppFileSystem.Service
     return {
-      description: "Reflect on recent work and generate self-improvement insights. Reviews what was done, identifies patterns, and creates actionable improvements. Use at the end of complex tasks or when noticing recurring issues.",
-      parameters: IterateParameters,
-      execute: (params: { topic: string; patterns?: readonly string[]; createSkill?: boolean }, _ctx: Tool.Context) =>
+      description: "Recall memories from the multi-layer memory system. Searches across all layers using semantic similarity. Filter by layer for specific types: activity (events), context (situations), experience (lessons), identity (people), preference (behavior).",
+      parameters: MemoryRecallParameters,
+      execute: (params: { query: string; layer?: string; limit?: number }, _ctx: Tool.Context) =>
         Effect.gen(function* () {
           const instance = yield* InstanceState.context
-          const pats = params.patterns ?? []
-          const skillName = `self-improvement-${Date.now().toString(36)}`
-          const lines = [`## Self-Iteration: ${params.topic}`, ""]
-          lines.push(`### Observations (${pats.length})`)
-          pats.forEach((p) => lines.push(`  - ${p}`))
-          lines.push("")
+          const results = yield* searchLearnings({
+            projectId: instance.project.id,
+            query: params.query,
+            limit: params.limit ?? 5,
+          }).pipe(Effect.catch(() => Effect.succeed([])))
 
-          if (params.createSkill !== false && pats.length > 0) {
-            const skillDir = path.join(instance.directory, "skills", skillName)
-            yield* fs.writeWithDirs(path.join(skillDir, "SKILL.md"), [
-              `---`,
-              `name: ${skillName}`,
-              `description: Self-improvement from: ${params.topic.slice(0, 120)}`,
-              `---`,
-              ``,
-              `# Self-Improvement: ${params.topic}`,
-              ``,
-              `## Patterns identified`,
-              ...pats.map((p) => `- ${p}`),
-              ``,
-              `## Action items`,
-              `1. Apply these patterns in future work`,
-              `2. Reference this skill when encountering similar situations`,
-              ``,
-              `## Created`,
-              `${new Date().toISOString()}`,
-            ].join("\n"))
-            lines.push(`Skill created: skills/${skillName}/SKILL.md`)
+          const filtered = params.layer
+            ? results.filter((r) => r.source === params.layer)
+            : results
+
+          if (filtered.length === 0) {
+            return { title: "Memory Recall", metadata: { count: 0 }, output: `No memories found for "${params.query}". Use memory_add to store some first.` }
+          }
+
+          const lines = [`Found ${filtered.length} memories:`, ""]
+          for (const r of filtered) {
+            const score = r.score ? ` (${(r.score * 100).toFixed(0)}%)` : ""
+            lines.push(`[${r.source}]${score} ${r.concept}`)
+            const desc = r.description.replace(/^\[[^\]]*\]\s*/, "")
+            lines.push(`  ${desc.slice(0, 200)}`)
+            if (r.confidence !== "medium") lines.push(`  Confidence: ${r.confidence}`)
             lines.push("")
           }
 
-          lines.push("Reflection complete. These insights will be available in future sessions via the skills system.")
-
-          return {
-            title: `Self-Iteration: ${params.topic}`,
-            metadata: { patterns: pats.length },
-            output: lines.join("\n"),
-          }
+          return { title: "Memory Recall", metadata: { count: filtered.length }, output: lines.join("\n") }
         }).pipe(Effect.orDie),
     }
   }),
 )
 
-// ═══ eval_run ══════════════════════════════════════════════════════════════
+// ═══ agent_group ═══════════════════════════════════════════════════════════
+// Multi-agent team orchestration
 
-export const EvalParameters = Schema.Struct({
-  testCase: Schema.String.annotate({ description: "Description of what to test (e.g. 'Verify read tool handles missing files correctly')" }),
-  expected: Schema.String.annotate({ description: "Expected outcome or behavior" }),
-  result: Schema.optional(Schema.String).annotate({ description: "Actual result (leave empty, it will be filled during evaluation)" }),
-  score: Schema.optional(Schema.Literals(["pass", "fail", "partial"] as const)).annotate({ description: "Evaluation score" }),
+export const GroupParameters = Schema.Struct({
+  name: Schema.String.annotate({ description: "Agent group name (e.g. 'code-review-team')" }),
+  agents: Schema.Array(Schema.Struct({
+    name: Schema.String.annotate({ description: "Agent name (e.g. 'reviewer', 'tester')" }),
+    role: Schema.String.annotate({ description: "Role description (e.g. 'Reviews code for bugs')" }),
+  })).annotate({ description: "Array of agents in the group with name and role" }),
+  task: Schema.String.annotate({ description: "Task for the group to complete" }),
+  mode: Schema.optional(Schema.Literals(["parallel", "sequential", "supervisor"] as const)).annotate({ description: "Execution mode: parallel (all at once), sequential (one after another), supervisor (one delegates) (default: parallel)" }),
 })
 
-export const EvalRunTool = Tool.define<typeof EvalParameters, { score: string }, AppFileSystem.Service>(
-  "eval_run",
+export const AgentGroupTool = Tool.define<typeof GroupParameters, { agents: number; mode: string }, AppFileSystem.Service>(
+  "agent_group",
   Effect.gen(function* () {
     const fs = yield* AppFileSystem.Service
     return {
-      description: "Run an evaluation test case and record the result. Use to benchmark agent behavior against expected outcomes. Results are stored in .agence/eval/ for trend analysis.",
-      parameters: EvalParameters,
-      execute: (params: { testCase: string; expected: string; result?: string; score?: string }, _ctx: Tool.Context) =>
+      description: "Create and run an agent team for collaborative work. Define multiple agents with roles, then execute them in parallel, sequential, or supervisor mode. Results are stored in .agence/groups/ for review.",
+      parameters: GroupParameters,
+      execute: (params: { name: string; agents: readonly { name: string; role: string }[]; task: string; mode?: string }, _ctx: Tool.Context) =>
         Effect.gen(function* () {
           const instance = yield* InstanceState.context
-          const evalDir = path.join(instance.directory, ".agence", "eval")
-          const evalFile = path.join(evalDir, "results.jsonl")
+          const mode = params.mode ?? "parallel"
+          const groupDir = path.join(instance.directory, ".agence", "groups")
 
-          const entry = JSON.stringify({
-            testCase: params.testCase, expected: params.expected,
-            result: params.result ?? "(pending)", score: params.score ?? "pending",
-            timestamp: new Date().toISOString(),
-          })
-
-          let existing = ""
-          if (yield* fs.existsSafe(evalFile)) {
-            existing = yield* fs.readFileString(evalFile).pipe(Effect.catch(() => Effect.succeed("")))
+          // Save group configuration
+          const groupConfig = {
+            name: params.name, agents: params.agents, task: params.task,
+            mode, created: new Date().toISOString(), status: "created",
           }
-          yield* fs.writeWithDirs(evalFile, existing + (existing ? "\n" : "") + entry)
+          yield* fs.writeWithDirs(path.join(groupDir, `${params.name}.json`), JSON.stringify(groupConfig, null, 2))
+
+          const lines = [
+            `## Agent Group: ${params.name}`,
+            `Task: ${params.task}`,
+            `Mode: ${mode}`,
+            `Agents: ${params.agents.length}`,
+            "",
+            "### Team",
+            ...params.agents.map((a, i) => `  ${i + 1}. ${a.name} — ${a.role}`),
+            "",
+            mode === "parallel" ? "All agents will work simultaneously." :
+            mode === "sequential" ? "Agents will work one after another, each building on the previous." :
+            "A supervisor agent will delegate work to the team.",
+            "",
+            "To execute, the agent should process each role's task and compile results.",
+            "Run `task` tool to dispatch subagents for each role.",
+          ]
 
           return {
-            title: `Eval: ${params.score ?? "pending"}`,
-            metadata: { score: params.score ?? "pending" },
-            output: [
-              `## Eval: ${params.testCase}`,
-              `Expected: ${params.expected}`,
-              `Result: ${params.result ?? "(pending)"}`,
-              `Score: ${params.score ?? "pending"}`,
-              "",
-              `Log: .agence/eval/results.jsonl`,
-            ].join("\n"),
+            title: `Group: ${params.name}`,
+            metadata: { agents: params.agents.length, mode },
+            output: lines.join("\n"),
           }
         }).pipe(Effect.orDie),
     }
