@@ -264,6 +264,31 @@ DB schema stores `rollingUsage` + `timeRollingUpdated`. Counter resets on next r
 
 See `packages/console/core/src/subscription.ts` for the full implementation.
 
+## OpenClaw Plugin System (Vendored at vendor/openclaw/)
+
+OpenClaw has a mature plugin architecture we can learn from or reuse:
+
+- **137 bundled plugins** in `extensions/`: Telegram, Discord, WhatsApp, Slack, Signal, iMessage, etc.
+- **Plugin SDK** (`@openclaw/plugin-sdk`): public API with typed channel/provider/utility contracts
+- **Plugin lifecycle**: discovery → manifest loading → registry assembly → activation planning → runtime loading
+- **Channel plugins**: implement outbound/inbound/setup/probe/status/security adapters
+- **Cron system**: `src/cron/` — full scheduler with delivery to any channel
+- **Heartbeat system**: `src/auto-reply/heartbeat.ts` — periodic agent wake-ups
+- **Skills**: 58 SKILL.md files contributed by plugins
+
+### How to integrate into Agence
+
+Two approaches:
+1. **Vendor approach**: Use OpenClaw's plugin SDK and extensions directly via a compatibility layer
+2. **Port approach**: Extend Agence's existing `packages/plugin/` with OpenClaw's patterns (channel contracts, cron, heartbeat)
+
+Key files in OpenClaw:
+- `vendor/openclaw/packages/plugin-sdk/` — The public plugin SDK
+- `vendor/openclaw/extensions/telegram/` — Telegram channel plugin (reference implementation)
+- `vendor/openclaw/src/cron/` — Cron/scheduling engine
+- `vendor/openclaw/src/plugins/` — Plugin loader, registry, discovery, config
+- `vendor/openclaw/src/gateway/` — Message gateway (HTTP + WebSocket)
+
 ---
 
 ## Dependabot Alerts
