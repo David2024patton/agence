@@ -234,6 +234,36 @@ The monorepo contains a full Cloudflare-deployed SaaS platform for selling LLM A
 3. SQLite instead of PlanetScale
 4. One provider to start
 
+### Subscription Usage Windows
+
+Three strategies for rate limiting, all lazy-reset (no cron needed):
+
+**Rolling window** (e.g., "500 requests per 5 hours"):
+```
+windowMs = 5 * 3600 * 1000
+windowStart = now - windowMs
+
+if lastUsage < windowStart:
+  usage = 0  // window expired, auto-reset
+elif usage < limit:
+  usage++     // within limit, allow
+else:
+  reject()   // rate limited
+```
+
+**Fixed calendar** (e.g., "10,000 per month"):
+```
+monthStart = Date(now.year, now.month, 1)
+if lastUsage < monthStart:
+  usage = 0
+```
+
+**Weekly** — resets each Monday.
+
+DB schema stores `rollingUsage` + `timeRollingUpdated`. Counter resets on next request after window expiry. Credit-based billing uses `balance` column debited per-token, auto-reload from Stripe.
+
+See `packages/console/core/src/subscription.ts` for the full implementation.
+
 ---
 
 ## Dependabot Alerts
