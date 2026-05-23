@@ -9,6 +9,7 @@ import DESCRIPTION_MODEL from "./model_learn.txt"
 import QGATE_DESC from "./quality_gate.txt"
 import { Todo } from "../session/todo"
 import type { SessionID } from "../session/schema"
+import { storeLearning, searchLearnings } from "../learning"
 import { AppFileSystem } from "@opencode-ai/core/filesystem"
 import { InstanceState } from "@/effect/instance-state"
 import path from "path"
@@ -168,12 +169,30 @@ export const ModelLearnTool = Tool.define<typeof ModelLearnParameters, { concept
           const instance = yield* InstanceState.context
           const modelDir = path.join(instance.directory, ".agence", "model")
           const modelFile = path.join(modelDir, "concepts.jsonl")
+
+          // Store in learning database with embedding
+          const learningId = yield* Effect.gen(function* () {
+            return yield* storeLearning({
+              projectId: instance.project.id,
+              source: "model_learn",
+              concept: params.concept,
+              description: params.description,
+              confidence: params.confidence ?? "medium",
+              relatedTo: params.relatedTo ? [...params.relatedTo] : undefined,
+            }).pipe(Effect.catch(() => Effect.succeed("")))
+          }).pipe(Effect.orDie)
+
+          // Also store in JSONL file for backwards compatibility
           let existing = ""
           const hasFile = yield* fs.existsSafe(modelFile)
-          if (hasFile) {
-            existing = yield* fs.readFileString(modelFile).pipe(Effect.catch(() => Effect.succeed("")))
-          }
-          const entry = JSON.stringify({ concept: params.concept, description: params.description, relatedTo: params.relatedTo ?? [], confidence: params.confidence ?? "medium", timestamp: new Date().toISOString() })
+          if (hasFile) existing = yield* fs.readFileString(modelFile).pipe(Effect.catch(() => Effect.succeed("")))
+
+          const entry = JSON.stringify({
+            concept: params.concept, description: params.description,
+            relatedTo: params.relatedTo ?? [], confidence: params.confidence ?? "medium",
+            learningId: learningId || undefined,
+            timestamp: new Date().toISOString(),
+          })
           yield* fs.writeWithDirs(modelFile, existing + (existing ? "\n" : "") + entry)
           return {
             title: `Learn: ${params.concept}`,
@@ -309,6 +328,19 @@ export const QualityGateTool = Tool.define<typeof QGateParameters, { check: stri
             skillPath = `skills/${skillName}/SKILL.md`
           }
 
+          // Store in learning database with embedding
+          yield* Effect.gen(function* () {
+            yield* storeLearning({
+              projectId: instance.project.id,
+              source: "quality_gate",
+              concept: `${params.check} failure: ${params.taskRef.slice(0, 80)}`,
+              description: params.details || params.output?.slice(0, 500) || params.taskRef,
+              confidence: params.passed ? "high" : "low",
+              skillPath: skillPath || undefined,
+              metadata: { taskRef: params.taskRef, check: params.check, passed: params.passed },
+            }).pipe(Effect.catch(() => Effect.succeed("")))
+          }).pipe(Effect.orDie)
+
           // Store the lesson
           const entry = JSON.stringify({
             taskRef: params.taskRef,
@@ -358,3 +390,50 @@ function extractPatterns(errors: string, details: string): string[] {
 }
 
 export { WriteParameters as Parameters }
+
+// ═══ vector_search ═══════════════════════════════════════════════════════════
+
+export const VSearchParameters = Schema.Struct({
+  query: Schema.String.annotate({ description: "Search query to find related concepts and patterns" }),
+  source: Schema.optional(Schema.String).annotate({ description: "Filter by source: reflect, model_learn, quality_gate" }),
+  limit: Schema.optional(Schema.Number).annotate({ description: "Max results (default 10)" }),
+})
+
+export const VectorSearchTool = Tool.define<typeof VSearchParameters, { count: number }, any>(
+  "vector_search",
+  Effect.gen(function* () {
+    return {
+      description: `Search your project's knowledge base using semantic similarity. Finds related concepts stored by reflect, model_learn, and quality_gate. Uses local embeddings (nomic-embed-text via Ollama) for understanding meaning, not just keyword matching.`,
+      parameters: VSearchParameters,
+      execute: (params: { query: string; source?: string; limit?: number }, _ctx: Tool.Context) =>
+        Effect.gen(function* () {
+          const instance = yield* InstanceState.context
+          const results = yield* searchLearnings({
+            projectId: instance.project.id,
+            query: params.query,
+            limit: params.limit ?? 10,
+          }).pipe(Effect.catch(() => Effect.succeed([])))
+
+          if (results.length === 0) {
+            return { title: "Vector Search", metadata: { count: 0 }, output: `No results found for "${params.query}". Try model_learn to create concepts first.` }
+          }
+
+          const lines = [`Found ${results.length} results for "${params.query}":`, ""]
+          for (const r of results) {
+            const score = r.score ? ` (${(r.score * 100).toFixed(0)}% match)` : ""
+            lines.push(`## ${r.concept} [${r.source}]${score}`)
+            lines.push(`  ${r.description.slice(0, 200)}`)
+            if (r.skillPath) lines.push(`  Skill: ${r.skillPath}`)
+            if (r.confidence !== "medium") lines.push(`  Confidence: ${r.confidence}`)
+            lines.push("")
+          }
+
+          return {
+            title: `Vector Search: ${params.query}`,
+            metadata: { count: results.length },
+            output: lines.join("\n"),
+          }
+        }).pipe(Effect.orDie),
+    }
+  }),
+)

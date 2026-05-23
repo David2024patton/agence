@@ -1,0 +1,7 @@
+Search your project's knowledge base using semantic similarity. Finds related concepts, patterns, and lessons stored by reflect, model_learn, and quality_gate. Uses local embeddings (nomic-embed-text via Ollama) for understanding meaning, not just keyword matching.
+
+## When to use
+- You need to recall what was learned about a topic
+- You're starting a task and want to know if similar work was done before
+- Auto-triggered by quality_gate when a check fails
+- Before creating a new skill, check if one already exists
