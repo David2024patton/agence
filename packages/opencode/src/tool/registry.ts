@@ -8,7 +8,7 @@ import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { TaskTool } from "./task"
 import { TaskStatusTool } from "./task_status"
-import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool, ModelLearnTool } from "./todo"
+import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool, ModelLearnTool, QualityGateTool } from "./todo"
 import { ImageDescribeTool } from "./image_describe"
 import {
   BrowserInspectTool,
@@ -146,6 +146,7 @@ export const layer: Layer.Layer<
     const todoCarry = yield* TodoCarryTool
     const reflect = yield* ReflectTool
     const modelLearn = yield* ModelLearnTool
+    const qualityGate = yield* QualityGateTool
     const browserInspect = yield* BrowserInspectTool
     const browserTutorial = yield* BrowserTutorialTool
     const browserExtract = yield* BrowserExtractTool
@@ -282,6 +283,7 @@ export const layer: Layer.Layer<
           todo_carry: Tool.init(todoCarry),
           reflect: Tool.init(reflect),
           model_learn: Tool.init(modelLearn),
+          quality_gate: Tool.init(qualityGate),
           browser_inspect: Tool.init(browserInspect),
           browser_tutorial: Tool.init(browserTutorial),
           browser_extract: Tool.init(browserExtract),
@@ -328,6 +330,7 @@ export const layer: Layer.Layer<
             tool.todo_carry,
             tool.reflect,
             tool.model_learn,
+            tool.quality_gate,
             tool.browser_inspect,
             tool.browser_tutorial,
             tool.browser_extract,

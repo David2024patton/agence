@@ -6,6 +6,7 @@ import DESCRIPTION_REFLECT from "./reflect.txt"
 import DESCRIPTION_SEARCH from "./task_search.txt"
 import DESCRIPTION_CARRY from "./todo_carry.txt"
 import DESCRIPTION_MODEL from "./model_learn.txt"
+import QGATE_DESC from "./quality_gate.txt"
 import { Todo } from "../session/todo"
 import type { SessionID } from "../session/schema"
 import { AppFileSystem } from "@opencode-ai/core/filesystem"
@@ -237,6 +238,123 @@ function buildSkillContent(name: string, summary: string, patterns?: string[]): 
     `## Usage history`,
     `- Created: ${new Date().toISOString()}`,
   ].join("\n")
+}
+
+// ═══ quality_gate ════════════════════════════════════════════════════════════
+
+export const QGateParameters = Schema.Struct({
+  taskRef: Schema.String.annotate({ description: "Reference to the task (title or id)" }),
+  check: Schema.Literals(["typecheck", "test", "review", "deploy", "security", "custom"] as const).annotate({ description: "Type of quality check" }),
+  passed: Schema.Boolean.annotate({ description: "Did the check pass?" }),
+  output: Schema.optional(Schema.String).annotate({ description: "Error/output text from the check" }),
+  details: Schema.optional(Schema.String).annotate({ description: "What was learned, or error patterns identified" }),
+})
+
+export const QualityGateTool = Tool.define<typeof QGateParameters, { check: string; passed: boolean; lessonsCount: number }, AppFileSystem.Service>(
+  "quality_gate",
+  Effect.gen(function* () {
+    const fs = yield* AppFileSystem.Service
+    return {
+      description: QGATE_DESC,
+      parameters: QGateParameters,
+      execute: (params: { taskRef: string; check: string; passed: boolean; output?: string; details?: string }, _ctx: Tool.Context) =>
+        Effect.gen(function* () {
+          const instance = yield* InstanceState.context
+          const qualityDir = path.join(instance.directory, ".agence", "quality")
+          const lessonsFile = path.join(qualityDir, "lessons.jsonl")
+
+          // Read existing lessons
+          let existing = ""
+          if (yield* fs.existsSafe(lessonsFile)) {
+            existing = yield* fs.readFileString(lessonsFile).pipe(Effect.catch(() => Effect.succeed("")))
+          }
+
+          // If it failed and there's error output, create a skill
+          let skillPath = ""
+          if (!params.passed && (params.output || params.details)) {
+            const errors = params.output || ""
+            const detail = params.details || ""
+            const keyPatterns = extractPatterns(errors, detail)
+            const skillName = `quality-${params.check}-${Date.now().toString(36)}`
+            const skillDir = path.join(instance.directory, "skills", skillName)
+
+            yield* fs.writeWithDirs(path.join(skillDir, "SKILL.md"), [
+              `---`,
+              `name: ${skillName}`,
+              `description: Auto-generated from ${params.check} failure on "${params.taskRef.slice(0, 80)}"`,
+              `---`,
+              ``,
+              `# Quality Gate: ${params.check}`,
+              ``,
+              `## Failed check`,
+              `Task: ${params.taskRef}`,
+              `Gate: ${params.check}`,
+              ``,
+              `## Error patterns`,
+              ...keyPatterns.map((p) => `- ${p}`),
+              ``,
+              `## Full output`,
+              "```",
+              errors.slice(0, 2000),
+              "```",
+              ``,
+              detail ? `## Notes\n${detail}\n` : "",
+              `## When to use`,
+              `This skill was automatically generated when a ${params.check} quality gate failed.`,
+              `Reference it when encountering similar issues in the future.`,
+              ``,
+              `## Created`,
+              `${new Date().toISOString()}`,
+            ].join("\n"))
+            skillPath = `skills/${skillName}/SKILL.md`
+          }
+
+          // Store the lesson
+          const entry = JSON.stringify({
+            taskRef: params.taskRef,
+            check: params.check,
+            passed: params.passed,
+            output: params.output?.slice(0, 500),
+            details: params.details,
+            skillCreated: skillPath || undefined,
+            timestamp: new Date().toISOString(),
+          })
+          yield* fs.writeWithDirs(lessonsFile, existing + (existing ? "\n" : "") + entry)
+
+          // Count total lessons
+          const allText = yield* fs.readFileString(lessonsFile).pipe(Effect.catch(() => Effect.succeed("")))
+          const count = allText ? allText.trim().split("\n").length : 1
+
+          const status = params.passed ? "PASSED" : "FAILED"
+          const lines = [`${status}: ${params.check} gate for "${params.taskRef}"`]
+          if (skillPath) lines.push(`Skill created: ${skillPath}`)
+          lines.push(`Lessons stored: ${count} total`)
+
+          return {
+            title: `${status} ${params.check}`,
+            metadata: { check: params.check, passed: params.passed, lessonsCount: count },
+            output: lines.join("\n"),
+          }
+        }).pipe(Effect.orDie),
+    }
+  }),
+)
+
+function extractPatterns(errors: string, details: string): string[] {
+  const patterns: string[] = []
+  if (details) patterns.push(details)
+
+  // Common error type patterns
+  if (errors.includes("TS") && errors.includes("error")) patterns.push("TypeScript compilation error detected")
+  if (errors.includes("Cannot find module") || errors.includes("Module not found")) patterns.push("Missing module import")
+  if (errors.includes("not assignable to type") || errors.includes("is not assignable")) patterns.push("Type mismatch - check interface alignment")
+  if (errors.includes("undefined") || errors.includes("undefined is not")) patterns.push("Undefined value - check initialization")
+  if (errors.includes("deprecated") || errors.includes("removed")) patterns.push("Using deprecated API - check for newer alternative")
+  if (errors.includes("timeout") || errors.includes("ETIMEDOUT") || errors.includes("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
+  if (errors.includes("test") && errors.includes("fail")) patterns.push("Test failure - check test expectations and implementation")
+  if (errors.includes("lint") || errors.includes("ESLint") || errors.includes("unused")) patterns.push("Code style/lint violation - check coding standards")
+
+  return patterns.length > 0 ? patterns : ["Error detected - review the output for specific patterns"]
 }
 
 export { WriteParameters as Parameters }

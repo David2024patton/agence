@@ -1,0 +1,15 @@
+Set a quality gate on a task: when the check passes or fails, the agent learns from the result. Failed checks auto-create skills documenting the error patterns so the same mistake never happens twice. Over time, the agent builds a personal quality playbook from every gate it encounters.
+
+## How it works
+- Passes reinforce the approach: "this pattern works"
+- Failures create SKILL.md files with the exact error + fix
+- Patterns are stored in .agence/quality/lessons.jsonl
+- Future sessions auto-discover created skills
+
+## Quality checks
+- typecheck: tsc/lint errors
+- test: test failures
+- review: PR/code review findings
+- deploy: build/deployment errors
+- security: vulnerability findings
+- custom: any other quality gate
