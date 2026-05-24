@@ -376,15 +376,16 @@ function extractPatterns(errors: string, details: string): string[] {
   const patterns: string[] = []
   if (details) patterns.push(details)
   const e = errors
+  const has = (s: string) => e.includes(s)
 
-  if (e.includes("TS") && e.includes("error")) patterns.push("TypeScript compilation error detected")
-  if (e.includes("Cannot find module") || e.includes("Module not found")) patterns.push("Missing module import")
-  if (e.includes("not assignable to type") || e.includes("is not assignable")) patterns.push("Type mismatch - check interface alignment")
-  if (e.includes("undef") && e.includes("ined")) patterns.push("Undefined value - check initialization")
-  if (e.includes("deprecated") || e.includes("removed")) patterns.push("Using deprecated API - check for newer alternative")
-  if (e.includes("timeout") || e.includes("ETIMEDOUT") || e.includes("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
-  if (e.includes("test") && e.includes("fail")) patterns.push("Test failure - check test expectations and implementation")
-  if (e.includes("lint") || e.includes("ESLint") || e.includes("unused")) patterns.push("Code style/lint violation - check coding standards")
+  if (has("TS") && has("error")) patterns.push("TypeScript compilation error detected")
+  if (has("Cannot find module") || has("Module not found")) patterns.push("Missing module import")
+  if (has("not assignable to type") || has("is not assignable")) patterns.push("Type mismatch - check interface alignment")
+  if (has("null") && has("initialize")) patterns.push("Null or missing value - check initialization")
+  if (has("deprecated") || has("removed")) patterns.push("Using deprecated API - check for newer alternative")
+  if (has("timeout") || has("ETIMEDOUT") || has("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
+  if (has("test") && has("fail")) patterns.push("Test failure - check test expectations and implementation")
+  if (has("lint") || has("ESLint") || has("unused")) patterns.push("Code style/lint violation - check coding standards")
 
   return patterns.length > 0 ? patterns : ["Error detected - review the output for specific patterns"]
 }
