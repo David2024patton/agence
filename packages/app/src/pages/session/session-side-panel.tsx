@@ -291,16 +291,6 @@ export function SessionSidePanel(props: {
                               </div>
                             </Tabs.Trigger>
                           </Show>
-                    <Show when={memoryOpen()}>
-                      <Tabs.Content value="memory" class="flex flex-col h-full overflow-hidden contain-strict">
-                        <Show when={activeTab() === "memory"}>
-                          <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
-                            <MemoryPanel />
-                          </div>
-                        </Show>
-                      </Tabs.Content>
-                    </Show>
-
                     <Show when={contextOpen()}>
                           <Tabs.Trigger
                             value="context"
@@ -385,6 +375,16 @@ export function SessionSidePanel(props: {
                         </div>
                       </Show>
                     </Tabs.Content>
+
+                    <Show when={memoryOpen()}>
+                      <Tabs.Content value="memory" class="flex flex-col h-full overflow-hidden contain-strict">
+                        <Show when={activeTab() === "memory"}>
+                          <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
+                            <MemoryPanel />
+                          </div>
+                        </Show>
+                      </Tabs.Content>
+                    </Show>
 
                     <Show when={contextOpen()}>
                       <Tabs.Content value="context" class="flex flex-col h-full overflow-hidden contain-strict">
