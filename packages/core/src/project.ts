@@ -62,7 +62,13 @@ export const layer = Layer.effect(
       return yield* fs.readFileString(path.join(dir, "agence")).pipe(
         Effect.map((value) => value.trim()),
         Effect.map((value) => (value ? ID.make(value) : undefined)),
-        Effect.catch(() => Effect.succeed(undefined)),
+        Effect.catch(() =>
+          fs.readFileString(path.join(dir, "opencode")).pipe(
+            Effect.map((value) => value.trim()),
+            Effect.map((value) => (value ? ID.make(value) : undefined)),
+            Effect.catch(() => Effect.succeed(undefined)),
+          ),
+        ),
       )
     })
 

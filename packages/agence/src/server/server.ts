@@ -3,8 +3,8 @@ import "./init-projectors"
 import { NodeHttpServer } from "@effect/platform-node"
 import * as Log from "@agence-ai/core/util/log"
 import { ConfigProvider, Context, Effect, Exit, Layer, Scope } from "effect"
-import type { InstanceContext } from "@/project/instance-context"
 import { InstanceRef, WorkspaceRef } from "@/effect/instance-ref"
+import type { InstanceContext } from "@/project/instance-context"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { OpenApi } from "effect/unstable/httpapi"
 import { createServer } from "node:http"
@@ -103,12 +103,14 @@ const listenEffect: (opts: ListenOptions) => Effect.Effect<EffectListener, unkno
 )
 
 function listenerLayer(opts: ListenOptions, port: number) {
-  const fallbackCtx: InstanceContext = {
+  // Provide a startup fallback InstanceRef so Bus and EventV2Bridge can
+  // initialize before any project is loaded. The instanceContextLayer
+  // middleware overrides this with the real context per-request.
+  const startupCtx: InstanceContext = {
     directory: process.cwd(),
-    project: { id: "server" } as any,
-    vcs: undefined as any,
-    id: "server" as any,
-  }
+    project: { id: "startup" } as any,
+    id: "startup" as any,
+  } as InstanceContext
   return HttpRouter.serve(HttpApiApp.createRoutes(opts), {
     middleware: disposeMiddleware,
     disableLogger: true,
@@ -116,7 +118,7 @@ function listenerLayer(opts: ListenOptions, port: number) {
   }).pipe(
     Layer.provideMerge(WebSocketTracker.layer),
     Layer.provideMerge(serverLayer({ port, hostname: opts.hostname })),
-    Layer.provideMerge(Layer.succeed(InstanceRef)(fallbackCtx)),
+    Layer.provideMerge(Layer.succeed(InstanceRef)(startupCtx)),
     Layer.provideMerge(Layer.succeed(WorkspaceRef)(undefined)),
     Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv())),
   )
