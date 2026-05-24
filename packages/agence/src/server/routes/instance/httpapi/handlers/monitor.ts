@@ -1,4 +1,6 @@
-import * as Log from "@agence-ai/core/util/log"
+// Monitor API handlers: state snapshot + live SSE event stream.
+// Subscribes to the bus to track sessions, commands, and errors in memory.
+// Exports a /monitor/state JSON endpoint and /monitor/events SSE endpoint.
 import { Bus } from "@/bus"
 import { InstallationVersion, InstallationChannel } from "@agence-ai/core/installation/version"
 import { HttpApiBuilder } from "effect/unstable/httpapi"

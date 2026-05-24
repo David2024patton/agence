@@ -1,4 +1,7 @@
-import path from "path"
+// Global paths: XDG-based directory layout for data, config, cache, state, and logs.
+// All paths are rooted under 'agence' inside the platform-specific XDG directories.
+// On Windows: %APPDATA%/agence/ for config, %LOCALAPPDATA%/agence/ for data
+// Controlled via OPENCODE_CONFIG_DIR env var override.
 import fs from "fs/promises"
 import { xdgData, xdgCache, xdgConfig, xdgState } from "xdg-basedir"
 import os from "os"

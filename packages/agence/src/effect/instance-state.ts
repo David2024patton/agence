@@ -1,4 +1,7 @@
-import { Effect, ScopedCache, Scope } from "effect"
+// InstanceState: Per-project scoped cache with lazy initialization.
+// Each project directory gets its own isolated state via ScopedCache.
+// Requires InstanceRef (provided by middleware per-request or fallback at startup).
+// Key exports: context, directory, workspaceID, make, get, use, has, invalidate
 import * as EffectLogger from "@agence-ai/core/effect/logger"
 import type { InstanceContext } from "@/project/instance-context"
 import { InstanceRef, WorkspaceRef } from "./instance-ref"
