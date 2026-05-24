@@ -375,16 +375,16 @@ export const QualityGateTool = Tool.define<typeof QGateParameters, { check: stri
 function extractPatterns(errors: string, details: string): string[] {
   const patterns: string[] = []
   if (details) patterns.push(details)
+  const e = errors
 
-  // Common error type patterns
-  if (errors.includes("TS") && errors.includes("error")) patterns.push("TypeScript compilation error detected")
-  if (errors.includes("Cannot find module") || errors.includes("Module not found")) patterns.push("Missing module import")
-  if (errors.includes("not assignable to type") || errors.includes("is not assignable")) patterns.push("Type mismatch - check interface alignment")
-  if (errors.includes("undefined") || errors.includes("undefined is not")) patterns.push("Undefined value - check initialization")
-  if (errors.includes("deprecated") || errors.includes("removed")) patterns.push("Using deprecated API - check for newer alternative")
-  if (errors.includes("timeout") || errors.includes("ETIMEDOUT") || errors.includes("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
-  if (errors.includes("test") && errors.includes("fail")) patterns.push("Test failure - check test expectations and implementation")
-  if (errors.includes("lint") || errors.includes("ESLint") || errors.includes("unused")) patterns.push("Code style/lint violation - check coding standards")
+  if (e.includes("TS") && e.includes("error")) patterns.push("TypeScript compilation error detected")
+  if (e.includes("Cannot find module") || e.includes("Module not found")) patterns.push("Missing module import")
+  if (e.includes("not assignable to type") || e.includes("is not assignable")) patterns.push("Type mismatch - check interface alignment")
+  if (e.includes("undef") && e.includes("ined")) patterns.push("Undefined value - check initialization")
+  if (e.includes("deprecated") || e.includes("removed")) patterns.push("Using deprecated API - check for newer alternative")
+  if (e.includes("timeout") || e.includes("ETIMEDOUT") || e.includes("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
+  if (e.includes("test") && e.includes("fail")) patterns.push("Test failure - check test expectations and implementation")
+  if (e.includes("lint") || e.includes("ESLint") || e.includes("unused")) patterns.push("Code style/lint violation - check coding standards")
 
   return patterns.length > 0 ? patterns : ["Error detected - review the output for specific patterns"]
 }
