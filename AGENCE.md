@@ -313,3 +313,12 @@ Key files in OpenClaw:
 33 vulnerabilities inherited from upstream opencode.
 Core packages patched: minimatch (→10.2.5), turbo (→2.9.14)
 Remaining alerts in `enterprise/`, `console/`, `function/` packages (unused).
+
+## Crash Fixes Applied (2026-05-24)
+
+| Issue | Fix |
+|---|---|
+| Offline drive boot-loop | `project/project.ts` — `Effect.orDie` → `Effect.catch` for sandbox path checks |
+| Corrupted database crash | `db.bun.ts` + `db.node.ts` — try/catch with `.corrupted` quarantine + fresh DB |
+| Migration loading crash | `db.ts` — try/catch around `readdirSync`/`readFileSync` for migration files |
+| Desktop build Vite SSR bug | `todo.ts` — simplified `extractPatterns()` to avoid byte-position corruption in CJS wrapper |
