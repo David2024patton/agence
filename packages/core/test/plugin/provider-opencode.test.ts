@@ -4,20 +4,20 @@ import { Catalog } from "@agence-ai/core/catalog"
 import { Location } from "@agence-ai/core/location"
 import { ModelV2 } from "@agence-ai/core/model"
 import { PluginV2 } from "@agence-ai/core/plugin"
-import { OpencodePlugin } from "@agence-ai/core/plugin/provider/agence"
+import { AgencePlugin } from "@agence-ai/core/plugin/provider/agence"
 import { ProviderV2 } from "@agence-ai/core/provider"
 import { it, model, provider, withEnv } from "./provider-helper"
 
 const cost = (input: number, output = 0) => [{ input, output, cache: { read: 0, write: 0 } }]
 const locationLayer = Layer.succeed(Location.Service, Location.Service.of({ directory: "test" }))
 
-describe("OpencodePlugin", () => {
+describe("AgencePlugin", () => {
   it.effect("uses a public key and disables paid models without credentials", () =>
     withEnv({ AGENCE_API_KEY: undefined }, () =>
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("agence")
@@ -38,7 +38,7 @@ describe("OpencodePlugin", () => {
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("agence")
@@ -59,7 +59,7 @@ describe("OpencodePlugin", () => {
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("agence")
@@ -80,7 +80,7 @@ describe("OpencodePlugin", () => {
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("agence")
@@ -101,7 +101,7 @@ describe("OpencodePlugin", () => {
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("agence", { env: ["CUSTOM_AGENCE_API_KEY"] })
@@ -124,7 +124,7 @@ describe("OpencodePlugin", () => {
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("agence", {
@@ -156,7 +156,7 @@ describe("OpencodePlugin", () => {
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("agence", { enabled: { via: "account", service: "agence" } })
@@ -179,7 +179,7 @@ describe("OpencodePlugin", () => {
       Effect.gen(function* () {
         const plugin = yield* PluginV2.Service
         const catalog = yield* Catalog.Service
-        yield* plugin.add(OpencodePlugin)
+        yield* plugin.add(AgencePlugin)
         const load = yield* catalog.loader()
         yield* load((catalog) => {
           const item = provider("openai")

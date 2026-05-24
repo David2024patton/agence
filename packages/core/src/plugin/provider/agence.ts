@@ -2,7 +2,7 @@ import { Effect } from "effect"
 import { PluginV2 } from "../../plugin"
 import { ProviderV2 } from "../../provider"
 
-export const OpencodePlugin = PluginV2.define({
+export const AgencePlugin = PluginV2.define({
   id: PluginV2.ID.make("agence"),
   effect: Effect.gen(function* () {
     let hasKey = false
