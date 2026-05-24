@@ -58,7 +58,8 @@ async function start(command: StartCommand) {
     useSystemCertificates()
     useEnvProxy()
     const { Database, JsonMigration, Log, Server } = await import("virtual:agence-server")
-    await Log.init({ level: "WARN" })
+    const logLevel = (process.env.AGENCE_LOG_LEVEL || "WARN") as "DEBUG" | "INFO" | "WARN" | "ERROR"
+    await Log.init({ level: logLevel })
 
     if (command.needsMigration) {
       await JsonMigration.run(drizzle({ client: Database.Client().$client }), {
