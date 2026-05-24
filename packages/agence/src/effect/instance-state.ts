@@ -1,3 +1,4 @@
+import { Effect, ScopedCache, Scope } from "effect"
 // InstanceState: Per-project scoped cache with lazy initialization.
 // Each project directory gets its own isolated state via ScopedCache.
 // Requires InstanceRef (provided by middleware per-request or fallback at startup).

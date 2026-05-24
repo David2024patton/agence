@@ -1,3 +1,4 @@
+import * as Log from "@agence-ai/core/util/log"
 // Monitor API handlers: state snapshot + live SSE event stream.
 // Subscribes to the bus to track sessions, commands, and errors in memory.
 // Exports a /monitor/state JSON endpoint and /monitor/events SSE endpoint.

@@ -1,3 +1,4 @@
+import { Schema } from "effect"
 // Monitor API: /monitor/state (JSON snapshot) and /monitor/events (SSE stream).
 // Designed for LLM agents to monitor server health, sessions, commands, and events.
 // Built-in GUI at /monitor route in the desktop app.

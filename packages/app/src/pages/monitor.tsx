@@ -1,3 +1,4 @@
+import { createEffect, createMemo, createSignal, For, Match, onCleanup, Switch } from "solid-js"
 // Monitor GUI page: dashboard showing server health, active sessions,
 // command counts, recent events, and LLM endpoint documentation.
 // Auto-refreshes every 5 seconds. Route: /monitor

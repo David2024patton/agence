@@ -1,3 +1,5 @@
+import { Schema } from "effect"
+
 // Directories config: baseDir for self-contained installs, plus additional
 // watch directories for MCP servers, skills, and custom tools.
 // Configured in opencode.jsonc under the "directories" key.

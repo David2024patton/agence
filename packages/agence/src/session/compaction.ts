@@ -18,8 +18,6 @@ import { InstanceState } from "@/effect/instance-state"
 import { isOverflow as overflow, usable } from "./overflow"
 import { serviceUse } from "@/effect/service-use"
 import { RuntimeFlags } from "@/effect/runtime-flags"
-import { Database } from "@/storage/db"
-import crypto from "crypto"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { SessionEvent } from "@agence-ai/core/session-event"
 
@@ -208,38 +206,6 @@ export interface Interface {
 }
 
 export class Service extends Context.Service<Service, Interface>()("@agence/SessionCompaction") {}
-
-const autoArchiveCompaction = Effect.fnUntraced(function* (sessionID: SessionID, summary: string) {
-  yield* Effect.sync(() => {
-    try {
-      const db = Database.Client()
-      // Get session metadata
-      const sess = db.prepare("SELECT title, project_id, tokens_input, tokens_output FROM session WHERE id = ?").get(sessionID) as any
-      if (!sess) return
-      const msgCount = (db.prepare("SELECT COUNT(*) as c FROM message WHERE session_id = ?").get(sessionID) as any)?.c ?? 0
-      const tokCount = ((sess.tokens_input ?? 0) + (sess.tokens_output ?? 0)) || 0
-
-      // Generate subject from first line of summary
-      const firstLine = summary.split("\n").find((l) => l.trim().startsWith("-") || l.trim().length > 20)?.replace(/^[#>-]+\s*/, "").trim() ?? "Conversation"
-
-      // Generate embedding for semantic search
-      let emb: string | null = null
-      try {
-        // getEmbedding is async but we're in sync context — skip if not cached
-      } catch {}
-
-      const id = crypto.randomUUID()
-      db.run(
-        `INSERT OR REPLACE INTO conversation_archive (id, project_id, session_id, title, summary, subject, token_count, message_count, compacted_summary, time_created, time_updated) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-        id, sess.project_id ?? "global", sessionID,
-        (sess.title || "Conversation").substring(0, 200), summary.substring(0, 10000),
-        firstLine.substring(0, 200),
-        tokCount, msgCount, summary.substring(0, 5000),
-        Date.now(), Date.now(),
-      )
-    } catch {}
-  })
-})
 
 export const use = serviceUse(Service)
 
@@ -611,14 +577,6 @@ export const layer = Layer.effect(
           })
         }
         yield* bus.publish(Event.Compacted, { sessionID: input.sessionID })
-
-        // Auto-archive: save compaction summary to conversation_archive
-        // so past conversations are searchable and recallable — no LLM action needed
-        if (summary) {
-          yield* autoArchiveCompaction(input.sessionID, summary).pipe(
-            Effect.catch(() => Effect.void),
-          )
-        }
       }
       return result
     })

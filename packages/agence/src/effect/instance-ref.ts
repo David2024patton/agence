@@ -1,3 +1,4 @@
+import { Context } from "effect"
 // InstanceRef/WorkspaceRef: Effect context references for project context.
 // InstanceRef carries the current InstanceContext (directory, project, worktree).
 // WorkspaceRef carries the current workspace ID.
