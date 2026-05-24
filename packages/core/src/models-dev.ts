@@ -12,7 +12,7 @@ import { EventV2 } from "./event"
 export const CatalogModelStatus = Schema.Literals(["alpha", "beta", "deprecated"])
 export type CatalogModelStatus = typeof CatalogModelStatus.Type
 
-const USER_AGENT = `opencode/${InstallationChannel}/${InstallationVersion}/${Flag.AGENCE_CLIENT}`
+const USER_AGENT = `agence/${InstallationChannel}/${InstallationVersion}/${Flag.AGENCE_CLIENT}`
 
 const CostTier = Schema.Struct({
   input: Schema.Finite,
@@ -190,7 +190,7 @@ export const layer = Layer.effect(
         }),
       )
       return JSON.parse(text) as Record<string, Provider>
-    }).pipe(Effect.withSpan("ModelsDev.populate"), Effect.orDie)
+    }).pipe(Effect.withSpan("ModelsDev.populate"), Effect.orElseSucceed(() => ({} as Record<string, Provider>)))
 
     const [cachedGet, invalidate] = yield* Effect.cachedInvalidateWithTTL(populate, Duration.infinity)
 
