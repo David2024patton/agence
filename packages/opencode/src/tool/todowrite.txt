@@ -1,30 +1,43 @@
-Create and maintain a structured task list with subtask support for the current session. **ALWAYS use this tool at the start of every task** to break the work down into steps. This is mandatory — every request gets a todo list.
+Create and maintain a structured task list for the current session. **ALWAYS use this tool at the start of every request.** This is mandatory.
+
+## Granularity rules — one task per unit of work
+
+| Type of work | One task per |
+|---|---|
+| **New feature** | Each function, method, or component |
+| **Bug fix** | Each file that needs a change |
+| **Testing** | Each test case or test file |
+| **Refactoring** | Each module or file being refactored |
+| **Investigation** | Each source of information to check |
+| **Documentation** | Each file or section to document |
+
+If you're asked to build something with 3 functions and tests for each, that's 6+ tasks minimum. Every atomic unit of work gets its own task.
 
 ## Task fields
 - `content` (required): Brief task description
 - `description` (optional): Detailed notes, context, or acceptance criteria
 - `status`: pending | in_progress | completed | cancelled
 - `priority`: high | medium | low
-- `parentId` (optional): Set to another task's `id` to make it a subtask. Subtasks nest under their parent in the display.
-- `tags` (optional): Labels like bug, feature, refactor, docs, test
-- `dependsOn` (optional): Task IDs that must be completed before this one
+- `parentId` (optional): Parent task ID for subtasks
+- `tags` (optional): bug, feature, refactor, docs, test, etc.
+- `dependsOn` (optional): Task IDs that must be completed first
 
 ## Mandatory workflow
-1. **On every request** — Create a todo list breaking the work into steps. Always do this first.
-2. **Mark `in_progress`** — Before starting any step, mark it in_progress (exactly one at a time)
-3. **Mark `completed`** — After finishing a step, mark it completed with verification
-4. **Mark `cancelled`** — If a step becomes unnecessary, mark it cancelled
-5. **Subtask complex work** — Any task with multiple sub-steps gets subtasks via parentId
-6. **Reflect after completion** — When all tasks are done, call `reflect` to capture what was learned
+1. **First thing on every request** — Break the work into tasks using the granularity rules above. Always use todowrite first.
+2. **Mark `in_progress`** before starting any task (exactly one at a time)
+3. **Mark `completed`** after finishing a task with verification
+4. **Add new tasks** if you discover more work while executing
+5. **When all tasks are done** → call `reflect` to create a skill from what was learned
 
 ## Examples
-- User says "fix the login bug" → todowrite: ["reproduce the bug", "find root cause", "implement fix", "write test", "verify"]
-- User says "add dark mode" → todowrite: ["design color scheme", "implement CSS variables", "add toggle switch", "test light/dark", "run lint"]
-- User says "what's the weather?" → todowrite: ["check weather for location", "report back"] (always, even for simple tasks)
+- "Add a login API endpoint" → todowrite: ["define POST /login route", "validate email/password", "generate JWT token", "write unit tests", "write integration test"]
+- "Fix the dark mode bug" → todowrite: ["reproduce and log the error", "fix the CSS variable", "fix the JavaScript toggle", "verify light mode still works"]
+- "What's the weather in Tokyo?" → todowrite: ["call weather API for Tokyo", "format and return the result"]
 
 ## Rules
-- Break EVERY request into at least 2 steps. No exceptions.
-- Keep exactly one `in_progress` while work remains
-- Add tags and dependsOn when they help with organization
-- If a step reveals more work, add new steps to the list
-- When all steps are done, call `reflect` to create a skill from the experience
+- Every request gets broken into granular tasks. No exceptions for simple requests.
+- One task per function, per file change, per test case. Not one task for "implement everything".
+- Keep exactly one `in_progress` at a time.
+- Use tags to categorize (bug, feature, test, docs, refactor).
+- Use dependsOn when task order matters.
+- When all done, call `reflect` to save what was learned as a skill.
