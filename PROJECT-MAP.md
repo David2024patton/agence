@@ -234,3 +234,72 @@ Handler processes request → returns response → SDK → renderer updates UI
 | Monitor live feed | `GET http://localhost:<port>/monitor/events` (SSE) |
 | Server stderr | Check desktop logs at `%APPDATA%/ai.agence.desktop.dev/logs/` |
 | Server log file | `~/.local/share/agence/log/dev.log` |
+
+## GitHub Actions / CI
+
+The `.github/workflows/` directory has 26 workflow files. The most important:
+
+| Workflow | Purpose | When it runs |
+|----------|---------|-------------|
+| `agence.yml` | AI agent in PRs — responds to `/agence` or `/oc` comments | On issue/PR comment |
+| `test.yml` | Run all tests and typecheck across packages | On push to dev, PRs |
+| `typecheck.yml` | TypeScript type checking across all packages | On push to dev, PRs |
+| `publish.yml` | Build and publish npm packages + desktop binaries | On tag/release |
+| `beta.yml` | Beta release automation | Scheduled + manual |
+| `review.yml` | AI code review on PRs | On PR |
+| `storybook.yml` | Deploy Storybook to GitHub Pages | On push to dev |
+| `pr-management.yml` | Auto-label and manage PRs | On PR events |
+| `pr-standards.yml` | Enforce PR title/description standards | On PR |
+| `triage.yml` | Auto-triage new issues | On new issue |
+
+## Build Process
+
+```
+1. bun install          # Resolve workspace dependencies
+2. bun dev:desktop      # Start dev (does all below automatically)
+   ├── bun ./scripts/predev.ts       # Copy icons, build node.js
+   │   └── bun run script/build-node.ts  # Bundles agence/src → dist/node/node.js (~20MB)
+   │       ├── Post-build: patches "undefined" string literals (esbuild SSR bug)
+   │       └── Inlines 23 migration files for embedded DB init
+   ├── electron-vite dev             # Builds Electron main + preload + renderer
+   │   ├── out/main/sidecar.js       # Sidecar process script (~4KB)
+   │   ├── out/main/index.js         # Main process (~97KB)
+   │   └── out/main/chunks/node-*.js # Full server bundle (~21MB)
+   └── starts Electron app
+       ├── Spawns sidecar (utilityProcess.fork)
+       │   └── Sidecar imports virtual:agence-server → node-*.js chunk
+       │       └── Server.listen() → HTTP server on localhost
+       └── Opens desktop window → loads renderer from localhost:5173 (vite dev)
+```
+
+## Testing
+
+Tests use Bun's test runner. Each package has its own `test/` directory mirroring `src/`.
+
+| Package | Test Count | How to Run |
+|---------|-----------|-----------|
+| `packages/agence/` | ~200 test files | `cd packages/agence && bun test` |
+| `packages/core/` | ~20 test files | `cd packages/core && bun test` |
+| `packages/llm/` | ~30 test files | `cd packages/llm && bun test` |
+| `packages/app/` | E2E + unit | `cd packages/app && bun test` |
+
+**Key testing notes:**
+- Tests CANNOT run from repo root (guard: `do-not-run-tests-from-root`)
+- CLI tests spawn real agence processes via `test/lib/cli-process.ts`
+- Server tests start real HTTP servers on random ports
+- LLM tests use recorded HTTP fixtures (no real API calls needed)
+- Provider tests use factory-based mocks
+- Effect tests use `test/lib/effect.ts` for runner setup
+
+## Common Rename Pitfalls
+
+When renaming from `opencode` to `agence`, these patterns caused issues:
+
+| Pattern | Why it broke | Fix |
+|---------|-------------|-----|
+| `opencode/` in user-agent strings | Protected by regex because `/` follows | Manual fix needed |
+| `opencode-` in `opencode-${safe}.db` | Protected by regex because `-` follows | DB filename mismatch |
+| `~opencode/InstanceRef` | Protected by regex because `~` precedes | Left as-is (internal ref) |
+| `Effect.tryPromise({try, catch})` | Effect v4 object form requires `catch` in options | Use `Effect.sync` instead |
+| `@opencode-ai/plugin` npm package | Doesn't exist on registry | Keep `@opencode-ai/plugin` for npm install |
+| `export { workspaceID }` accidentally removed | Lost during revert of `safeContext` edit | Restored manually |
