@@ -2,6 +2,7 @@ import { Effect, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
 import { AppFileSystem } from "@agence-ai/core/filesystem"
 import { storeLearning, searchLearnings, recentLearnings, getEmbedding } from "../learning"
+import { Database } from "@/storage/db"
 import path from "path"
 import crypto from "crypto"
 import * as Tool from "./tool"
@@ -156,6 +157,91 @@ export const AgentGroupTool = Tool.define<typeof GroupParameters, { agents: numb
             metadata: { agents: params.agents.length, mode },
             output: lines.join("\n"),
           }
+        }).pipe(Effect.orDie),
+    }
+  }),
+)
+
+// ═══ archive_conversation / search_archives / recall_archive ═════════
+// Auto-archive conversations on compaction for semantic search across sessions
+
+export const ArchiveConversationParams = Schema.Struct({
+  title: Schema.String,
+  subject: Schema.String,
+  summary: Schema.String,
+  tags: Schema.optional(Schema.Array(Schema.String)),
+  token_count: Schema.Number,
+  message_count: Schema.Number,
+})
+
+export const ArchiveConversationTool = Tool.define<typeof ArchiveConversationParams, { id: string }, any>(
+  "archive_conversation",
+  Effect.gen(function* () {
+    return {
+      description: "Archive a completed conversation to the searchable index. Auto-triggered on compaction, callable manually. Stores title, subject, summary, tags, and embedding for semantic search.",
+      parameters: ArchiveConversationParams,
+      execute: (params: typeof ArchiveConversationParams.fields, ctx: Tool.Context) =>
+        Effect.gen(function* () {
+          const i = yield* InstanceState.context
+          const id = crypto.randomUUID()
+          const tags = params.tags ? JSON.stringify(params.tags) : null
+          let emb: string | null = null
+          try { const e = yield* Effect.promise(() => getEmbedding(`${params.subject}: ${params.summary.substring(0, 500)}`)); if (e) emb = JSON.stringify(e) } catch {}
+          const db = yield* Effect.sync(() => Database.Client())
+          db.run(`INSERT INTO conversation_archive (id,project_id,session_id,title,summary,subject,tags,embedding,token_count,message_count,time_created,time_updated) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+            id, i.project.id, ctx.sessionID, params.title, params.summary, params.subject, tags, emb, params.token_count, params.message_count, Date.now(), Date.now())
+          return { title: `Archived: ${params.title}`, metadata: { id }, output: `Archived as "${params.title}" [${id}]` }
+        }).pipe(Effect.orDie),
+    }
+  }),
+)
+
+export const SearchArchivesParams = Schema.Struct({
+  query: Schema.String,
+  limit: Schema.optional(Schema.Number),
+})
+
+export const SearchArchivesTool = Tool.define<typeof SearchArchivesParams, { results: any[] }, any>(
+  "search_archives",
+  Effect.gen(function* () {
+    return {
+      description: "Search archived conversations by semantic similarity or text match on subject/title/summary. Returns ranked results with scores.",
+      parameters: SearchArchivesParams,
+      execute: (params: typeof SearchArchivesParams.fields, _ctx: Tool.Context) =>
+        Effect.gen(function* () {
+          const i = yield* InstanceState.context
+          const lim = params.limit ?? 5
+          let qEmb: number[] | null = null
+          try { qEmb = yield* Effect.promise(() => getEmbedding(params.query)) } catch {}
+          const db = yield* Effect.sync(() => Database.Client())
+          const rows = db.prepare("SELECT * FROM conversation_archive WHERE project_id = ? ORDER BY time_created DESC").all(i.project.id) as any[]
+          const results = rows.map((r: any) => {
+            let s = 0
+            if (qEmb && r.embedding) { try { const e = JSON.parse(r.embedding); let d=0,mA=0,mB=0; for(let j=0;j<Math.min(qEmb!.length,e.length);j++){d+=qEmb![j]*e[j];mA+=qEmb![j]*qEmb![j];mB+=e[j]*e[j]}; s=d/(Math.sqrt(mA)*Math.sqrt(mB)+0.0001) } catch{} }
+            if (s<0.05) { const q=params.query.toLowerCase(); if(r.subject?.toLowerCase().includes(q))s=0.5; if(r.title?.toLowerCase().includes(q))s=Math.max(s,0.4) }
+            return { id:r.id,title:r.title,subject:r.subject,summary:(r.summary??"").substring(0,200),token_count:r.token_count,created:r.time_created,score:s }
+          }).filter((x:any)=>x.score>0.05).sort((a:any,b:any)=>b.score-a.score).slice(0,lim)
+          return { title: `Archives for "${params.query}"`, metadata: { results: results.length }, output: results.length ? results.map((r:any,i:number)=>`${i+1}. **${r.title}** [${r.id}] — ${r.subject} (${r.token_count.toLocaleString()} tokens)\n   ${r.summary.substring(0,150)}`).join("\n\n") : "No matches found." }
+        }).pipe(Effect.orDie),
+    }
+  }),
+)
+
+export const RecallArchiveParams = Schema.Struct({ id: Schema.String })
+
+export const RecallArchiveTool = Tool.define<typeof RecallArchiveParams, { archive: any }, any>(
+  "recall_archive",
+  Effect.gen(function* () {
+    return {
+      description: "Recall an archived conversation by ID. Returns full structured summary for context injection.",
+      parameters: RecallArchiveParams,
+      execute: (params: typeof RecallArchiveParams.fields, _ctx: Tool.Context) =>
+        Effect.gen(function* () {
+          const db = yield* Effect.sync(() => Database.Client())
+          const row = db.prepare("SELECT * FROM conversation_archive WHERE id = ?").get(params.id) as any
+          if (!row) return { title: "Not found", metadata: { archive: null }, output: `No archive found with ID ${params.id}` }
+          const a = { id:row.id, title:row.title, subject:row.subject, summary:row.summary, tags:row.tags?JSON.parse(row.tags):[], tokenCount:row.token_count, created:new Date(row.time_created).toISOString() }
+          return { title: `Recalled: ${a.title}`, metadata: { archive: a }, output: `## Recalled: ${a.title}\n**Subject:** ${a.subject} | **Tokens:** ${a.tokenCount.toLocaleString()} | **Created:** ${a.created}\n\n${a.summary}` }
         }).pipe(Effect.orDie),
     }
   }),

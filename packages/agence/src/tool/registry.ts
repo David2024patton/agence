@@ -12,7 +12,7 @@ import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool
 import { ImageDescribeTool } from "./image_describe"
 import { OpenClawGatewayTool } from "./openclaw_gateway"
 import { PluginMarketplaceTool, PluginInstallTool } from "./plugin_marketplace"
-import { MemoryAddTool, MemoryRecallTool, AgentGroupTool } from "./agent"
+import { MemoryAddTool, MemoryRecallTool, AgentGroupTool, ArchiveConversationTool, SearchArchivesTool, RecallArchiveTool } from "./agent"
 import {
   BrowserInspectTool,
   BrowserTutorialTool,
@@ -163,6 +163,9 @@ export const layer: Layer.Layer<
     const memoryAdd = yield* MemoryAddTool
     const memoryRecall = yield* MemoryRecallTool
     const agentGroup = yield* AgentGroupTool
+    const archiveConversation = yield* ArchiveConversationTool
+    const searchArchives = yield* SearchArchivesTool
+    const recallArchive = yield* RecallArchiveTool
     const imageDescribe = yield* ImageDescribeTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
@@ -307,6 +310,9 @@ export const layer: Layer.Layer<
           memory_add: Tool.init(memoryAdd),
           memory_recall: Tool.init(memoryRecall),
           agent_group: Tool.init(agentGroup),
+          archive_conversation: Tool.init(archiveConversation),
+          search_archives: Tool.init(searchArchives),
+          recall_archive: Tool.init(recallArchive),
           image_describe: Tool.init(imageDescribe),
           search: Tool.init(websearch),
           repo_clone: Tool.init(repoClone),
