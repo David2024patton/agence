@@ -513,7 +513,10 @@ export const layer = Layer.effect(
 
     const loadInstanceState = Effect.fn("Config.loadInstanceState")(
       function* (ctx: InstanceContext) {
-        const auth = yield* authSvc.all().pipe(Effect.orDie)
+        const auth = yield* authSvc.all().pipe(
+          Effect.tapError((e) => Effect.sync(() => console.error("authSvc.all error:", e))),
+          Effect.orDie,
+        )
 
         let result: Info = {}
         const authEnv: Record<string, string> = {}
@@ -639,7 +642,7 @@ export const layer = Layer.effect(
             .install(dir, {
               add: [
                 {
-                  name: "@agence-ai/plugin",
+                  name: "@opencode-ai/plugin",
                   version: InstallationLocal ? undefined : InstallationVersion,
                 },
               ],
