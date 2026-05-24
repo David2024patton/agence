@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, type JSX } from "solid-js"
+import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Tabs } from "@agence-ai/ui/tabs"
@@ -14,7 +14,7 @@ import { useDialog } from "@agence-ai/ui/context/dialog"
 
 import FileTree from "@/components/file-tree"
 import { SessionContextUsage } from "@/components/session-context-usage"
-import { SessionContextTab, SortableTab, FileVisual } from "@/components/session"
+import { SessionContextTab, SortableTab, FileVisual, MemoryPanel } from "@/components/session"
 import { useCommand } from "@/context/command"
 import { useFile, type SelectedLineRange } from "@/context/file"
 import { useLanguage } from "@/context/language"
@@ -145,8 +145,13 @@ export function SessionSidePanel(props: {
     hasReview: props.canReview,
   })
   const contextOpen = tabState.contextOpen
+  const [memoryOpen, setMemoryOpen] = createSignal(false)
   const openedTabs = tabState.openedTabs
-  const activeTab = tabState.activeTab
+  const activeTabInternal = tabState.activeTab
+  const activeTab = createMemo(() => {
+    if (memoryOpen() && tabs().active() === "memory") return "memory"
+    return activeTabInternal()
+  })
   const activeFileTab = tabState.activeFileTab
 
   const fileTreeTab = () => layout.fileTree.tab()
@@ -258,7 +263,45 @@ export function SessionSidePanel(props: {
                             </div>
                           </Tabs.Trigger>
                         </Show>
-                        <Show when={contextOpen()}>
+                        <Show when={memoryOpen() || contextOpen()}>
+                          <Show when={memoryOpen()}>
+                            <Tabs.Trigger
+                              value="memory"
+                              closeButton={
+                                <TooltipKeybind
+                                  title={language.t("common.closeTab")}
+                                  keybind={command.keybind("tab.close")}
+                                  placement="bottom"
+                                  gutter={10}
+                                >
+                                  <IconButton
+                                    icon="close-small"
+                                    variant="ghost"
+                                    class="h-5 w-5"
+                                    onClick={() => setMemoryOpen(false)}
+                                    aria-label={language.t("common.closeTab")}
+                                  />
+                                </TooltipKeybind>
+                              }
+                              hideCloseButton
+                            >
+                              <div class="flex items-center gap-2">
+                                <Icon name="archive" class="size-3.5" />
+                                <div>Memory</div>
+                              </div>
+                            </Tabs.Trigger>
+                          </Show>
+                    <Show when={memoryOpen()}>
+                      <Tabs.Content value="memory" class="flex flex-col h-full overflow-hidden contain-strict">
+                        <Show when={activeTab() === "memory"}>
+                          <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
+                            <MemoryPanel />
+                          </div>
+                        </Show>
+                      </Tabs.Content>
+                    </Show>
+
+                    <Show when={contextOpen()}>
                           <Tabs.Trigger
                             value="context"
                             closeButton={
@@ -289,7 +332,19 @@ export function SessionSidePanel(props: {
                         <SortableProvider ids={openedTabs()}>
                           <For each={openedTabs()}>{(tab) => <SortableTab tab={tab} onTabClose={tabs().close} />}</For>
                         </SortableProvider>
-                        <div class="bg-background-stronger h-full shrink-0 sticky right-0 z-10 flex items-center justify-center pr-3">
+                        <div class="bg-background-stronger h-full shrink-0 sticky right-0 z-10 flex items-center justify-center pr-0">
+                          <Show when={!memoryOpen()}>
+                            <TooltipKeybind title="Memory" class="flex items-center">
+                              <IconButton
+                                icon="archive"
+                                variant="ghost"
+                                iconSize="small"
+                                class="!rounded-md"
+                                onClick={() => setMemoryOpen(true)}
+                                aria-label="Memory"
+                              />
+                            </TooltipKeybind>
+                          </Show>
                           <TooltipKeybind
                             title={language.t("command.file.open")}
                             keybind={command.keybind("file.open")}
