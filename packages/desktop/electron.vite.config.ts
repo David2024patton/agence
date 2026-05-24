@@ -3,10 +3,10 @@ import { defineConfig } from "electron-vite"
 import appPlugin from "@agence-ai/app/vite"
 import * as fs from "node:fs/promises"
 
-const AGENCE_SERVER_DIST = "../opencode/dist/node"
+const AGENCE_SERVER_DIST = "../agence/dist/node"
 
 const channel = (() => {
-  const raw = process.env.AGENCE_CHANNEL ?? process.env.AGENCE_CHANNEL
+  const raw = process.env.AGENCE_CHANNEL ?? process.env.OPENCODE_CHANNEL
   if (raw === "dev" || raw === "beta" || raw === "prod") return raw
   if (process.env.AGENCE_CHANNEL === "latest") return "prod"
   return "dev"
@@ -34,7 +34,6 @@ const sentry =
 export default defineConfig({
   main: {
     define: {
-      "import.meta.env.AGENCE_CHANNEL": JSON.stringify(channel),
       "import.meta.env.AGENCE_CHANNEL": JSON.stringify(channel),
     },
     build: {
