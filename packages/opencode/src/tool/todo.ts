@@ -375,17 +375,8 @@ export const QualityGateTool = Tool.define<typeof QGateParameters, { check: stri
 function extractPatterns(errors: string, details: string): string[] {
   const patterns: string[] = []
   if (details) patterns.push(details)
-
-  if (errors.includes("TS") && errors.includes("error")) patterns.push("TypeScript compilation error detected")
-  if (errors.includes("Cannot find module") || errors.includes("Module not found")) patterns.push("Missing module import")
-  if (errors.includes("not assignable to type") || errors.includes("is not assignable")) patterns.push("Type mismatch - check interface alignment")
-  if (errors.includes("null") || errors.includes("is not defined")) patterns.push("Null or missing value - check initialization")
-  if (errors.includes("deprecated") || errors.includes("removed")) patterns.push("Using deprecated API - check for newer alternative")
-  if (errors.includes("timeout") || errors.includes("ETIMEDOUT") || errors.includes("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
-  if (errors.includes("test") && errors.includes("fail")) patterns.push("Test failure - check test expectations and implementation")
-  if (errors.includes("lint") || errors.includes("ESLint") || errors.includes("unused")) patterns.push("Code style/lint violation - check coding standards")
-
-  return patterns.length > 0 ? patterns : ["Error detected - review the output for specific patterns"]
+  if (errors.length > 0) patterns.push("Error detected - review the output for specific patterns")
+  return patterns
 }
 
 export { WriteParameters as Parameters }
