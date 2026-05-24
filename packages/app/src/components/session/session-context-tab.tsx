@@ -1,6 +1,9 @@
 import { createMemo, createEffect, on, onCleanup, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
+import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
+import { useLayout } from "@/context/layout"
+import { A } from "@solidjs/router"
 import { checksum } from "@agence-ai/core/util/encode"
 import { findLast } from "@agence-ai/core/util/array"
 import { same } from "@/utils/same"
@@ -281,9 +284,19 @@ export function SessionContextTab() {
           <For each={stats}>
             {(stat) => <Stat label={language.t(stat.label as Parameters<typeof language.t>[0])} value={stat.value()} />}
           </For>
-        </div>
+          </div>
 
-        <Show when={breakdown().length > 0}>
+          <div class="flex gap-2 pt-2">
+            <A
+              href="/monitor"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-raised-base hover:bg-surface-raised-base-hover rounded-md text-12-medium text-text-weak transition-colors"
+            >
+              <Icon name="dashboard" size="small" />
+              Monitor
+            </A>
+          </div>
+
+          <Show when={breakdown().length > 0}>
           <div class="flex flex-col gap-2">
             <div class="text-12-regular text-text-weak">{language.t("context.breakdown.title")}</div>
             <div class="h-2 w-full rounded-full bg-surface-base overflow-hidden flex">
