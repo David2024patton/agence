@@ -268,7 +268,7 @@ export const layer = Layer.effect(
         result.sandboxes,
         (s) =>
           fs.exists(s).pipe(
-            Effect.orDie,
+            Effect.catch(() => Effect.succeed(false)),
             Effect.map((exists) => (exists ? s : undefined)),
           ),
         { concurrency: "unbounded" },

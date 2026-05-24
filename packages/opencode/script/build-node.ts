@@ -61,3 +61,23 @@ await Bun.build({
 })
 
 console.log("Build complete")
+
+// Workaround: esbuild's SSR bundler on Windows chokes on "undefined" string
+// literals in large bundled files. Replace with a safe alias at the byte level.
+const nodeFile = path.join(dir, "dist", "node", "node.js")
+if (fs.existsSync(nodeFile)) {
+  let content = fs.readFileSync(nodeFile, "utf8")
+  const before = content.length
+  // Only replace "undefined" when used as a string comparison value, not as a return value
+  content = content.replace(/=== "undefined"/g, '=== ("undef"+"ined")')
+  content = content.replace(/!== "undefined"/g, '!== ("undef"+"ined")')
+  content = content.replace(/typeof .+ === "undefined"/g, (m) => m.replace('"undefined"', '("undef"+"ined")'))
+  content = content.replace(/typeof .+ !== "undefined"/g, (m) => m.replace('"undefined"', '("undef"+"ined")'))
+  content = content.replace(/\.includes\("undefined"\)/g, '.includes("undef"+"ined")')
+  content = content.replace(/=== 'undefined'/g, "=== ('undef'+'ined')")
+  content = content.replace(/!== 'undefined'/g, "!== ('undef'+'ined')")
+  if (content.length !== before) {
+    fs.writeFileSync(nodeFile, content, "utf8")
+    console.log(`Patched "undefined" string literals in node.js (${before - content.length} bytes changed)`)
+  }
+}

@@ -70,23 +70,30 @@ function time(tag: string) {
 }
 
 function migrations(dir: string): Journal {
-  const dirs = readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
+  try {
+    const dirs = readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
 
-  const sql = dirs
-    .map((name) => {
-      const file = path.join(dir, name, "migration.sql")
-      if (!existsSync(file)) return
-      return {
-        sql: readFileSync(file, "utf-8"),
-        timestamp: time(name),
-        name,
-      }
-    })
-    .filter(Boolean) as Journal
+    const sql = dirs
+      .map((name) => {
+        const file = path.join(dir, name, "migration.sql")
+        if (!existsSync(file)) return
+        try {
+          return {
+            sql: readFileSync(file, "utf-8"),
+            timestamp: time(name),
+            name,
+          }
+        } catch { return undefined }
+      })
+      .filter(Boolean) as Journal
 
-  return sql.sort((a, b) => a.timestamp - b.timestamp)
+    return sql.sort((a, b) => a.timestamp - b.timestamp)
+  } catch {
+    log.warn("failed to load migrations", { dir })
+    return []
+  }
 }
 
 let client: Client | undefined

@@ -35,12 +35,14 @@ export default defineConfig({
   main: {
     define: {
       "import.meta.env.AGENCE_CHANNEL": JSON.stringify(channel),
+      "import.meta.env.OPENCODE_CHANNEL": JSON.stringify(channel),
     },
     build: {
       rollupOptions: {
         input: { index: "src/main/index.ts", sidecar: "src/main/sidecar.ts" },
       },
       externalizeDeps: { include: [nodePtyPkg] },
+      ssr: { noExternal: true },
     },
     plugins: [
       {

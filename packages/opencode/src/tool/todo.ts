@@ -375,17 +375,15 @@ export const QualityGateTool = Tool.define<typeof QGateParameters, { check: stri
 function extractPatterns(errors: string, details: string): string[] {
   const patterns: string[] = []
   if (details) patterns.push(details)
-  const e = errors
-  const has = (s: string) => e.includes(s)
 
-  if (has("TS") && has("error")) patterns.push("TypeScript compilation error detected")
-  if (has("Cannot find module") || has("Module not found")) patterns.push("Missing module import")
-  if (has("not assignable to type") || has("is not assignable")) patterns.push("Type mismatch - check interface alignment")
-  if (has("null") && has("initialize")) patterns.push("Null or missing value - check initialization")
-  if (has("deprecated") || has("removed")) patterns.push("Using deprecated API - check for newer alternative")
-  if (has("timeout") || has("ETIMEDOUT") || has("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
-  if (has("test") && has("fail")) patterns.push("Test failure - check test expectations and implementation")
-  if (has("lint") || has("ESLint") || has("unused")) patterns.push("Code style/lint violation - check coding standards")
+  if (errors.includes("TS") && errors.includes("error")) patterns.push("TypeScript compilation error detected")
+  if (errors.includes("Cannot find module") || errors.includes("Module not found")) patterns.push("Missing module import")
+  if (errors.includes("not assignable to type") || errors.includes("is not assignable")) patterns.push("Type mismatch - check interface alignment")
+  if (errors.includes("null") || errors.includes("is not defined")) patterns.push("Null or missing value - check initialization")
+  if (errors.includes("deprecated") || errors.includes("removed")) patterns.push("Using deprecated API - check for newer alternative")
+  if (errors.includes("timeout") || errors.includes("ETIMEDOUT") || errors.includes("ECONNREFUSED")) patterns.push("Network/connection issue - check service availability")
+  if (errors.includes("test") && errors.includes("fail")) patterns.push("Test failure - check test expectations and implementation")
+  if (errors.includes("lint") || errors.includes("ESLint") || errors.includes("unused")) patterns.push("Code style/lint violation - check coding standards")
 
   return patterns.length > 0 ? patterns : ["Error detected - review the output for specific patterns"]
 }
