@@ -62,6 +62,9 @@ await Bun.build({
 
 console.log("Build complete")
 
+// Ensure ESM module type so Vite doesn't try to CJS-wrap the file
+fs.writeFileSync(path.join(dir, "dist", "node", "package.json"), '{"type":"module"}\n')
+
 // Workaround: esbuild's SSR bundler on Windows chokes on "undefined" string
 // literals in large bundled files. Replace with a safe alias at the byte level.
 const nodeFile = path.join(dir, "dist", "node", "node.js")

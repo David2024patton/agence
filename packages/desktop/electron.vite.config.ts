@@ -42,7 +42,6 @@ export default defineConfig({
         input: { index: "src/main/index.ts", sidecar: "src/main/sidecar.ts" },
       },
       externalizeDeps: { include: [nodePtyPkg] },
-      ssr: { noExternal: true },
     },
     plugins: [
       {
