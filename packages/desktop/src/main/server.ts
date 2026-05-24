@@ -157,6 +157,7 @@ export async function spawnLocalServer(
         return
       }
       if (message.type === "error") {
+        options.onStderr?.(`sidecar error: ${message.error.message}\n${message.error.stack ?? ""}`)
         fail(Object.assign(new Error(message.error.message), { stack: message.error.stack }))
       }
     }

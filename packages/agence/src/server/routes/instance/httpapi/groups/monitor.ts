@@ -72,4 +72,4 @@ export const MonitorApi = HttpApi.make("monitor").add(
     .annotateMerge(OpenApi.annotations({ title: "monitor", description: "Server monitoring routes." })),
 )
 
-export * as MonitorApi from "./monitor"
+
