@@ -1,5 +1,20 @@
-Load a specialized skill when the task at hand matches one of the skills listed in the system prompt.
+Load a specialized skill to get domain-specific instructions and workflows. **Always check which skills are available first** — don't guess skill names.
 
-Use this tool to inject the skill's instructions and resources into current conversation. The output may contain detailed workflow guidance as well as references to scripts, files, etc in the same directory as the skill.
+## How to use
+1. Check the "Available skills" list in the system prompt output
+2. Only call this tool with a name from that list
+3. If you're unsure what skills exist, look at the skill descriptions in the available list
+4. Never guess or invent skill names — only use names from the available list
 
-The skill name must match one of the skills listed in your system prompt.
+The skill will inject detailed instructions, workflows, and access to bundled resources (scripts, references, templates) into the conversation context.
+
+Tool output includes a `<skill_content name="...">` block with the loaded content.
+
+## When to use
+- A task description matches a skill's purpose
+- The user asks you to load a specific skill
+- You need expert guidance on a specific domain
+
+## When NOT to use
+- Don't guess skill names — check the available list first
+- Don't call this with made-up names expecting them to exist
