@@ -3,6 +3,8 @@ import "./init-projectors"
 import { NodeHttpServer } from "@effect/platform-node"
 import * as Log from "@agence-ai/core/util/log"
 import { ConfigProvider, Context, Effect, Exit, Layer, Scope } from "effect"
+import type { InstanceContext } from "@/project/instance-context"
+import { InstanceRef, WorkspaceRef } from "@/effect/instance-ref"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { OpenApi } from "effect/unstable/httpapi"
 import { createServer } from "node:http"
@@ -101,6 +103,12 @@ const listenEffect: (opts: ListenOptions) => Effect.Effect<EffectListener, unkno
 )
 
 function listenerLayer(opts: ListenOptions, port: number) {
+  const fallbackCtx: InstanceContext = {
+    directory: process.cwd(),
+    project: { id: "server" } as any,
+    vcs: undefined as any,
+    id: "server" as any,
+  }
   return HttpRouter.serve(HttpApiApp.createRoutes(opts), {
     middleware: disposeMiddleware,
     disableLogger: true,
@@ -108,11 +116,8 @@ function listenerLayer(opts: ListenOptions, port: number) {
   }).pipe(
     Layer.provideMerge(WebSocketTracker.layer),
     Layer.provideMerge(serverLayer({ port, hostname: opts.hostname })),
-    // Install a fresh `ConfigProvider` per listener so `Config.string(...)`
-    // reads reflect the current `process.env`. Effect's default
-    // `ConfigProvider` snapshots `process.env` on first read and caches the
-    // result on a module-singleton Reference; without overriding it here,
-    // every later `Server.listen()` keeps observing that initial snapshot.
+    Layer.provideMerge(Layer.succeed(InstanceRef)(fallbackCtx)),
+    Layer.provideMerge(Layer.succeed(WorkspaceRef)(undefined)),
     Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv())),
   )
 }

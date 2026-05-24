@@ -772,7 +772,8 @@ export const layer = Layer.effect(
               }
               return entries
             },
-          }).pipe(Effect.catch(() => Effect.succeed([] as Array<{ name: string; config: unknown }>)))
+            catch: () => [] as Array<{ name: string; config: unknown }>,
+          })
           for (const { name, config } of mcpEntries) {
             result.mcp = result.mcp ?? {}
             ;(result.mcp as Record<string, unknown>)[name] = config

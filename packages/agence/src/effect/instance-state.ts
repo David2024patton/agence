@@ -14,15 +14,11 @@ export interface InstanceState<A, E = never, R = never> {
 
 export const context = Effect.gen(function* () {
   const ctx = yield* InstanceRef
-  if (!ctx) return undefined
+  if (!ctx) return yield* Effect.die(new Error("InstanceRef not provided"))
   return ctx
 })
 
-export const workspaceID = Effect.gen(function* () {
-  return (yield* WorkspaceRef) ?? WorkspaceContext.workspaceID
-})
-
-export const directory = Effect.map(context, (ctx) => ctx?.directory ?? "")
+export const directory = Effect.map(context, (ctx) => ctx.directory)
 
 export const make = <A, E = never, R = never>(
   init: (ctx: InstanceContext) => Effect.Effect<A, E, R | Scope.Scope>,
