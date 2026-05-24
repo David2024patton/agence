@@ -10,6 +10,7 @@ import { FileApi } from "./groups/file"
 import { GlobalApi } from "./groups/global"
 import { InstanceApi } from "./groups/instance"
 import { McpApi } from "./groups/mcp"
+import { MonitorApi } from "./groups/monitor"
 import { PermissionApi } from "./groups/permission"
 import { ProjectApi } from "./groups/project"
 import { ProviderApi } from "./groups/provider"
@@ -39,6 +40,7 @@ export const InstanceHttpApi = HttpApi.make("agence-instance")
   .addHttpApi(FileApi)
   .addHttpApi(InstanceApi)
   .addHttpApi(McpApi)
+  .addHttpApi(MonitorApi)
   .addHttpApi(ProjectApi)
   .addHttpApi(PtyApi)
   .addHttpApi(QuestionApi)
