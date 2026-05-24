@@ -739,6 +739,51 @@ export const layer = Layer.effect(
           )
         }
 
+        // Load MCP configs from self-contained and additional directories
+        const mcpScanDirs: string[] = []
+        if (result.directories?.baseDir) {
+          const d = result.directories.baseDir
+          const base = d.startsWith("~/") ? path.join(os.homedir(), d.slice(2)) : d
+          mcpScanDirs.push(path.join(path.isAbsolute(base) ? base : path.join(ctx.directory, base), "mcp"))
+        }
+        const exeDir = path.dirname(process.execPath)
+        if (exeDir !== "/" && exeDir !== ".") {
+          mcpScanDirs.push(path.join(exeDir, "mcp"))
+        }
+        for (const item of result.directories?.mcp ?? []) {
+          const expanded = item.startsWith("~/") ? path.join(os.homedir(), item.slice(2)) : item
+          mcpScanDirs.push(path.isAbsolute(expanded) ? expanded : path.join(ctx.directory, expanded))
+        }
+        for (const dir of mcpScanDirs) {
+          const entries = yield* Effect.sync(() => {
+            try {
+              const files = fsNode.readdirSync(dir)
+              const result: Array<{ name: string; config: unknown }> = []
+              for (const file of files) {
+                if (!file.endsWith(".json") && !file.endsWith(".jsonc")) continue
+                const source = path.join(dir, file)
+                const name = file.replace(/\.jsonc?$/, "")
+                try {
+                  const content = fsNode.readFileSync(source, "utf-8")
+                  const parsed = JSON.parse(content)
+                  if (parsed.type && (parsed.command || parsed.url)) {
+                    result.push({ name, config: parsed })
+                  }
+                } catch {
+                  // Skip malformed files
+                }
+              }
+              return result
+            } catch {
+              return [] as Array<{ name: string; config: unknown }>
+            }
+          })
+          for (const { name, config } of entries) {
+            result.mcp = result.mcp ?? {}
+            ;(result.mcp as Record<string, unknown>)[name] = config
+          }
+        }
+
         for (const [name, mode] of Object.entries(result.mode ?? {})) {
           result.agent = mergeDeep(result.agent ?? {}, {
             [name]: {
