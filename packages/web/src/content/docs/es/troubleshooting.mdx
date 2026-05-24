@@ -3,7 +3,7 @@ title: Solución de problemas
 description: Problemas comunes y cómo resolverlos.
 ---
 
-Para depurar problemas con OpenCode, comience verificando los registros y los datos locales que almacena en el disco.
+Para depurar problemas con Agence, comience verificando los registros y los datos locales que almacena en el disco.
 
 ---
 
@@ -12,20 +12,20 @@ Para depurar problemas con OpenCode, comience verificando los registros y los da
 Los archivos de registro se escriben en:
 
 - **macOS/Linux**: `~/.local/share/opencode/log/`
-- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.local\share\opencode\log`
+- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.local\share\agence\log`
 
 Los archivos de registro reciben nombres con marcas de tiempo (por ejemplo, `2025-01-09T123456.log`) y se conservan los 10 archivos de registro más recientes.
 
-Puede configurar el nivel de registro con la opción de línea de comandos `--log-level` para obtener información de depuración más detallada. Por ejemplo, `opencode --log-level DEBUG`.
+Puede configurar el nivel de registro con la opción de línea de comandos `--log-level` para obtener información de depuración más detallada. Por ejemplo, `agence --log-level DEBUG`.
 
 ---
 
 ## Almacenamiento
 
-opencode almacena datos de sesión y otros datos de aplicaciones en el disco en:
+agence almacena datos de sesión y otros datos de aplicaciones en el disco en:
 
 - **macOS/Linux**: `~/.local/share/opencode/`
-- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.local\share\opencode`
+- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.local\share\agence`
 
 Este directorio contiene:
 
@@ -39,13 +39,13 @@ Este directorio contiene:
 
 ## Aplicación de escritorio
 
-OpenCode Desktop ejecuta un servidor OpenCode local (el sidecar `opencode-cli`) en segundo plano. La mayoría de los problemas se deben a un complemento que no funciona correctamente, una memoria caché dañada o una mala configuración del servidor.
+Agence Desktop ejecuta un servidor Agence local (el sidecar `opencode-cli`) en segundo plano. La mayoría de los problemas se deben a un complemento que no funciona correctamente, una memoria caché dañada o una mala configuración del servidor.
 
 ### Comprobaciones rápidas
 
 - Salga por completo y reinicie la aplicación.
 - Si la aplicación muestra una pantalla de error, haga clic en **Reiniciar** y copie los detalles del error.
-- Solo macOS: menú `OpenCode` -> **Recargar vista web** (ayuda si la interfaz de usuario está en blanco/congelada).
+- Solo macOS: menú `Agence` -> **Recargar vista web** (ayuda si la interfaz de usuario está en blanco/congelada).
 
 ---
 
@@ -59,24 +59,24 @@ Abra su archivo de configuración global y busque una clave `plugin`.
 
 - **macOS/Linux**: `~/.config/opencode/opencode.jsonc` (o `~/.config/opencode/opencode.json`)
 - **macOS/Linux** (instalaciones anteriores): `~/.local/share/opencode/opencode.jsonc`
-- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.config\opencode\opencode.jsonc`
+- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.config\agence\opencode.jsonc`
 
 Si tiene complementos configurados, desactívelos temporalmente eliminando la clave o configurándola en una matriz vacía:
 
 ```jsonc
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "plugin": [],
 }
 ```
 
 #### Verificar directorios de complementos
 
-OpenCode también puede cargar complementos locales desde el disco. Quítelos temporalmente del camino (o cambie el nombre de la carpeta) y reinicie la aplicación de escritorio:
+Agence también puede cargar complementos locales desde el disco. Quítelos temporalmente del camino (o cambie el nombre de la carpeta) y reinicie la aplicación de escritorio:
 
 - **Complementos globales**
   - **macOS/Linux**: `~/.config/opencode/plugins/`
-  - **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.config\opencode\plugins`
+  - **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.config\agence\plugins`
 - **Complementos de proyecto** (solo si usas la configuración por proyecto)
   - `<your-project>/.opencode/plugins/`
 
@@ -86,22 +86,22 @@ Si la aplicación comienza a funcionar nuevamente, vuelva a habilitar los comple
 
 ### Borrar el caché
 
-Si deshabilitar los complementos no ayuda (o la instalación de un complemento está bloqueada), borre el caché para que OpenCode pueda reconstruirlo.
+Si deshabilitar los complementos no ayuda (o la instalación de un complemento está bloqueada), borre el caché para que Agence pueda reconstruirlo.
 
-1. Salga de OpenCode Desktop por completo.
+1. Salga de Agence Desktop por completo.
 2. Elimine el directorio de caché:
 
-- **macOS**: Buscador -> `Cmd+Shift+G` -> pegar `~/.cache/opencode`
-- **Linux**: eliminar `~/.cache/opencode` (o ejecutar `rm -rf ~/.cache/opencode`)
-- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.cache\opencode`
+- **macOS**: Buscador -> `Cmd+Shift+G` -> pegar `~/.cache/agence`
+- **Linux**: eliminar `~/.cache/agence` (o ejecutar `rm -rf ~/.cache/agence`)
+- **Windows**: Presione `WIN+R` y pegue `%USERPROFILE%\.cache\agence`
 
-3. Reinicie el escritorio OpenCode.
+3. Reinicie el escritorio Agence.
 
 ---
 
 ### Solucionar problemas de conexión del servidor
 
-OpenCode Desktop puede iniciar su propio servidor local (predeterminado) o conectarse a la URL de un servidor que haya configurado.
+Agence Desktop puede iniciar su propio servidor local (predeterminado) o conectarse a la URL de un servidor que haya configurado.
 
 Si ve un cuadro de diálogo **"Error de conexión"** (o la aplicación nunca pasa de la pantalla de inicio), busque una URL de servidor personalizada.
 
@@ -115,9 +115,9 @@ Si su `opencode.json(c)` contiene una sección `server`, elimínela temporalment
 
 #### Verificar variables de entorno
 
-Si tiene `OPENCODE_PORT` configurado en su entorno, la aplicación de escritorio intentará usar ese puerto para el servidor local.
+Si tiene `AGENCE_PORT` configurado en su entorno, la aplicación de escritorio intentará usar ese puerto para el servidor local.
 
-- Desarme `OPENCODE_PORT` (o elija un puerto libre) y reinicie.
+- Desarme `AGENCE_PORT` (o elija un puerto libre) y reinicie.
 
 ---
 
@@ -132,21 +132,21 @@ En Linux, algunas configuraciones de Wayland pueden causar ventanas en blanco o 
 
 ### Windows: tiempo de ejecución de WebView2
 
-En Windows, el escritorio OpenCode requiere Microsoft Edge **WebView2 Runtime**. Si la aplicación se abre en una ventana en blanco o no se inicia, instale/actualice WebView2 e inténtelo nuevamente.
+En Windows, el escritorio Agence requiere Microsoft Edge **WebView2 Runtime**. Si la aplicación se abre en una ventana en blanco o no se inicia, instale/actualice WebView2 e inténtelo nuevamente.
 
 ---
 
 ### Windows: Problemas generales de rendimiento
 
-Si tiene un rendimiento lento, problemas de acceso a archivos o problemas de terminal en Windows, intente usar [WSL (Windows Subsistema para Linux)](/docs/windows-wsl). WSL proporciona un entorno Linux que funciona de manera más fluida con las funciones de OpenCode.
+Si tiene un rendimiento lento, problemas de acceso a archivos o problemas de terminal en Windows, intente usar [WSL (Windows Subsistema para Linux)](/docs/windows-wsl). WSL proporciona un entorno Linux que funciona de manera más fluida con las funciones de Agence.
 
 ---
 
 ### Notificaciones que no se muestran
 
-OpenCode Desktop solo muestra notificaciones del sistema cuando:
+Agence Desktop solo muestra notificaciones del sistema cuando:
 
-- las notificaciones están habilitadas para OpenCode en la configuración de su sistema operativo, y
+- las notificaciones están habilitadas para Agence en la configuración de su sistema operativo, y
 - la ventana de la aplicación no está enfocada.
 
 ---
@@ -155,11 +155,11 @@ OpenCode Desktop solo muestra notificaciones del sistema cuando:
 
 Si la aplicación no se inicia y no puede borrar la configuración desde la interfaz de usuario, restablezca el estado guardado de la aplicación de escritorio.
 
-1. Salga del escritorio OpenCode.
-2. Busque y elimine estos archivos (se encuentran en el directorio de datos de la aplicación de escritorio OpenCode):
+1. Salga del escritorio Agence.
+2. Busque y elimine estos archivos (se encuentran en el directorio de datos de la aplicación de escritorio Agence):
 
-- `opencode.settings.dat` (URL del servidor predeterminado de escritorio)
-- `opencode.global.dat` y `opencode.workspace.*.dat` (estado de la interfaz de usuario como servidores/proyectos recientes)
+- `agence.settings.dat` (URL del servidor predeterminado de escritorio)
+- `agence.global.dat` y `agence.workspace.*.dat` (estado de la interfaz de usuario como servidores/proyectos recientes)
 
 Para encontrar el directorio rápidamente:
 
@@ -171,7 +171,7 @@ Para encontrar el directorio rápidamente:
 
 ## Obtener ayuda
 
-Si tiene problemas con OpenCode:
+Si tiene problemas con Agence:
 
 1. **Informar problemas el GitHub**
 
@@ -185,7 +185,7 @@ Si tiene problemas con OpenCode:
 
    Para obtener ayuda en tiempo real y debates comunitarios, únase a nuestro servidor de Discord:
 
-   [**opencode.ai/discord**](https://opencode.ai/discord)
+   [**agence.ai/discord**](https://github.com/David2024patton/agence/discord)
 
 ---
 
@@ -195,11 +195,11 @@ A continuación se detallan algunos problemas comunes y cómo resolverlos.
 
 ---
 
-### OpenCode no se inicia
+### Agence no se inicia
 
 1. Verifique los registros en busca de mensajes de error.
 2. Intente ejecutar con `--print-logs` para ver el resultado en la terminal.
-3. Asegúrese de tener la última versión con `opencode upgrade`
+3. Asegúrese de tener la última versión con `agence upgrade`
 
 ---
 
@@ -227,7 +227,7 @@ Ejemplos:
 - `openrouter/google/gemini-2.5-flash`
 - `opencode/kimi-k2`
 
-Para saber a qué modelos tiene acceso, ejecute `opencode models`
+Para saber a qué modelos tiene acceso, ejecute `agence models`
 
 ---
 
@@ -241,10 +241,10 @@ Para resolver esto:
 2. Si el problema persiste, intente borrar la configuración almacenada:
 
    ```bash
-   rm -rf ~/.local/share/opencode
+   rm -rf ~/.local/share/agence
    ```
 
-   En Windows, presione `WIN+R` y elimine: `%USERPROFILE%\.local\share\opencode`
+   En Windows, presione `WIN+R` y elimine: `%USERPROFILE%\.local\share\agence`
 
 3. Vuelva a autenticarse con su proveedor utilizando el comando `/connect` en TUI.
 
@@ -252,21 +252,21 @@ Para resolver esto:
 
 ### AI_APICallError y problemas con el paquete del proveedor
 
-Si encuentra errores de llamada API, esto puede deberse a paquetes de proveedores obsoletos. opencode instala dinámicamente paquetes de proveedores (OpenAI, Anthropic, Google, etc.) según sea necesario y los almacena en caché localmente.
+Si encuentra errores de llamada API, esto puede deberse a paquetes de proveedores obsoletos. agence instala dinámicamente paquetes de proveedores (OpenAI, Anthropic, Google, etc.) según sea necesario y los almacena en caché localmente.
 
 Para resolver problemas con el paquete del proveedor:
 
 1. Borre la caché del paquete del proveedor:
 
    ```bash
-   rm -rf ~/.cache/opencode
+   rm -rf ~/.cache/agence
    ```
 
-   En Windows, presione `WIN+R` y elimine: `%USERPROFILE%\.cache\opencode`
+   En Windows, presione `WIN+R` y elimine: `%USERPROFILE%\.cache\agence`
 
-2. Reinicie opencode para reinstalar los paquetes del proveedor más recientes.
+2. Reinicie agence para reinstalar los paquetes del proveedor más recientes.
 
-Esto obligará a opencode a descargar las versiones más recientes de los paquetes del proveedor, lo que a menudo resuelve problemas de compatibilidad con los parámetros del modelo y los cambios de API.
+Esto obligará a agence a descargar las versiones más recientes de los paquetes del proveedor, lo que a menudo resuelve problemas de compatibilidad con los parámetros del modelo y los cambios de API.
 
 ---
 
@@ -297,4 +297,4 @@ Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 export DISPLAY=:99.0
 ```
 
-opencode detectará si estás usando Wayland y prefieres `wl-clipboard`; de lo contrario, intentará encontrar herramientas del portapapeles en el orden de: `xclip` y `xsel`.
+agence detectará si estás usando Wayland y prefieres `wl-clipboard`; de lo contrario, intentará encontrar herramientas del portapapeles en el orden de: `xclip` y `xsel`.

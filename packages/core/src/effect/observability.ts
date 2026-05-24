@@ -45,9 +45,9 @@ export function resource(): { serviceName: string; serviceVersion: string; attri
     attributes: {
       ...attributes,
       "deployment.environment.name": InstallationChannel,
-      "agence.client": Flag.OPENCODE_CLIENT,
+      "agence.client": Flag.AGENCE_CLIENT,
       "agence.process_role": processMetadata.processRole,
-      "opencode.run_id": processMetadata.runID,
+      "agence.run_id": processMetadata.runID,
       "service.instance.id": processID,
     },
   }

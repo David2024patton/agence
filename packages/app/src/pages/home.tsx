@@ -1,21 +1,21 @@
-import type { Session } from "@opencode-ai/sdk/v2/client"
+import type { Session } from "@agence-ai/sdk/v2/client"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useQuery } from "@tanstack/solid-query"
-import { Button } from "@opencode-ai/ui/button"
-import { Logo } from "@opencode-ai/ui/logo"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { Avatar as AvatarV2 } from "@opencode-ai/ui/v2/components/avatar-v2.jsx"
-import { ButtonV2 } from "@opencode-ai/ui/v2/components/button-v2.jsx"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/components/icon.jsx"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/components/icon-button-v2.jsx"
+import { Button } from "@agence-ai/ui/button"
+import { Logo } from "@agence-ai/ui/logo"
+import { Spinner } from "@agence-ai/ui/spinner"
+import { Avatar as AvatarV2 } from "@agence-ai/ui/v2/components/avatar-v2.jsx"
+import { ButtonV2 } from "@agence-ai/ui/v2/components/button-v2.jsx"
+import { Icon as IconV2 } from "@agence-ai/ui/v2/components/icon.jsx"
+import { IconButtonV2 } from "@agence-ai/ui/v2/components/icon-button-v2.jsx"
 import { getAvatarColors, useLayout, type LocalProject } from "@/context/layout"
 import { useNavigate } from "@solidjs/router"
-import { base64Encode } from "@opencode-ai/core/util/encode"
-import { Icon } from "@opencode-ai/ui/icon"
+import { base64Encode } from "@agence-ai/core/util/encode"
+import { Icon } from "@agence-ai/ui/icon"
 import { usePlatform } from "@/context/platform"
 import { DateTime } from "luxon"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { useDialog } from "@agence-ai/ui/context/dialog"
 import { DialogSelectDirectory } from "@/components/dialog-select-directory"
 import { DialogSelectServer } from "@/components/dialog-select-server"
 import { useServer } from "@/context/server"
@@ -24,13 +24,13 @@ import { useLanguage } from "@/context/language"
 import { useNotification } from "@/context/notification"
 import { usePermission } from "@/context/permission"
 import { displayName, getProjectAvatarSource, projectForSession, sortedRootSessions } from "@/pages/layout/helpers"
-import { getFilename } from "@opencode-ai/core/util/path"
+import { getFilename } from "@agence-ai/core/util/path"
 import { sessionTitle } from "@/utils/session-title"
 import { pathKey } from "@/utils/path-key"
 import { messageAgentColor } from "@/utils/agent"
 import { sessionPermissionRequest } from "@/pages/session/composer/session-request-tree"
 
-const USE_HOME_DESIGN = import.meta.env.VITE_OPENCODE_CHANNEL !== "prod"
+const USE_HOME_DESIGN = import.meta.env.VITE_AGENCE_CHANNEL !== "prod"
 const HOME_SESSION_LIMIT = 15
 const HOME_ROW =
   "flex min-w-0 w-full shrink-0 cursor-default items-center rounded-[6px] border-0 bg-transparent text-left [font-weight:530] text-v2-text-text-muted transition-colors duration-[120ms] ease-in-out hover:bg-v2-overlay-simple-overlay-hover focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:outline-none"
@@ -180,7 +180,7 @@ function HomeDesign() {
         selectProject={selectProject}
         chooseProject={() => void chooseProject()}
         openSettings={openSettings}
-        openHelp={() => platform.openLink("https://opencode.ai/desktop-feedback")}
+        openHelp={() => platform.openLink("https://github.com/David2024patton/agence/desktop-feedback")}
         language={language}
       />
 

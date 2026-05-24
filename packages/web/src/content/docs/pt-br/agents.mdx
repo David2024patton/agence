@@ -15,7 +15,7 @@ Você pode alternar entre agentes durante uma sessão ou invocá-los com a menç
 
 ## Tipos
 
-Existem dois tipos de agentes no opencode; agentes primários e subagentes.
+Existem dois tipos de agentes no agence; agentes primários e subagentes.
 
 ---
 
@@ -27,7 +27,7 @@ Agentes primários são os principais assistentes com os quais você interage di
 Você pode usar a tecla **Tab** para alternar entre agentes primários durante uma sessão.
 :::
 
-opencode vem com dois agentes primários integrados, **Build** e **Plan**. Vamos
+agence vem com dois agentes primários integrados, **Build** e **Plan**. Vamos
 ver isso abaixo.
 
 ---
@@ -36,13 +36,13 @@ ver isso abaixo.
 
 Subagentes são assistentes especializados que agentes primários podem invocar para tarefas específicas. Você também pode invocá-los manualmente mencionando-os com **@** em suas mensagens.
 
-OpenCode vem com três subagentes integrados, **General**, **Explore** e **Scout**. Vamos ver isso abaixo.
+Agence vem com três subagentes integrados, **General**, **Explore** e **Scout**. Vamos ver isso abaixo.
 
 ---
 
 ## Integrados
 
-OpenCode vem com dois agentes primários integrados e três subagentes integrados.
+Agence vem com dois agentes primários integrados e três subagentes integrados.
 
 ---
 
@@ -88,7 +88,7 @@ Um agente rápido e somente leitura para explorar bases de código. Não pode mo
 
 _Modo_: `subagent`
 
-Um agente somente leitura para pesquisa em documentação externa e dependências. Use-o quando você precisar clonar o repositório de uma dependência para o cache gerenciado do OpenCode, inspecionar o código-fonte de uma biblioteca ou cruzar o código local com implementações upstream sem modificar seu workspace.
+Um agente somente leitura para pesquisa em documentação externa e dependências. Use-o quando você precisar clonar o repositório de uma dependência para o cache gerenciado do Agence, inspecionar o código-fonte de uma biblioteca ou cruzar o código local com implementações upstream sem modificar seu workspace.
 
 ---
 
@@ -148,7 +148,7 @@ Configure os agentes em seu arquivo de configuração `opencode.json`:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "agent": {
     "build": {
       "mode": "primary",
@@ -285,7 +285,7 @@ Os valores de temperatura geralmente variam de 0.0 a 1.0:
 }
 ```
 
-Se nenhuma temperatura for especificada, o opencode usa padrões específicos do modelo; tipicamente 0 para a maioria dos modelos, 0.55 para modelos Qwen.
+Se nenhuma temperatura for especificada, o agence usa padrões específicos do modelo; tipicamente 0 para a maioria dos modelos, 0.55 para modelos Qwen.
 
 ---
 
@@ -345,7 +345,7 @@ Especifique um arquivo de prompt do sistema personalizado para este agente com a
 }
 ```
 
-Este caminho é relativo ao local onde o arquivo de configuração está localizado. Portanto, isso funciona tanto para a configuração global do opencode quanto para a configuração específica do projeto.
+Este caminho é relativo ao local onde o arquivo de configuração está localizado. Portanto, isso funciona tanto para a configuração global do agence quanto para a configuração específica do projeto.
 
 ---
 
@@ -367,7 +367,7 @@ Se você não especificar um modelo, os agentes primários usam o [modelo config
 }
 ```
 
-O ID do modelo em sua configuração do opencode usa o formato `provider/model-id`. Por exemplo, se você estiver usando [OpenCode Zen](/docs/zen), você usaria `opencode/gpt-5.1-codex` para GPT 5.1 Codex.
+O ID do modelo em sua configuração do agence usa o formato `provider/model-id`. Por exemplo, se você estiver usando [Agence Zen](/docs/zen), você usaria `opencode/gpt-5.1-codex` para GPT 5.1 Codex.
 
 ---
 
@@ -377,7 +377,7 @@ Controle quais ferramentas estão disponíveis neste agente com a configuração
 
 ```json title="opencode.json" {3-6,9-12}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "tools": {
     "write": true,
     "bash": true
@@ -401,7 +401,7 @@ Você também pode usar curingas para controlar várias ferramentas ao mesmo tem
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "agent": {
     "readonly": {
       "tools": {
@@ -428,7 +428,7 @@ Você pode configurar permissões para gerenciar quais ações um agente pode re
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "edit": "deny"
   }
@@ -439,7 +439,7 @@ Você pode substituir essas permissões por agente.
 
 ```json title="opencode.json" {3-5,8-10}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "edit": "deny"
   },
@@ -476,7 +476,7 @@ Você pode definir permissões para comandos bash específicos.
 
 ```json title="opencode.json" {7}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "agent": {
     "build": {
       "permission": {
@@ -494,7 +494,7 @@ Isso pode aceitar um padrão glob.
 
 ```json title="opencode.json" {7}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "agent": {
     "build": {
       "permission": {
@@ -512,7 +512,7 @@ Como a última regra correspondente tem precedência, coloque o curinga `*` prim
 
 ```json title="opencode.json" {8}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "agent": {
     "build": {
       "permission": {
@@ -665,7 +665,7 @@ Por exemplo, com os modelos de raciocínio da OpenAI, você pode controlar o esf
 Essas opções adicionais são específicas do modelo e do provedor. Verifique a documentação do seu provedor para parâmetros disponíveis.
 
 :::tip
-Execute `opencode models` para ver uma lista dos modelos disponíveis.
+Execute `agence models` para ver uma lista dos modelos disponíveis.
 :::
 
 ---
@@ -675,7 +675,7 @@ Execute `opencode models` para ver uma lista dos modelos disponíveis.
 Você pode criar novos agentes usando o seguinte comando:
 
 ```bash
-opencode agent create
+agence agent create
 ```
 
 Este comando interativo irá:
@@ -705,7 +705,7 @@ Aqui estão alguns casos de uso comuns para diferentes agentes.
 Aqui estão alguns agentes de exemplo que você pode achar úteis.
 
 :::tip
-Você tem um agente que gostaria de compartilhar? [Envie um PR](https://github.com/anomalyco/opencode).
+Você tem um agente que gostaria de compartilhar? [Envie um PR](https://github.com/anomalyco/agence).
 :::
 
 ---

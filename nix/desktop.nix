@@ -8,14 +8,14 @@
   makeWrapper,
   writableTmpDirAsHomeHook,
   autoPatchelfHook,
-  opencode,
+  agence,
 }:
 let
   electron = electron_41;
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "opencode-desktop";
-  inherit (opencode)
+  inherit (agence)
     version
     src
     node_modules
@@ -38,7 +38,7 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.getLib stdenv.cc.cc)
   ];
 
-  env = opencode.env // {
+  env = agence.env // {
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
   };
 
@@ -83,7 +83,7 @@ stdenv.mkDerivation (finalAttrs: {
     + lib.optionalString stdenv.hostPlatform.isDarwin ''
       mkdir -p $out/Applications
       mv dist/mac*/*.app $out/Applications
-      makeWrapper "$out/Applications/OpenCode.app/Contents/MacOS/OpenCode" $out/bin/opencode-desktop
+      makeWrapper "$out/Applications/Agence.app/Contents/MacOS/Agence" $out/bin/opencode-desktop
     ''
     + lib.optionalString stdenv.hostPlatform.isLinux ''
       mkdir -p $out/opt/opencode-desktop
@@ -103,8 +103,8 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   meta = {
-    description = "OpenCode Desktop App";
+    description = "Agence Desktop App";
     mainProgram = "opencode-desktop";
-    inherit (opencode.meta) homepage license platforms;
+    inherit (agence.meta) homepage license platforms;
   };
 })

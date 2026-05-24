@@ -1,14 +1,14 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { defineConfig } from "electron-vite"
-import appPlugin from "@opencode-ai/app/vite"
+import appPlugin from "@agence-ai/app/vite"
 import * as fs from "node:fs/promises"
 
 const AGENCE_SERVER_DIST = "../opencode/dist/node"
 
 const channel = (() => {
-  const raw = process.env.AGENCE_CHANNEL ?? process.env.OPENCODE_CHANNEL
+  const raw = process.env.AGENCE_CHANNEL ?? process.env.AGENCE_CHANNEL
   if (raw === "dev" || raw === "beta" || raw === "prod") return raw
-  if (process.env.OPENCODE_CHANNEL === "latest") return "prod"
+  if (process.env.AGENCE_CHANNEL === "latest") return "prod"
   return "dev"
 })()
 
@@ -35,7 +35,7 @@ export default defineConfig({
   main: {
     define: {
       "import.meta.env.AGENCE_CHANNEL": JSON.stringify(channel),
-      "import.meta.env.OPENCODE_CHANNEL": JSON.stringify(channel),
+      "import.meta.env.AGENCE_CHANNEL": JSON.stringify(channel),
     },
     build: {
       rollupOptions: {

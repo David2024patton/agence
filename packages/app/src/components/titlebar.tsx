@@ -1,13 +1,13 @@
 import { createEffect, createMemo, For, mapArray, Match, Show, startTransition, Switch, untrack } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { useLocation, useMatch, useNavigate, useParams } from "@solidjs/router"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { Icon } from "@opencode-ai/ui/icon"
-import { Button } from "@opencode-ai/ui/button"
-import { Tooltip, TooltipKeybind } from "@opencode-ai/ui/tooltip"
-import { useTheme } from "@opencode-ai/ui/theme/context"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/components/icon-button-v2.jsx"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/components/icon.jsx"
+import { IconButton } from "@agence-ai/ui/icon-button"
+import { Icon } from "@agence-ai/ui/icon"
+import { Button } from "@agence-ai/ui/button"
+import { Tooltip, TooltipKeybind } from "@agence-ai/ui/tooltip"
+import { useTheme } from "@agence-ai/ui/theme/context"
+import { IconButtonV2 } from "@agence-ai/ui/v2/components/icon-button-v2.jsx"
+import { Icon as IconV2 } from "@agence-ai/ui/v2/components/icon.jsx"
 
 import { getAvatarColors, useLayout, type LocalProject } from "@/context/layout"
 import { usePlatform } from "@/context/platform"
@@ -18,9 +18,9 @@ import { WindowsAppMenu } from "./windows-app-menu"
 import { applyPath, backPath, forwardPath } from "./titlebar-history"
 import { useGlobalSync } from "@/context/global-sync"
 import { decodeDirectory } from "@/pages/directory-layout"
-import { iife } from "@opencode-ai/core/util/iife"
-import { base64Encode } from "@opencode-ai/core/util/encode"
-import { Avatar as AvatarV2 } from "@opencode-ai/ui/v2/components/avatar-v2.jsx"
+import { iife } from "@agence-ai/core/util/iife"
+import { base64Encode } from "@agence-ai/core/util/encode"
+import { Avatar as AvatarV2 } from "@agence-ai/ui/v2/components/avatar-v2.jsx"
 import { displayName, getProjectAvatarSource, projectForSession } from "@/pages/layout/helpers"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { StatusPopover } from "./status-popover"
@@ -51,7 +51,7 @@ const legacyTitlebarHeight = 40
 const v2TitlebarHeight = 44
 const minTitlebarZoom = 0.25
 const windowsControlsBaseWidth = 138 // 3 native Windows caption buttons at 46px each.
-const USE_V2_TITLEBAR = import.meta.env.VITE_OPENCODE_CHANNEL !== "prod"
+const USE_V2_TITLEBAR = import.meta.env.VITE_AGENCE_CHANNEL !== "prod"
 
 const makeSessionHref = (b64Dir: string, sessionId: string) => `/${b64Dir}/session/${sessionId}`
 
@@ -115,7 +115,7 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
   const canBack = createMemo(() => history.index > 0)
   const canForward = createMemo(() => history.index < history.stack.length - 1)
   const hasProjects = createMemo(() => layout.projects.list().length > 0)
-  const nav = createMemo(() => import.meta.env.VITE_OPENCODE_CHANNEL !== "beta" || settings.general.showNavigation())
+  const nav = createMemo(() => import.meta.env.VITE_AGENCE_CHANNEL !== "beta" || settings.general.showNavigation())
 
   const back = () => {
     const next = backPath(history)
@@ -758,9 +758,9 @@ function NewSessionTabItem(props: { href: string; title: string; onClose: () => 
 function ChannelIndicator() {
   return (
     <>
-      {["beta", "dev"].includes(import.meta.env.VITE_OPENCODE_CHANNEL) && (
+      {["beta", "dev"].includes(import.meta.env.VITE_AGENCE_CHANNEL) && (
         <div class="bg-icon-interactive-base text-[#FFF] font-medium px-2 rounded-sm uppercase font-mono">
-          {import.meta.env.VITE_OPENCODE_CHANNEL.toUpperCase()}
+          {import.meta.env.VITE_AGENCE_CHANNEL.toUpperCase()}
         </div>
       )}
     </>

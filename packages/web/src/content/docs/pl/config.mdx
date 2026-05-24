@@ -1,21 +1,21 @@
 ---
 title: Konfiguracja
-description: Ustawienia OpenCode w pliku JSON.
+description: Ustawienia Agence w pliku JSON.
 ---
 
-Możesz dostosować OpenCode za pomocą pliku konfiguracyjnego JSON.
+Możesz dostosować Agence za pomocą pliku konfiguracyjnego JSON.
 
 ---
 
 ## Format
 
-OpenCode obsługuje formaty **JSON** i **JSONC** (JSON z komentarzami).
+Agence obsługuje formaty **JSON** i **JSONC** (JSON z komentarzami).
 
 ```jsonc title="opencode.jsonc"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   // Theme configuration
-  "theme": "opencode",
+  "theme": "agence",
   "model": "anthropic/claude-sonnet-4-5",
   "autoupdate": true,
 }
@@ -33,7 +33,7 @@ Pliki konfiguracyjne są **łączone**, a nie nadpisywane.
 
 Pliki konfiguracyjne są łączone ze sobą. Ustawienia z lokalizacji o wyższym priorytecie nadpisują ustawienia z lokalizacji o niższym priorytecie tylko w przypadku konfliktów kluczy. Ustawienia niekolidujące ze wszystkich źródeł są zachowywane.
 
-Na przykład, jeśli konfiguracja globalna ustawi `theme: "opencode"` i `autoupdate: true`, a konfiguracja projektu ustawi `model: "anthropic/claude-sonnet-4-5"`, ostateczna konfiguracja będzie zawierać wszystkie trzy ustawienia.
+Na przykład, jeśli konfiguracja globalna ustawi `theme: "agence"` i `autoupdate: true`, a konfiguracja projektu ustawi `model: "anthropic/claude-sonnet-4-5"`, ostateczna konfiguracja będzie zawierać wszystkie trzy ustawienia.
 
 ---
 
@@ -41,30 +41,30 @@ Na przykład, jeśli konfiguracja globalna ustawi `theme: "opencode"` i `autoupd
 
 Źródła konfiguracji są ładowane w następującej kolejności (źródła występujące później mają pierwszeństwo):
 
-1. **Konfiguracja zdalna** (z `.well-known/opencode`) – ustawienia wymuszane przez organizację
+1. **Konfiguracja zdalna** (z `.well-known/agence`) – ustawienia wymuszane przez organizację
 2. **Konfiguracja globalna** (`~/.config/opencode/opencode.json`) – preferencje użytkownika
-3. **Konfiguracja niestandardowa** (zmienna `OPENCODE_CONFIG`) — jawne nadpisanie
+3. **Konfiguracja niestandardowa** (zmienna `AGENCE_CONFIG`) — jawne nadpisanie
 4. **Konfiguracja projektu** (`opencode.json` w projekcie) - ustawienia specyficzne dla projektu
 5. **Katalogi `.opencode`** - agenci, polecenia, umiejętności
-6. **Konfiguracja wbudowana** (zmienna `OPENCODE_CONFIG_CONTENT`) — nadpisanie środowiska uruchomieniowego
+6. **Konfiguracja wbudowana** (zmienna `AGENCE_CONFIG_CONTENT`) — nadpisanie środowiska uruchomieniowego
 
 Oznacza to, że konfiguracje projektu mogą nadpisywać konfiguracje globalne, a konfiguracje globalne mogą nadpisywać konfiguracje zdalne.
 
 :::note
-W katalogach `.opencode` i `~/.config/opencode` używane są **nazwy w liczbie mnogiej** dla podkatalogów: `agents/`, `commands/`, `modes/`, `plugins/`, `skills/`, `tools/` i `themes/`. Nazwy w liczbie pojedynczej (np. `agent/`) są również obsługiwane dla kompatybilności wstecznej.
+W katalogach `.opencode` i `~/.config/agence` używane są **nazwy w liczbie mnogiej** dla podkatalogów: `agents/`, `commands/`, `modes/`, `plugins/`, `skills/`, `tools/` i `themes/`. Nazwy w liczbie pojedynczej (np. `agent/`) są również obsługiwane dla kompatybilności wstecznej.
 :::
 
 ---
 
 ### Zdalna
 
-Organizacje mogą publikować konfigurację pod adresem `.well-known/opencode`. Jest ona pobierana automatycznie po uwierzytelnieniu u dostawcy, który ją obsługuje.
+Organizacje mogą publikować konfigurację pod adresem `.well-known/agence`. Jest ona pobierana automatycznie po uwierzytelnieniu u dostawcy, który ją obsługuje.
 
 Konfiguracja zdalna jest ładowana jako pierwsza i stanowi bazę. Wszystkie inne źródła konfiguracji (globalne, projektowe) mogą ją nadpisywać.
 
 Na przykład, jeśli Twoja organizacja udostępnia serwery MCP, które są domyślnie wyłączone:
 
-```json title="Remote config from .well-known/opencode"
+```json title="Remote config from .well-known/agence"
 {
   "mcp": {
     "jira": {
@@ -94,7 +94,7 @@ Możesz włączyć serwer w konfiguracji projektu:
 
 ### Globalna
 
-Umieść swoją globalną konfigurację OpenCode w `~/.config/opencode/opencode.json`. Użyj jej do ustawień ogólnych dla użytkownika, takich jak dostawcy, modele i uprawnienia.
+Umieść swoją globalną konfigurację Agence w `~/.config/opencode/opencode.json`. Użyj jej do ustawień ogólnych dla użytkownika, takich jak dostawcy, modele i uprawnienia.
 
 Dla ustawień specyficznych dla TUI, użyj `~/.config/opencode/tui.json`.
 
@@ -112,7 +112,7 @@ Dla ustawień TUI specyficznych dla projektu, dodaj plik `tui.json` obok niego.
 Umieść konfigurację specyficzną dla projektu w katalogu głównym projektu.
 :::
 
-Kiedy OpenCode się uruchamia, szuka pliku konfiguracyjnego w katalogu głównym repozytorium Git.
+Kiedy Agence się uruchamia, szuka pliku konfiguracyjnego w katalogu głównym repozytorium Git.
 
 Może on być przechowywany w Git i mieć ten sam schemat, co konfiguracja globalna.
 
@@ -120,11 +120,11 @@ Może on być przechowywany w Git i mieć ten sam schemat, co konfiguracja globa
 
 ### Niestandardowa ścieżka
 
-Możesz załadować niestandardowy plik konfiguracyjny, ustawiając zmienną środowiskową `OPENCODE_CONFIG`.
+Możesz załadować niestandardowy plik konfiguracyjny, ustawiając zmienną środowiskową `AGENCE_CONFIG`.
 
 ```bash
-export OPENCODE_CONFIG=/path/to/my/custom-config.json
-opencode run "Hello world"
+export AGENCE_CONFIG=/path/to/my/custom-config.json
+agence run "Hello world"
 ```
 
 Konfiguracja niestandardowa jest ładowana po konfiguracji globalnej i przed konfiguracją projektu w kolejności priorytetów.
@@ -133,11 +133,11 @@ Konfiguracja niestandardowa jest ładowana po konfiguracji globalnej i przed kon
 
 ### Niestandardowy katalog
 
-Możesz ustawić niestandardowy katalog konfiguracyjny za pomocą zmiennej środowiskowej `OPENCODE_CONFIG_DIR`. Katalog ten będzie przeszukiwany pod kątem agentów, poleceń, trybów i wtyczek, tak jak standardowy katalog `.opencode` i powinien zachować tę samą strukturę.
+Możesz ustawić niestandardowy katalog konfiguracyjny za pomocą zmiennej środowiskowej `AGENCE_CONFIG_DIR`. Katalog ten będzie przeszukiwany pod kątem agentów, poleceń, trybów i wtyczek, tak jak standardowy katalog `.opencode` i powinien zachować tę samą strukturę.
 
 ```bash
-export OPENCODE_CONFIG_DIR=/path/to/my/config-directory
-opencode run "Hello world"
+export AGENCE_CONFIG_DIR=/path/to/my/config-directory
+agence run "Hello world"
 ```
 
 Katalog niestandardowy jest ładowany po globalnej konfiguracji i katalogach `.opencode`, więc **może być łączony** z ich zawartością.
@@ -146,7 +146,7 @@ Katalog niestandardowy jest ładowany po globalnej konfiguracji i katalogach `.o
 
 ## Schemat
 
-Plik konfiguracyjny ma schemat JSON dostępny pod adresem [**`opencode.ai/config.json`**](https://opencode.ai/config.json).
+Plik konfiguracyjny ma schemat JSON dostępny pod adresem [**`agence.ai/config.json`**](https://github.com/David2024patton/agence/config.json).
 
 Twój edytor powinien zapewniać walidację i autouzupełnianie na podstawie tego schematu.
 
@@ -158,7 +158,7 @@ Użyj dedykowanego pliku `tui.json` (lub `tui.jsonc`) dla ustawień specyficznyc
 
 ```json title="tui.json"
 {
-  "$schema": "https://opencode.ai/tui.json",
+  "$schema": "https://github.com/David2024patton/agence/tui.json",
   "scroll_speed": 3,
   "scroll_acceleration": {
     "enabled": true
@@ -167,7 +167,7 @@ Użyj dedykowanego pliku `tui.json` (lub `tui.jsonc`) dla ustawień specyficznyc
 }
 ```
 
-Użyj `OPENCODE_TUI_CONFIG`, aby wskazać niestandardowy plik konfiguracyjny TUI.
+Użyj `AGENCE_TUI_CONFIG`, aby wskazać niestandardowy plik konfiguracyjny TUI.
 
 Przestarzałe klucze `theme`, `keybinds` i `tui` w `opencode.json` są wycofywane i automatycznie migrowane, gdy to możliwe.
 
@@ -177,11 +177,11 @@ Przestarzałe klucze `theme`, `keybinds` i `tui` w `opencode.json` są wycofywan
 
 ### Server (Serwer)
 
-Możesz skonfigurować serwer dla `opencode serve` i `opencode web` za pomocą opcji `server`.
+Możesz skonfigurować serwer dla `agence serve` i `agence web` za pomocą opcji `server`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "server": {
     "port": 4096,
     "hostname": "0.0.0.0",
@@ -196,8 +196,8 @@ Dostępne opcje:
 
 - `port` - Port do nasłuchiwania.
 - `hostname` — Nazwa hosta, z którą należy się powiązać. Gdy `mdns` jest włączone i nie ustawiono innej nazwy hosta, domyślnie jest to `0.0.0.0`.
-- `mdns` - Włącz wykrywanie usług mDNS. Dzięki temu inne urządzenia w sieci mogą łatwo znaleźć Twój serwer OpenCode.
-- `mdnsDomain` - Niestandardowa nazwa domeny dla usług mDNS. Domyślnie `opencode.local`. Przydatne do uruchamiania wielu instancji w tej samej sieci.
+- `mdns` - Włącz wykrywanie usług mDNS. Dzięki temu inne urządzenia w sieci mogą łatwo znaleźć Twój serwer Agence.
+- `mdnsDomain` - Niestandardowa nazwa domeny dla usług mDNS. Domyślnie `agence.local`. Przydatne do uruchamiania wielu instancji w tej samej sieci.
 - `cors` - Dozwolone źródła CORS podczas korzystania z serwera HTTP z przeglądarki. Wartość musi być listą źródeł (schemat + host + opcjonalny port), np. `https://app.example.com`.
 
 [Dowiedz się więcej o serwerze](/docs/server).
@@ -210,7 +210,7 @@ Kontroluj, które narzędzia są dostępne dla LLM, za pomocą opcji `tools`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "tools": {
     "write": false,
     "bash": false
@@ -228,20 +228,20 @@ Możesz skonfigurować dostawców i modele, których chcesz używać, za pomocą
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "provider": {},
   "model": "anthropic/claude-sonnet-4-5",
   "small_model": "anthropic/claude-haiku-4-5"
 }
 ```
 
-Opcja `small_model` konfiguruje oddzielny model do lżejszych zadań, takich jak generowanie tytułów. Domyślnie OpenCode wybiera tańszy model od tego samego dostawcy, jeśli jest dostępny, w przeciwnym razie powraca do modelu głównego.
+Opcja `small_model` konfiguruje oddzielny model do lżejszych zadań, takich jak generowanie tytułów. Domyślnie Agence wybiera tańszy model od tego samego dostawcy, jeśli jest dostępny, w przeciwnym razie powraca do modelu głównego.
 
 Opcje dostawcy mogą zawierać `timeout` i `setCacheKey`:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "provider": {
     "anthropic": {
       "options": {
@@ -270,7 +270,7 @@ Amazon Bedrock umożliwia konfigurację połączenia z AWS:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "provider": {
     "amazon-bedrock": {
       "options": {
@@ -301,7 +301,7 @@ Ustaw motyw interfejsu użytkownika w `tui.json`.
 
 ```json title="tui.json"
 {
-  "$schema": "https://opencode.ai/tui.json",
+  "$schema": "https://github.com/David2024patton/agence/tui.json",
   "theme": "tokyonight"
 }
 ```
@@ -316,7 +316,7 @@ Możesz zdefiniować i skonfigurować agentów za pomocą opcji `agent`.
 
 ```jsonc title="opencode.jsonc"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "agent": {
     "code-reviewer": {
       "description": "Reviews code for best practices and potential issues",
@@ -342,14 +342,14 @@ Domyślnego agenta można ustawić za pomocą opcji `default_agent`. Określa to
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "default_agent": "plan"
 }
 ```
 
-Agent domyślny musi być agentem typu `primary` (nie `subagent`). Może to być agent wbudowany, taki jak `"build"` lub `"plan"`, albo zdefiniowany przez Ciebie [agent niestandardowy](/docs/agents). Jeśli agent nie istnieje lub jest subagentem, OpenCode powróci do `"build"` z ostrzeżeniem.
+Agent domyślny musi być agentem typu `primary` (nie `subagent`). Może to być agent wbudowany, taki jak `"build"` lub `"plan"`, albo zdefiniowany przez Ciebie [agent niestandardowy](/docs/agents). Jeśli agent nie istnieje lub jest subagentem, Agence powróci do `"build"` z ostrzeżeniem.
 
-Dotyczy to wszystkich interfejsów: TUI, CLI (`opencode run`), aplikacji desktopowej i GitHub Actions.
+Dotyczy to wszystkich interfejsów: TUI, CLI (`agence run`), aplikacji desktopowej i GitHub Actions.
 
 ---
 
@@ -359,7 +359,7 @@ Możesz skonfigurować [udostępnianie](/docs/share) za pomocą opcji `share`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "share": "manual"
 }
 ```
@@ -380,7 +380,7 @@ Możesz zdefiniować niestandardowe polecenia dla powtarzalnych zadań za pomoc�
 
 ```jsonc title="opencode.jsonc"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "command": {
     "test": {
       "template": "Run the full test suite with coverage report and show any failures.\nFocus on the failing tests and suggest fixes.",
@@ -406,7 +406,7 @@ Dostosuj skróty klawiszowe w `tui.json`.
 
 ```json title="tui.json"
 {
-  "$schema": "https://opencode.ai/tui.json",
+  "$schema": "https://github.com/David2024patton/agence/tui.json",
   "keybinds": {}
 }
 ```
@@ -417,17 +417,17 @@ Dostosuj skróty klawiszowe w `tui.json`.
 
 ### Autoupdate (Automatyczna aktualizacja)
 
-OpenCode może automatycznie pobierać nowe wersje. Możesz to kontrolować za pomocą opcji `autoupdate`.
+Agence może automatycznie pobierać nowe wersje. Możesz to kontrolować za pomocą opcji `autoupdate`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "autoupdate": false
 }
 ```
 
 Jeśli nie chcesz automatycznych aktualizacji, ale chcesz być powiadamiany o nowych wersjach, ustaw `autoupdate` na `"notify"`.
-Działa to tylko wtedy, gdy OpenCode nie został zainstalowany przez menedżera pakietów, takiego jak Homebrew.
+Działa to tylko wtedy, gdy Agence nie został zainstalowany przez menedżera pakietów, takiego jak Homebrew.
 
 ---
 
@@ -437,7 +437,7 @@ Możesz skonfigurować formatery kodu za pomocą opcji `formatter`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "formatter": {
     "prettier": {
       "disabled": true
@@ -459,13 +459,13 @@ Możesz skonfigurować formatery kodu za pomocą opcji `formatter`.
 
 ### Permissions (Uprawnienia)
 
-Domyślnie OpenCode **zezwala na wszystkie działania** bez konieczności zatwierdzania. Możesz to zmienić za pomocą opcji `permission`.
+Domyślnie Agence **zezwala na wszystkie działania** bez konieczności zatwierdzania. Możesz to zmienić za pomocą opcji `permission`.
 
 Na przykład, aby wymagać zatwierdzenia dla narzędzi `edit` i `bash`:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "edit": "ask",
     "bash": "ask"
@@ -483,7 +483,7 @@ Możesz kontrolować zachowanie kompaktowania kontekstu za pomocą opcji `compac
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "compaction": {
     "auto": true,
     "prune": true
@@ -502,7 +502,7 @@ Skonfiguruj ignorowane wzorce plików dla obserwatora plików za pomocą `watche
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "watcher": {
     "ignore": ["node_modules/**", "dist/**", ".git/**"]
   }
@@ -519,7 +519,7 @@ Skonfiguruj serwery MCP, których chcesz używać, za pomocą opcji `mcp`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "mcp": {}
 }
 ```
@@ -530,13 +530,13 @@ Skonfiguruj serwery MCP, których chcesz używać, za pomocą opcji `mcp`.
 
 ### Plugins (Wtyczki)
 
-[Wtyczki](/docs/plugins) rozszerzają OpenCode o niestandardowe narzędzia, hooki i integracje.
+[Wtyczki](/docs/plugins) rozszerzają Agence o niestandardowe narzędzia, hooki i integracje.
 
 Umieść pliki wtyczek w `.opencode/plugins/` lub `~/.config/opencode/plugins/`. Możesz także załadować wtyczkę z npm za pomocą opcji `plugin`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "plugin": ["opencode-helicone-session", "@my-org/custom-plugin"]
 }
 ```
@@ -551,7 +551,7 @@ Określ pliki instrukcji dla modelu, używając opcji `instructions`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "instructions": ["CONTRIBUTING.md", "docs/guidelines.md", ".cursor/rules/*.md"]
 }
 ```
@@ -566,7 +566,7 @@ Zapobiegaj automatycznemu ładowaniu dostawców za pomocą opcji `disabled_provi
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "disabled_providers": ["openai", "gemini"]
 }
 ```
@@ -589,12 +589,12 @@ Możesz określić listę dozwolonych dostawców za pomocą `enabled_providers`.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "enabled_providers": ["anthropic", "openai"]
 }
 ```
 
-Jest to przydatne, gdy chcesz ograniczyć użycie OpenCode tylko do określonych dostawców.
+Jest to przydatne, gdy chcesz ograniczyć użycie Agence tylko do określonych dostawców.
 
 :::note
 `disabled_providers` ma pierwszeństwo przed `enabled_providers`.
@@ -610,7 +610,7 @@ Klucz `experimental` zawiera opcje, które są we wczesnej fazie rozwoju.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "experimental": {}
 }
 ```
@@ -633,8 +633,8 @@ Użyj `{env:VARIABLE_NAME}`, aby wstawić wartość zmiennej środowiskowej:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
-  "model": "{env:OPENCODE_MODEL}",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
+  "model": "{env:AGENCE_MODEL}",
   "provider": {
     "anthropic": {
       "models": {},
@@ -656,7 +656,7 @@ Użyj `{file:path/to/file}`, aby wstawić zawartość pliku:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "instructions": ["./custom-instructions.md"],
   "provider": {
     "openai": {

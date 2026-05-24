@@ -3,7 +3,7 @@ title: Ferramentas
 description: Gerencie as ferramentas que um LLM pode usar.
 ---
 
-As ferramentas permitem que o LLM execute ações em sua base de código. O opencode vem com um conjunto de ferramentas integradas, mas você pode estendê-lo com [ferramentas personalizadas](/docs/custom-tools) ou [servidores MCP](/docs/mcp-servers).
+As ferramentas permitem que o LLM execute ações em sua base de código. O agence vem com um conjunto de ferramentas integradas, mas você pode estendê-lo com [ferramentas personalizadas](/docs/custom-tools) ou [servidores MCP](/docs/mcp-servers).
 
 Por padrão, todas as ferramentas estão **ativadas** e não precisam de permissão para serem executadas. Você pode controlar o comportamento das ferramentas através de [permissões](/docs/permissions).
 
@@ -15,7 +15,7 @@ Use o campo `permission` para controlar o comportamento das ferramentas. Você p
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "edit": "deny",
     "bash": "ask",
@@ -28,7 +28,7 @@ Você também pode usar curingas para controlar várias ferramentas ao mesmo tem
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "mymcp_*": "ask"
   }
@@ -41,7 +41,7 @@ Você também pode usar curingas para controlar várias ferramentas ao mesmo tem
 
 ## Integradas
 
-Aqui estão todas as ferramentas integradas disponíveis no opencode.
+Aqui estão todas as ferramentas integradas disponíveis no agence.
 
 ---
 
@@ -51,7 +51,7 @@ Execute comandos de shell no ambiente do seu projeto.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "bash": "allow"
   }
@@ -68,7 +68,7 @@ Modifique arquivos existentes usando substituições de string exatas.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "edit": "allow"
   }
@@ -85,7 +85,7 @@ Crie novos arquivos ou sobrescreva os existentes.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "edit": "allow"
   }
@@ -106,7 +106,7 @@ Leia o conteúdo dos arquivos da sua base de código.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "read": "allow"
   }
@@ -123,7 +123,7 @@ Pesquise o conteúdo dos arquivos usando expressões regulares.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "grep": "allow"
   }
@@ -140,7 +140,7 @@ Encontre arquivos por correspondência de padrões.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "glob": "allow"
   }
@@ -156,12 +156,12 @@ Pesquise arquivos usando padrões glob como `**/*.js` ou `src/**/*.ts`. Retorna 
 Interaja com seus servidores LSP configurados para obter recursos de inteligência de código, como definições, referências, informações de hover e hierarquia de chamadas.
 
 :::note
-Esta ferramenta está disponível apenas quando `OPENCODE_EXPERIMENTAL_LSP_TOOL=true` (ou `OPENCODE_EXPERIMENTAL=true`).
+Esta ferramenta está disponível apenas quando `AGENCE_EXPERIMENTAL_LSP_TOOL=true` (ou `AGENCE_EXPERIMENTAL=true`).
 :::
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "lsp": "allow"
   }
@@ -180,7 +180,7 @@ Aplique patches a arquivos.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "edit": "allow"
   }
@@ -201,7 +201,7 @@ Carregue uma [skill](/docs/skills) (um arquivo `SKILL.md`) e retorne seu conteú
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "skill": "allow"
   }
@@ -216,7 +216,7 @@ Gerencie listas de tarefas durante sessões de codificação.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "todowrite": "allow"
   }
@@ -237,7 +237,7 @@ Busque conteúdo da web.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "webfetch": "allow"
   }
@@ -253,19 +253,19 @@ Permite que o LLM busque e leia páginas da web. Útil para consultar documenta�
 Pesquise na web por informações.
 
 :::note
-Esta ferramenta está disponível apenas ao usar o provedor opencode ou quando a variável de ambiente `OPENCODE_ENABLE_EXA` está definida como qualquer valor verdadeiro (por exemplo, `true` ou `1`).
+Esta ferramenta está disponível apenas ao usar o provedor agence ou quando a variável de ambiente `AGENCE_ENABLE_EXA` está definida como qualquer valor verdadeiro (por exemplo, `true` ou `1`).
 
-Para habilitar ao iniciar o opencode:
+Para habilitar ao iniciar o agence:
 
 ```bash
-OPENCODE_ENABLE_EXA=1 opencode
+AGENCE_ENABLE_EXA=1 agence
 ```
 
 :::
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "websearch": "allow"
   }
@@ -288,7 +288,7 @@ Faça perguntas ao usuário durante a execução.
 
 ```json title="opencode.json" {4}
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "permission": {
     "question": "allow"
   }

@@ -10,7 +10,7 @@ export const VercelPlugin = PluginV2.define({
           if (item.provider.endpoint.type !== "aisdk") continue
           if (item.provider.endpoint.package !== "@ai-sdk/vercel") continue
           evt.provider.update(item.provider.id, (provider) => {
-            provider.options.headers["http-referer"] = "https://opencode.ai/"
+            provider.options.headers["http-referer"] = "https://github.com/David2024patton/agence/"
             provider.options.headers["x-title"] = "agence"
           })
         }

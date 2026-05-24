@@ -11,7 +11,7 @@ export const OpenRouterPlugin = PluginV2.define({
           if (item.provider.endpoint.type !== "aisdk") continue
           if (item.provider.endpoint.package !== "@openrouter/ai-sdk-provider") continue
           evt.provider.update(item.provider.id, (provider) => {
-            provider.options.headers["HTTP-Referer"] = "https://opencode.ai/"
+            provider.options.headers["HTTP-Referer"] = "https://github.com/David2024patton/agence/"
             provider.options.headers["X-Title"] = "agence"
           })
           for (const modelID of [ModelV2.ID.make("gpt-5-chat-latest"), ModelV2.ID.make("openai/gpt-5-chat")]) {

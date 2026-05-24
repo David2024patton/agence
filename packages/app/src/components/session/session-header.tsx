@@ -1,13 +1,13 @@
-import { AppIcon } from "@opencode-ai/ui/app-icon"
-import { Button } from "@opencode-ai/ui/button"
-import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
-import { Icon } from "@opencode-ai/ui/icon"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { Keybind } from "@opencode-ai/ui/keybind"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { showToast } from "@opencode-ai/ui/toast"
-import { Tooltip, TooltipKeybind } from "@opencode-ai/ui/tooltip"
-import { getFilename } from "@opencode-ai/core/util/path"
+import { AppIcon } from "@agence-ai/ui/app-icon"
+import { Button } from "@agence-ai/ui/button"
+import { DropdownMenu } from "@agence-ai/ui/dropdown-menu"
+import { Icon } from "@agence-ai/ui/icon"
+import { IconButton } from "@agence-ai/ui/icon-button"
+import { Keybind } from "@agence-ai/ui/keybind"
+import { Spinner } from "@agence-ai/ui/spinner"
+import { showToast } from "@agence-ai/ui/toast"
+import { Tooltip, TooltipKeybind } from "@agence-ai/ui/tooltip"
+import { getFilename } from "@agence-ai/core/util/path"
 import { createEffect, createMemo, createSignal, For, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Portal } from "solid-js/web"
@@ -153,7 +153,7 @@ export function SessionHeader() {
   })
   const hotkey = createMemo(() => command.keybind("file.open"))
   const os = createMemo(() => detectOS(platform))
-  const isDesktopBeta = platform.platform === "desktop" && import.meta.env.VITE_OPENCODE_CHANNEL === "beta"
+  const isDesktopBeta = platform.platform === "desktop" && import.meta.env.VITE_AGENCE_CHANNEL === "beta"
   const search = createMemo(() => !isDesktopBeta || settings.general.showSearch())
   const tree = createMemo(() => !isDesktopBeta || settings.general.showFileTree())
   const term = createMemo(() => !isDesktopBeta || settings.general.showTerminal())

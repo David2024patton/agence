@@ -1,25 +1,25 @@
 ---
 title: Regeln
-description: Lege eigene Anweisungen fuer opencode fest.
+description: Lege eigene Anweisungen fuer agence fest.
 ---
 
-Du kannst opencode ueber eine `AGENTS.md`-Datei mit eigenen Anweisungen steuern.
+Du kannst agence ueber eine `AGENTS.md`-Datei mit eigenen Anweisungen steuern.
 Das ist aehnlich zu den Regeln in Cursor und wird direkt in den LLM-Kontext geladen.
 
 ---
 
 ## Initialisierung
 
-Um eine neue `AGENTS.md` zu erstellen, fuehre in opencode den Befehl `/init` aus.
+Um eine neue `AGENTS.md` zu erstellen, fuehre in agence den Befehl `/init` aus.
 
 :::tip
 Du solltest die `AGENTS.md` deines Projekts in Git committen.
 :::
 
 Der Befehl scannt dein Projekt und erzeugt daraus eine passende `AGENTS.md`.
-So kann opencode sich in deinem Code besser orientieren.
+So kann agence sich in deinem Code besser orientieren.
 
-Wenn bereits eine `AGENTS.md` existiert, versucht opencode sie zu erweitern.
+Wenn bereits eine `AGENTS.md` existiert, versucht agence sie zu erweitern.
 
 ---
 
@@ -57,7 +57,7 @@ Hier hinterlegst du projektspezifische Regeln, die dein Team gemeinsam nutzt.
 
 ## Typen
 
-opencode kann `AGENTS.md` aus mehreren Orten lesen.
+agence kann `AGENTS.md` aus mehreren Orten lesen.
 Die Orte haben unterschiedliche Zwecke.
 
 ### Projekt
@@ -74,7 +74,7 @@ Da diese Datei nicht in Git landet und nicht mit dem Team geteilt wird, eignet s
 
 ### Claude Code-Kompatibilität
 
-Wenn du von Claude Code kommst, unterstuetzt OpenCode dessen Dateikonventionen als Fallback:
+Wenn du von Claude Code kommst, unterstuetzt Agence dessen Dateikonventionen als Fallback:
 
 - **Projektregeln**: `CLAUDE.md` im Projekt (wenn keine `AGENTS.md` existiert)
 - **Globale Regeln**: `~/.claude/CLAUDE.md` (wenn keine `~/.config/opencode/AGENTS.md` existiert)
@@ -83,16 +83,16 @@ Wenn du von Claude Code kommst, unterstuetzt OpenCode dessen Dateikonventionen a
 Um die Claude-Code-Kompatibilitaet zu deaktivieren, setze eine dieser Umgebungsvariablen:
 
 ```bash
-export OPENCODE_DISABLE_CLAUDE_CODE=1        # Disable all .claude support
-export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only ~/.claude/CLAUDE.md
-export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
+export AGENCE_DISABLE_CLAUDE_CODE=1        # Disable all .claude support
+export AGENCE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only ~/.claude/CLAUDE.md
+export AGENCE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 ```
 
 ---
 
 ## Rangfolge
 
-Beim Start sucht opencode in dieser Reihenfolge nach Regeldateien:
+Beim Start sucht agence in dieser Reihenfolge nach Regeldateien:
 
 1. **Lokale Dateien** beim Hochlaufen ab dem aktuellen Verzeichnis (`AGENTS.md`, `CLAUDE.md`)
 2. **Globale Datei** unter `~/.config/opencode/AGENTS.md`
@@ -112,7 +112,7 @@ Beispiel:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "instructions": ["CONTRIBUTING.md", "docs/guidelines.md", ".cursor/rules/*.md"]
 }
 ```
@@ -121,7 +121,7 @@ Du kannst auch Remote-URLs nutzen, um Regeln aus dem Web zu laden.
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "instructions": ["https://raw.githubusercontent.com/my-org/shared-rules/main/style.md"]
 }
 ```
@@ -134,7 +134,7 @@ Alle Anweisungsdateien werden mit deinen `AGENTS.md`-Dateien kombiniert.
 
 ## Externe Dateien referenzieren
 
-opencode parst Datei-Referenzen in `AGENTS.md` nicht automatisch.
+agence parst Datei-Referenzen in `AGENTS.md` nicht automatisch.
 Du erreichst aehnliches Verhalten auf zwei Wegen.
 
 ### Mit opencode.json
@@ -143,14 +143,14 @@ Empfohlen ist das `instructions`-Feld in der `opencode.json`:
 
 ```json title="opencode.json"
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://github.com/David2024patton/agence/config.json",
   "instructions": ["docs/development-standards.md", "test/testing-guidelines.md", "packages/*/AGENTS.md"]
 }
 ```
 
 ### Manuelle Anweisungen in AGENTS.md
 
-Du kannst opencode explizit anweisen, externe Dateien zu lesen.
+Du kannst agence explizit anweisen, externe Dateien zu lesen.
 Hier ein praxisnahes Beispiel:
 
 ```markdown title="AGENTS.md"

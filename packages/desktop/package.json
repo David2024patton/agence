@@ -1,10 +1,10 @@
 {
-  "name": "@opencode-ai/desktop",
+  "name": "@agence-ai/desktop",
   "private": true,
   "version": "1.15.10",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://opencode.ai",
+  "homepage": "https://github.com/David2024patton/agence",
   "author": {
     "name": "David Patton",
     "email": "hello@opencode.ai"
@@ -37,8 +37,8 @@
   "devDependencies": {
     "@actions/artifact": "4.0.0",
     "@lydell/node-pty": "catalog:",
-    "@opencode-ai/app": "workspace:*",
-    "@opencode-ai/ui": "workspace:*",
+    "@agence-ai/app": "workspace:*",
+    "@agence-ai/ui": "workspace:*",
     "@sentry/solid": "catalog:",
     "@sentry/vite-plugin": "catalog:",
     "@solid-primitives/i18n": "2.2.1",

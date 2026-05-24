@@ -200,8 +200,8 @@ export const DESKTOP_MENU: DesktopMenu[] = [
     id: "help",
     label: "Help",
     items: [
-      { type: "item",   label: "Agence Documentation", href: "https://opencode.ai/docs" },
-      { type: "item", label: "Support Forum", href: "https://discord.com/invite/opencode" },
+      { type: "item",   label: "Agence Documentation", href: "https://github.com/David2024patton/agence/docs" },
+      { type: "item", label: "Support Forum", href: "https://discord.com/invite/agence" },
       { type: "item", label: "Export Logs...", command: "logs.export" },
       { type: "separator" },
       {

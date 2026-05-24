@@ -87,7 +87,7 @@ export async function spawnLocalServer(
   const externalConfig = getExternalServerConfig()
   if (externalConfig.enabled) {
     if (process.platform === "win32") {
-      const fullCmd = `set AGENCE_CLIENT=desktop&&set AGENCE_SERVER_PASSWORD=${password}&&bun run --cwd ..\\..\\..\\opencode src\\index.ts serve --port ${port}`
+      const fullCmd = `set AGENCE_CLIENT=desktop&&set AGENCE_SERVER_PASSWORD=${password}&&bun run --cwd ..\\..\\..\\agence src\\index.ts serve --port ${port}`
       exec(`start "Agence Server" cmd /k "${fullCmd}"`)
     } else if (process.platform === "darwin") {
       const script = `tell application "Terminal" to do script "AGENCE_CLIENT=desktop AGENCE_SERVER_PASSWORD=${password} bun run src/index.ts serve --port ${port}"`

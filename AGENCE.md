@@ -1,9 +1,9 @@
 # Agence Knowledge Base
 
 Project: **Agence** — Modular agent + MCP server framework by David Patton
-Forked from: [anomalyco/opencode](https://github.com/anomalyco/opencode)
+Forked from: [anomalyco/agence](https://github.com/anomalyco/agence)
 Private repo: `github.com/David2024patton/agence`
-Upstream: `github.com/anomalyco/opencode` (original opencode)
+Upstream: `github.com/anomalyco/agence` (original agence)
 
 ---
 
@@ -90,7 +90,7 @@ packages/
 
 ---
 
-## Config Paths (Rebranded from opencode)
+## Config Paths (Rebranded from agence)
 
 | Directory | Old path | New path |
 |-----------|----------|----------|
@@ -99,37 +99,37 @@ packages/
 | Cache | `~/.cache/opencode/` | `~/.cache/agence/` |
 | State | `~/.local/state/opencode/` | `~/.local/state/agence/` |
 | Desktop app ID | `ai.opencode.desktop` | `ai.agence.desktop` |
-| Protocol scheme | `opencode://` | `agence://` |
-| Settings store | `opencode.settings` | `agence.settings` |
+| Protocol scheme | `agence://` | `agence://` |
+| Settings store | `agence.settings` | `agence.settings` |
 
-Env var override: `AGENCE_CHANNEL=dev|beta|prod` (was `OPENCODE_CHANNEL`)
+Env var override: `AGENCE_CHANNEL=dev|beta|prod` (was `AGENCE_CHANNEL`)
 
 ---
 
 ## Key Files We Modified
 
 ### Tools
-- `packages/opencode/src/tool/todo.ts` — Full task system (todowrite, todoread, task_search, todo_carry, reflect, model_learn, quality_gate)
-- `packages/opencode/src/tool/browser.ts` — Browser automation (inspect, tutorial, extract, analyze, screenshot, close)
-- `packages/opencode/src/tool/screenshot.ts` — Desktop screenshot
-- `packages/opencode/src/tool/powershell.ts` — PowerShell tool
-- `packages/opencode/src/tool/weather.ts` — Weather via wttr.in
-- `packages/opencode/src/tool/system_info.ts` — System info
-- `packages/opencode/src/tool/drives.ts` — Drive listing
-- `packages/opencode/src/tool/os_open.ts` — Open files
-- `packages/opencode/src/tool/env_read.ts` / `env_write.ts` — Env var management
-- `packages/opencode/src/tool/lint.ts` — Multi-language linting
-- `packages/opencode/src/tool/image_describe.ts` — Image OCR/vision
-- `packages/opencode/src/tool/registry.ts` — Tool registration
+- `packages/agence/src/tool/todo.ts` — Full task system (todowrite, todoread, task_search, todo_carry, reflect, model_learn, quality_gate)
+- `packages/agence/src/tool/browser.ts` — Browser automation (inspect, tutorial, extract, analyze, screenshot, close)
+- `packages/agence/src/tool/screenshot.ts` — Desktop screenshot
+- `packages/agence/src/tool/powershell.ts` — PowerShell tool
+- `packages/agence/src/tool/weather.ts` — Weather via wttr.in
+- `packages/agence/src/tool/system_info.ts` — System info
+- `packages/agence/src/tool/drives.ts` — Drive listing
+- `packages/agence/src/tool/os_open.ts` — Open files
+- `packages/agence/src/tool/env_read.ts` / `env_write.ts` — Env var management
+- `packages/agence/src/tool/lint.ts` — Multi-language linting
+- `packages/agence/src/tool/image_describe.ts` — Image OCR/vision
+- `packages/agence/src/tool/registry.ts` — Tool registration
 
 ### Core Systems
-- `packages/opencode/src/session/todo.ts` — Todo service with history, search, carry
-- `packages/opencode/src/session/session.sql.ts` — DB schema (TodoTable, TaskHistoryTable)
-- `packages/opencode/src/session/message-v2.ts` — Vision model detection + image stripping
-- `packages/opencode/src/provider/provider.ts` — Local provider auto-discovery + database entries
-- `packages/opencode/src/provider/local-providers.ts` — Port probing logic
-- `packages/opencode/src/storage/json-migration.ts` — Migration fix for new schema
-- `packages/core/src/global.ts` — App path changed from "opencode" to "agence"
+- `packages/agence/src/session/todo.ts` — Todo service with history, search, carry
+- `packages/agence/src/session/session.sql.ts` — DB schema (TodoTable, TaskHistoryTable)
+- `packages/agence/src/session/message-v2.ts` — Vision model detection + image stripping
+- `packages/agence/src/provider/provider.ts` — Local provider auto-discovery + database entries
+- `packages/agence/src/provider/local-providers.ts` — Port probing logic
+- `packages/agence/src/storage/json-migration.ts` — Migration fix for new schema
+- `packages/core/src/global.ts` — App path changed from "agence" to "agence"
 
 ### Desktop UI
 - `packages/desktop/electron-builder.config.ts` — Rebranded app name, ID, publish config
@@ -160,8 +160,8 @@ Env var override: `AGENCE_CHANNEL=dev|beta|prod` (was `OPENCODE_CHANNEL`)
 - `packages/ui/src/components/favicon.tsx` — PWA name
 
 ### DB Migrations
-- `packages/opencode/migration/20260523164657_add_todo_id_description_parent/` — Todo: id, description, parentId
-- `packages/opencode/migration/20260523171744_add_task_deps_tags_history/` — Todo: dependsOn, tags + TaskHistoryTable
+- `packages/agence/migration/20260523164657_add_todo_id_description_parent/` — Todo: id, description, parentId
+- `packages/agence/migration/20260523171744_add_task_deps_tags_history/` — Todo: dependsOn, tags + TaskHistoryTable
 
 ---
 
@@ -171,19 +171,19 @@ Env var override: `AGENCE_CHANNEL=dev|beta|prod` (was `OPENCODE_CHANNEL`)
 cd C:\Users\David\AI\smart-hub\opencode01
 
 # Build node server (required before desktop dev)
-bun run --cwd packages/opencode script/build-node.ts
+bun run --cwd packages/agence script/build-node.ts
 
 # Desktop dev mode
 bun dev:desktop
 
 # CLI dev mode (terminal TUI)
-bun run --cwd packages/opencode dev
+bun run --cwd packages/agence dev
 
 # Serve mode (REST API)
-.\packages\opencode\dist\opencode-windows-x64\bin\opencode.exe serve --port 9123
+.\packages\agence\dist\opencode-windows-x64\bin\agence.exe serve --port 9123
 
 # Typecheck
-bun run --cwd packages/opencode typecheck
+bun run --cwd packages/agence typecheck
 ```
 
 ---
@@ -194,7 +194,7 @@ bun run --cwd packages/opencode typecheck
 # Push to private repo
 git push origin dev --no-verify
 
-# Pull upstream opencode changes
+# Pull upstream agence changes
 git pull upstream dev
 ```
 
@@ -215,7 +215,7 @@ Auto-updater activates only in packaged (production) builds.
 ## Cloud Platform / LLM Resale (Future Work)
 
 The monorepo contains a full Cloudflare-deployed SaaS platform for selling LLM API access:
-- `packages/console/app/` — SolidStart web app (opencode.ai)
+- `packages/console/app/` — SolidStart web app (agence.ai)
 - `packages/console/core/` — Billing, auth, database (PlanetScale MySQL)
 - `packages/console/function/` — Auth worker (OpenAuth)
 - `packages/function/` — API worker + session sharing (Hono)
@@ -310,7 +310,7 @@ Key files in OpenClaw:
 
 ## Dependabot Alerts
 
-33 vulnerabilities inherited from upstream opencode.
+33 vulnerabilities inherited from upstream agence.
 Core packages patched: minimatch (→10.2.5), turbo (→2.9.14)
 Remaining alerts in `enterprise/`, `console/`, `function/` packages (unused).
 

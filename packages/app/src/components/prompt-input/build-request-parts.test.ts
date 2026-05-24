@@ -208,7 +208,7 @@ describe("buildRequestParts", () => {
       text: "@README.md",
       messageID: "msg_mac_1",
       sessionID: "ses_mac_1",
-      sessionDirectory: "/Users/kelvin/Projects/opencode",
+      sessionDirectory: "/Users/kelvin/Projects/agence",
     })
 
     const filePart = result.requestParts.find((part) => part.type === "file")
