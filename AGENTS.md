@@ -1,3 +1,7 @@
+# agence — Agent Instructions
+
+**Before modifying any code, read `PROJECT-MAP.md`** — the full architecture map, extension guide, and file cheat sheet.
+
 - To regenerate the JavaScript SDK, run `./packages/sdk/js/script/build.ts`.
 - ALWAYS USE PARALLEL TOOLS WHEN APPLICABLE.
 - The default branch in this repo is `dev`.

@@ -1,7 +1,9 @@
 # Agence Knowledge Base
 
+> **New to the codebase? Read `PROJECT-MAP.md` first** — architecture map, extension guide, where every file lives, and how to add features.
+
 Project: **Agence** — Modular agent + MCP server framework by David Patton
-Forked from: [anomalyco/agence](https://github.com/anomalyco/agence)
+Forked from: [anomalyco/opencode](https://github.com/anomalyco/opencode)
 Private repo: `github.com/David2024patton/agence`
 Upstream: `github.com/anomalyco/agence` (original agence)
 
