@@ -87,7 +87,7 @@ function getConfig() {
         ...base,
         appId: "ai.agence.desktop.dev",
         productName: "Agence Dev",
-        rpm: { packageName: "opencode-dev" },
+        rpm: { packageName: "agence-dev" },
       }
     }
     case "beta": {

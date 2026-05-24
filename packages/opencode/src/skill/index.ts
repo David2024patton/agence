@@ -23,6 +23,7 @@ const AGENTS_EXTERNAL_DIR = ".agents"
 const EXTERNAL_SKILL_PATTERN = "skills/**/SKILL.md"
 const OPENCODE_SKILL_PATTERN = "{skill,skills}/**/SKILL.md"
 const SKILL_PATTERN = "**/SKILL.md"
+const SELF_CONTAINED_SKILL_PATTERN = "skills/**/SKILL.md"
 
 // Built-in skill that ships with opencode. The model's intuition for what an
 // opencode.json should look like is often wrong, and opencode hard-fails on
@@ -31,7 +32,7 @@ const SKILL_PATTERN = "**/SKILL.md"
 // actual schemas instead of guesses.
 const CUSTOMIZE_OPENCODE_SKILL_NAME = "customize-opencode"
 const CUSTOMIZE_OPENCODE_SKILL_DESCRIPTION =
-  "Use ONLY when the user is editing or creating opencode's own configuration: opencode.json, opencode.jsonc, files under .opencode/, or files under ~/.config/opencode/. Also use when creating or fixing opencode agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring opencode itself."
+  "Use ONLY when the user is editing or creating agence's own configuration: opencode.json, opencode.jsonc, files under .opencode/, or files under ~/.config/agence/. Also use when creating or fixing agence agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring agence itself."
 
 export const Info = Schema.Struct({
   name: Schema.String,
@@ -208,6 +209,32 @@ const discoverSkills = Effect.fnUntraced(function* (
   }
 
   const cfg = yield* config.get()
+
+  // Scan self-contained directory (baseDir from config)
+  const baseDirs: string[] = []
+  if (cfg.directories?.baseDir) {
+    const d = cfg.directories.baseDir
+    const base = d.startsWith("~/") ? path.join(global.home, d.slice(2)) : d
+    baseDirs.push(path.isAbsolute(base) ? base : path.join(directory, base))
+  }
+  // Automatically detect binary's parent as self-contained fallback
+  const exeDir = path.dirname(process.execPath)
+  if (exeDir !== "/" && exeDir !== ".") baseDirs.push(exeDir)
+  for (const base of baseDirs) {
+    yield* scan(state, base, SELF_CONTAINED_SKILL_PATTERN, { scope: "self-contained" })
+  }
+
+  // Scan additional skill directories from config.directories.skills
+  for (const item of cfg.directories?.skills ?? []) {
+    const expanded = item.startsWith("~/") ? path.join(global.home, item.slice(2)) : item
+    const dir = path.isAbsolute(expanded) ? expanded : path.join(directory, expanded)
+    if (!(yield* fsys.isDir(dir))) {
+      log.warn("skill directory not found", { path: dir })
+      continue
+    }
+    yield* scan(state, dir, SKILL_PATTERN)
+  }
+
   for (const item of cfg.skills?.paths ?? []) {
     const expanded = item.startsWith("~/") ? path.join(global.home, item.slice(2)) : item
     const dir = path.isAbsolute(expanded) ? expanded : path.join(directory, expanded)

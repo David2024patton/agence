@@ -26,6 +26,7 @@ import { NonNegativeInt, PositiveInt, type DeepMutable } from "@opencode-ai/core
 import { ConfigAgent } from "./agent"
 import { ConfigAttachment } from "./attachment"
 import { ConfigCommand } from "./command"
+import { ConfigDirectories } from "./directories"
 import { ConfigFormatter } from "./formatter"
 import { ConfigLayout } from "./layout"
 import { ConfigLSP } from "./lsp"
@@ -139,6 +140,9 @@ export const Info = Schema.Struct({
     description: "Default shell to use for terminal and bash tool",
   }),
   logLevel: Schema.optional(LogLevelRef).annotate({ description: "Log level" }),
+  directories: Schema.optional(ConfigDirectories.Info).annotate({
+    description: "Self-contained base directory and additional search paths for MCPs, skills, and tools",
+  }),
   server: Schema.optional(ConfigServer.Server).annotate({
     description: "Server configuration for opencode serve and web commands",
   }),
@@ -730,6 +734,49 @@ export const layer = Layer.effect(
               source: managed.source,
             }),
           )
+        }
+
+        // Load MCP configs from self-contained and additional directories
+        const mcpScanDirs: string[] = []
+        if (result.directories?.baseDir) {
+          const d = result.directories.baseDir
+          const base = d.startsWith("~/") ? path.join(os.homedir(), d.slice(2)) : d
+          mcpScanDirs.push(path.join(path.isAbsolute(base) ? base : path.join(ctx.directory, base), "mcp"))
+        }
+        const exeDir = path.dirname(process.execPath)
+        if (exeDir !== "/" && exeDir !== ".") {
+          mcpScanDirs.push(path.join(exeDir, "mcp"))
+        }
+        for (const item of result.directories?.mcp ?? []) {
+          const expanded = item.startsWith("~/") ? path.join(os.homedir(), item.slice(2)) : item
+          mcpScanDirs.push(path.isAbsolute(expanded) ? expanded : path.join(ctx.directory, expanded))
+        }
+        for (const dir of mcpScanDirs) {
+          const mcpEntries = yield* Effect.tryPromise({
+            try: async () => {
+              const files = await fsNode.readdir(dir)
+              const entries: Array<{ name: string; config: unknown }> = []
+              for (const file of files) {
+                if (!file.endsWith(".json") && !file.endsWith(".jsonc")) continue
+                const source = path.join(dir, file)
+                const name = file.replace(/\.jsonc?$/, "")
+                try {
+                  const content = await fsNode.readFile(source, "utf-8")
+                  const parsed = JSON.parse(content)
+                  if (parsed.type && (parsed.command || parsed.url)) {
+                    entries.push({ name, config: parsed })
+                  }
+                } catch {
+                  // Skip malformed files
+                }
+              }
+              return entries
+            },
+          }).pipe(Effect.catch(() => Effect.succeed([] as Array<{ name: string; config: unknown }>)))
+          for (const { name, config } of mcpEntries) {
+            result.mcp = result.mcp ?? {}
+            ;(result.mcp as Record<string, unknown>)[name] = config
+          }
         }
 
         for (const [name, mode] of Object.entries(result.mode ?? {})) {
