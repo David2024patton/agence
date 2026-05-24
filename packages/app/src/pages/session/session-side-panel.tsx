@@ -263,9 +263,8 @@ export function SessionSidePanel(props: {
                             </div>
                           </Tabs.Trigger>
                         </Show>
-                        <Show when={memoryOpen() || contextOpen()}>
-                          <Show when={memoryOpen()}>
-                            <Tabs.Trigger
+                        <Show when={memoryOpen()}>
+                          <Tabs.Trigger
                               value="memory"
                               closeButton={
                                 <TooltipKeybind
