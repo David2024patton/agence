@@ -32,7 +32,7 @@ export const SidebarContent = (props: {
   onOpenHelp: () => void
   renderPanel: () => JSX.Element
 }): JSX.Element => {
-  const expanded = createMemo(() => !!props.mobile || props.opened())
+  const expanded = createMemo(() => true)
   const placement = () => (props.mobile ? "bottom" : "right")
   let panel: HTMLDivElement | undefined
 
