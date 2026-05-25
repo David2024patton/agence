@@ -297,6 +297,7 @@ export function AppInterface(props: {
   disableHealthCheck?: boolean
 }) {
   return (
+    <div style="padding-left: 300px; height: 100%">
     <ServerProvider
       defaultServer={props.defaultServer}
       disableHealthCheck={props.disableHealthCheck}
@@ -324,5 +325,6 @@ export function AppInterface(props: {
         </ServerKey>
       </ConnectionGate>
     </ServerProvider>
+    </div>
   )
 }

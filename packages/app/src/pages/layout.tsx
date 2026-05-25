@@ -2395,7 +2395,7 @@ export default function Layout(props: ParentProps) {
         <nav
           aria-label={language.t("sidebar.nav.projectsAndSessions")}
           data-component="sidebar-nav-desktop"
-          class="shrink-0 overflow-y-auto border-r border-border-weaker-base bg-background-base"
+          class="fixed left-0 top-[44px] bottom-0 overflow-y-auto border-r border-border-weaker-base bg-background-base z-30"
           style="width: 300px"
           ref={(el) => { setState("nav", el) }}
           onMouseEnter={() => { disarm() }}
