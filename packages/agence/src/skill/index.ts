@@ -39,7 +39,7 @@ const CUSTOMIZE_AGENCE_SKILL_DESCRIPTION =
 // extension points, UI patterns, and known bug fixes.
 const AGENCE_SKILL_NAME = "agence"
 const AGENCE_SKILL_DESCRIPTION =
-  "Agence architecture, extension guide, UI patterns, and fix knowledge base. Use whenever working on this codebase — adding features, debugging, understanding the monorepo, or modifying the desktop UI."
+  "Use ONLY when the user is working on the Agence codebase itself — editing Agence source files, adding features to Agence, debugging Agence internals, modifying the Agence desktop UI, or understanding the Agence monorepo structure. Do NOT use for general coding tasks, user projects, or anything outside the Agence repo at C:\\Users\\David\\AI\\agence."
 
 export const Info = Schema.Struct({
   name: Schema.String,
