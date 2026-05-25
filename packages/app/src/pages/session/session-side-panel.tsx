@@ -276,24 +276,20 @@ export function SessionSidePanel(props: {
                           </Tabs.Trigger>
                         </Show>
                         <Show when={memoryOpen()}>
-                          <div
-                            data-value="memory"
-                            class="relative flex items-center shrink-0 h-7 px-2 text-12-regular cursor-default select-none rounded-t-md border border-border-weaker-base bg-background-base"
-                            onClick={() => tabs().open("memory")}
-                          >
-                            <div class="flex items-center gap-1.5">
+                          <Tabs.Trigger value="memory" hideCloseButton>
+                            <div class="flex items-center gap-2">
                               <IconButton
                                 icon="close-small"
                                 variant="ghost"
                                 size="small"
-                                class="h-3.5 w-3.5"
-                                onClick={(e) => { e.stopPropagation(); tabs().close("memory") }}
+                                class="h-4 w-4"
+                                onClick={() => tabs().close("memory")}
                                 aria-label="Close memory"
                               />
                               <Icon name="archive" size="small" />
-                              <span class="text-text-strong">Memory</span>
+                              <div>Memory</div>
                             </div>
-                          </div>
+                          </Tabs.Trigger>
                           </Show>
                     <Show when={contextOpen()}>
                           <Tabs.Trigger

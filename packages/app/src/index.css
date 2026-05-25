@@ -139,3 +139,6 @@
     }
   }
 }
+
+/* Hide close button on tabs with hideCloseButton prop */
+[data-slot="tabs-trigger-close-button"][data-hidden="true"] { display: none !important }
