@@ -279,6 +279,14 @@ export function SessionSidePanel(props: {
                               hideCloseButton
                             >
                               <div class="flex items-center gap-2">
+                                <IconButton
+                                  icon="close-small"
+                                  variant="ghost"
+                                  size="small"
+                                  class="h-4 w-4"
+                                  onClick={() => tabs().close("memory")}
+                                  aria-label="Close memory"
+                                />
                                 <Icon name="archive" size="small" />
                                 <div>Memory</div>
                               </div>
