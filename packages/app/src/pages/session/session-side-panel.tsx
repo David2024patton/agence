@@ -286,7 +286,7 @@ export function SessionSidePanel(props: {
                               hideCloseButton
                             >
                               <div class="flex items-center gap-2">
-                                <Icon name="archive" class="size-3.5" />
+                                <Icon name="archive" size="small" />
                                 <div>Memory</div>
                               </div>
                             </Tabs.Trigger>

@@ -457,14 +457,14 @@ export function SessionHeader() {
                   </Tooltip>
                 </Show>
                 <Tooltip placement="bottom" value="Memory">
-                  <IconButton
-                    icon="archive"
-                    size="small"
+                  <Button
                     variant="ghost"
-                    class="w-6 h-6"
+                    class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
                     onClick={() => tabs().open("memory")}
                     aria-label="Memory"
-                  />
+                  >
+                    <Icon size="small" name="archive" class="text-icon-weak" />
+                  </Button>
                 </Tooltip>
                 <Show when={term()}>
                   <TooltipKeybind
