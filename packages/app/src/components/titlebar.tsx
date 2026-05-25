@@ -476,58 +476,35 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                 </Show>
                 <Show when={currentSessionTab()?.dir}>
                   <Tooltip placement="bottom" value="Memory">
-                      <IconButton
-                        icon="archive"
-                        variant="ghost"
-                        size="small"
-                        class="titlebar-icon w-6 h-6"
+                      <Button variant="ghost" class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
                         onClick={() => window.dispatchEvent(new CustomEvent("agence:memory:toggle"))}
-                        aria-label="Memory"
-                      />
+                        aria-label="Memory">
+                        <Icon size="small" name="archive" class="text-icon-weak" />
+                      </Button>
+                    </Tooltip>
+                  </Show>
+                  <Show when={currentSessionTab()?.dir}>
+                    <Tooltip placement="bottom" value="Terminal">
+                      <Button variant="ghost" class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
+                        onClick={() => window.dispatchEvent(new CustomEvent("agence:terminal:toggle"))}
+                        aria-label="Terminal">
+                        <Icon size="small" name="terminal" class="text-icon-weak" />
+                      </Button>
+                    </Tooltip>
+                  </Show>
+                  <Tooltip placement="bottom" value="Settings">
+                    <Button variant="ghost" class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
+                      aria-label="Settings">
+                      <Icon size="small" name="settings-gear" class="text-icon-weak" />
+                    </Button>
                   </Tooltip>
-                </Show>
-                <Show when={currentSessionTab()?.dir}>
-                  <Tooltip placement="bottom" value="Search">
-                    <IconButton
-                      icon="search"
-                      variant="ghost"
-                      size="small"
-                      class="titlebar-icon w-6 h-6"
-                      aria-label="Search"
-                    />
+                  <Tooltip placement="bottom" value="Help">
+                    <Button variant="ghost" class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
+                      onClick={() => window.open("https://github.com/David2024patton/agence", "_blank")}
+                      aria-label="Help">
+                      <Icon size="small" name="help" class="text-icon-weak" />
+                    </Button>
                   </Tooltip>
-                </Show>
-                <Show when={currentSessionTab()?.dir}>
-                  <Tooltip placement="bottom" value="Terminal">
-                    <IconButton
-                      icon="terminal"
-                      variant="ghost"
-                      size="small"
-                      class="titlebar-icon w-6 h-6"
-                      onClick={() => window.dispatchEvent(new CustomEvent("agence:terminal:toggle"))}
-                      aria-label="Terminal"
-                    />
-                  </Tooltip>
-                </Show>
-                <Tooltip placement="bottom" value="Settings">
-                  <IconButton
-                    icon="settings"
-                    variant="ghost"
-                    size="small"
-                    class="titlebar-icon w-6 h-6"
-                    aria-label="Settings"
-                  />
-                </Tooltip>
-                <Tooltip placement="bottom" value="Help">
-                  <IconButton
-                    icon="help"
-                    variant="ghost"
-                    size="small"
-                    class="titlebar-icon w-6 h-6"
-                    onClick={() => window.open("https://github.com/David2024patton/agence", "_blank")}
-                    aria-label="Help"
-                  />
-                </Tooltip>
                 <TitlebarUpdatePill update={props.update} />
                 <Show when={windows() && !electronWindows()}>
                   <div data-tauri-decorum-tb class="flex flex-row" />
