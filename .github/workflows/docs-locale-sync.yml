@@ -10,7 +10,7 @@ on:
 jobs:
   sync-locales:
     if: false
-    #if: github.actor != 'opencode-agent[bot]'
+    #if: github.actor != 'agence-agent[bot]'
     runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: write
@@ -29,7 +29,7 @@ jobs:
         id: committer
         uses: ./.github/actions/setup-git-committer
         with:
-          opencode-app-id: ${{ vars.AGENCE_APP_ID }}
+          agence-app-id: ${{ vars.AGENCE_APP_ID }}
           opencode-app-secret: ${{ secrets.AGENCE_APP_SECRET }}
 
       - name: Compute changed English docs

@@ -22,7 +22,7 @@ jobs:
         id: committer
         uses: ./.github/actions/setup-git-committer
         with:
-          opencode-app-id: ${{ vars.AGENCE_APP_ID }}
+          agence-app-id: ${{ vars.AGENCE_APP_ID }}
           opencode-app-secret: ${{ secrets.AGENCE_APP_SECRET }}
 
       - name: Generate

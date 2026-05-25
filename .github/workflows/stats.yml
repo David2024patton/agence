@@ -9,7 +9,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   stats:
-    if: github.repository == 'anomalyco/agence'
+    if: github.repository == 'David2024patton/agence'
     runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: write
