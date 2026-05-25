@@ -2392,19 +2392,33 @@ export default function Layout(props: ParentProps) {
         <UpdateAvailableToast version={updateVersion() ?? ""} install={installUpdate} language={language} />
       </Show>
       <div class="flex-1 min-h-0 min-w-0 flex">
-        <nav
-          aria-label={language.t("sidebar.nav.projectsAndSessions")}
-          data-component="sidebar-nav-desktop"
-          class="fixed left-0 top-[44px] bottom-0 overflow-y-auto border-r border-border-weaker-base bg-background-base z-30"
-          style="width: 300px"
-          ref={(el) => { setState("nav", el) }}
-          onMouseEnter={() => { disarm() }}
-          onMouseLeave={() => { aim.reset(); if (!sidebarHovering()) return; arm() }}
-        >
-          <div class="@container w-full h-full contain-strict">{sidebarContent()}</div>
-        </nav>
         <div class="flex-1 min-h-0 relative">
           <div class="size-full relative overflow-x-hidden">
+            <nav
+              aria-label={language.t("sidebar.nav.projectsAndSessions")}
+              data-component="sidebar-nav-desktop"
+              classList={{
+                "block": true,
+                "fixed top-11 left-0 bottom-0": true,
+                "z-10": true,
+              }}
+              style={{ width: `${side()}px` }}
+              ref={(el) => {
+                setState("nav", el)
+              }}
+              onMouseEnter={() => {
+                disarm()
+              }}
+              onMouseLeave={() => {
+                aim.reset()
+                if (!sidebarHovering()) return
+
+                arm()
+              }}
+            >
+              <div class="@container w-full h-full contain-strict">{sidebarContent()}</div>
+            </nav>
+
             <Show when={layout.sidebar.opened()}>
               <div
                 class="hidden xl:block absolute inset-y-0 z-30 w-0 overflow-visible"
@@ -2456,7 +2470,18 @@ export default function Layout(props: ParentProps) {
               </nav>
             </div>
 
-            <div class="flex-1 min-w-0 z-20">
+            <div
+              classList={{
+                "absolute inset-0": true,
+                "xl:inset-y-0 xl:right-0 xl:left-[var(--main-left)]": true,
+                "z-20": true,
+                "transition-[left] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[left] motion-reduce:transition-none":
+                  !state.sizing,
+              }}
+              style={{
+                "--main-left": layout.sidebar.opened() ? `${side()}px` : "4rem",
+              }}
+            >
               <main
                 classList={{
                   "size-full overflow-x-hidden flex flex-col items-start contain-strict border-t border-border-weak-base bg-background-base xl:border-l xl:rounded-tl-[12px]": true,
