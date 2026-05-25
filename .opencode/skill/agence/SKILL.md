@@ -1,9 +1,9 @@
 ---
-name: agence-architecture
+name: agence
 description: Complete architecture, extension guide, UI patterns, and fix knowledge base for the Agence project. Use whenever working on this codebase — adding features, debugging, understanding the monorepo structure, or modifying the desktop UI.
 ---
 
-# Agence Architecture & Extension Guide
+# Agence Skill
 
 ## Quick Reference
 - **Repo:** `C:\Users\David\AI\agence` / `github.com/David2024patton/agence` (branch: `dev`)
