@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, type JSX } from "solid-js"
+import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, onMount, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Tabs } from "@agence-ai/ui/tabs"
@@ -148,6 +148,15 @@ export function SessionSidePanel(props: {
   const contextOpen = tabState.contextOpen
   const memoryOpen = createMemo(() => tabs().active() === "memory" || tabs().all().includes("memory"))
   const openedTabs = tabState.openedTabs
+
+  onMount(() => {
+    const handler = () => {
+      const t = tabs()
+      t.all().includes("memory") ? t.close("memory") : t.open("memory")
+    }
+    window.addEventListener("agence:memory:toggle", handler)
+    onCleanup(() => window.removeEventListener("agence:memory:toggle", handler))
+  })
   const activeTabInternal = tabState.activeTab
   const activeTab = createMemo(() => {
     if (memoryOpen() && tabs().active() === "memory") return "memory"

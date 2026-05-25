@@ -481,6 +481,7 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                         variant="ghost"
                         size="small"
                         class="titlebar-icon w-6 h-6"
+                        onClick={() => window.dispatchEvent(new CustomEvent("agence:memory:toggle"))}
                         aria-label="Memory"
                       />
                   </Tooltip>
