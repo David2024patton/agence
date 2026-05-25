@@ -2482,16 +2482,7 @@ export default function Layout(props: ParentProps) {
             </div>
 
             <div
-              classList={{
-                "absolute inset-0": true,
-                "xl:inset-y-0 xl:right-0 xl:left-[var(--main-left)]": true,
-                "z-20": true,
-                "transition-[left] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[left] motion-reduce:transition-none":
-                  !state.sizing,
-              }}
-              style={{
-                "--main-left": layout.sidebar.opened() ? `${side()}px` : "4rem",
-              }}
+              class="flex-1 min-w-0 z-20"
             >
               <main
                 classList={{
