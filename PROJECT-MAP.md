@@ -202,7 +202,34 @@ Here's exactly what we added to create the monitoring system:
 | Fix desktop issues | `packages/desktop/src/main/sidecar.ts` + `server.ts` |
 | Debug startup crashes | Check `InstanceRef` in `packages/agence/src/effect/instance-state.ts` |
 | Add desktop menu item | `packages/app/src/desktop-menu.ts` + route in `app.tsx` |
+| Add titlebar icon | `packages/app/src/components/titlebar.tsx` — add `<IconButton>` in the same row as `StatusPopover`. Use `window.dispatchEvent(new CustomEvent(...))` for click actions. Listen in the target component with `window.addEventListener`. |
 | Add config option | `packages/agence/src/config/` + register in `config.ts` |
+
+## Titlebar Icons (How-To)
+
+Titlebar icons render in the window frame, next to the minimize/maximize/close buttons. To add one:
+
+1. In `titlebar.tsx`, find the `StatusPopover` section (~line 468-476)
+2. Add your icon button AFTER the `</Show>` that wraps StatusPopover:
+   ```tsx
+   <Show when={currentSessionTab()?.dir}>
+     <Tooltip placement="bottom" value="Memory">
+       <IconButton icon="archive" variant="ghost" size="small"
+         class="titlebar-icon w-6 h-6"
+         onClick={() => window.dispatchEvent(new CustomEvent("agence:memory:toggle"))}
+         aria-label="Memory" />
+     </Tooltip>
+   </Show>
+   ```
+3. In the target component (e.g., `session-side-panel.tsx`), listen for the event:
+   ```tsx
+   onMount(() => {
+     const handler = () => { /* toggle your panel */ }
+     window.addEventListener("agence:myevent:toggle", handler)
+     onCleanup(() => window.removeEventListener("agence:myevent:toggle", handler))
+   })
+   ```
+4. Use `CustomEvent` for cross-component communication since the titlebar doesn't share session context.
 
 ## Runtime Flow
 
