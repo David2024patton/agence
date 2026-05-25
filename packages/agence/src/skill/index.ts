@@ -15,6 +15,7 @@ import { Glob } from "@agence-ai/core/util/glob"
 import * as Log from "@agence-ai/core/util/log"
 import { Discovery } from "./discovery"
 import CUSTOMIZE_AGENCE_SKILL_BODY from "./prompt/customize-agence.md" with { type: "text" }
+import AGENCE_SKILL_BODY from "./prompt/agence.md" with { type: "text" }
 import { isRecord } from "@/util/record"
 
 const log = Log.create({ service: "skill" })
@@ -33,6 +34,12 @@ const SELF_CONTAINED_SKILL_PATTERN = "skills/**/SKILL.md"
 const CUSTOMIZE_AGENCE_SKILL_NAME = "customize-agence"
 const CUSTOMIZE_AGENCE_SKILL_DESCRIPTION =
   "Use ONLY when the user is editing or creating agence's own configuration: opencode.json, opencode.jsonc, files under .opencode/, or files under ~/.config/agence/. Also use when creating or fixing agence agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring agence itself."
+
+// Built-in skill that teaches any LLM the full Agence architecture,
+// extension points, UI patterns, and known bug fixes.
+const AGENCE_SKILL_NAME = "agence"
+const AGENCE_SKILL_DESCRIPTION =
+  "Agence architecture, extension guide, UI patterns, and fix knowledge base. Use whenever working on this codebase — adding features, debugging, understanding the monorepo, or modifying the desktop UI."
 
 export const Info = Schema.Struct({
   name: Schema.String,
@@ -303,6 +310,12 @@ export const layer = Layer.effect(
           description: CUSTOMIZE_AGENCE_SKILL_DESCRIPTION,
           location: "<built-in>",
           content: CUSTOMIZE_AGENCE_SKILL_BODY,
+        }
+        s.skills[AGENCE_SKILL_NAME] = {
+          name: AGENCE_SKILL_NAME,
+          description: AGENCE_SKILL_DESCRIPTION,
+          location: "<built-in>",
+          content: AGENCE_SKILL_BODY,
         }
         yield* loadSkills(s, yield* InstanceState.get(discovered), bus)
         return s
