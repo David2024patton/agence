@@ -2398,7 +2398,7 @@ export default function Layout(props: ParentProps) {
               aria-label={language.t("sidebar.nav.projectsAndSessions")}
               data-component="sidebar-nav-desktop"
               classList={{
-                "hidden xl:block": true,
+                "block": true,
                 "absolute inset-y-0 left-0": true,
                 "z-10": true,
               }}
