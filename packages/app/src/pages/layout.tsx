@@ -2392,6 +2392,17 @@ export default function Layout(props: ParentProps) {
         <UpdateAvailableToast version={updateVersion() ?? ""} install={installUpdate} language={language} />
       </Show>
       <div class="flex-1 min-h-0 min-w-0 flex">
+        <nav
+          aria-label={language.t("sidebar.nav.projectsAndSessions")}
+          data-component="sidebar-nav-desktop"
+          class="shrink-0 overflow-y-auto border-r border-border-weaker-base bg-background-base"
+          style={{ width: `${side()}px` }}
+          ref={(el) => { setState("nav", el) }}
+          onMouseEnter={() => { disarm() }}
+          onMouseLeave={() => { aim.reset(); if (!sidebarHovering()) return; arm() }}
+        >
+          <div class="@container w-full h-full contain-strict">{sidebarContent()}</div>
+        </nav>
         <div class="flex-1 min-h-0 relative">
           <div class="size-full relative overflow-x-hidden">
             <nav
