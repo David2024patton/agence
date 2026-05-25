@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, type JSX } from "solid-js"
+import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Tabs } from "@agence-ai/ui/tabs"
@@ -146,7 +146,7 @@ export function SessionSidePanel(props: {
     hasReview: props.canReview,
   })
   const contextOpen = tabState.contextOpen
-  const [memoryOpen, setMemoryOpen] = createSignal(false)
+  const memoryOpen = createMemo(() => tabs().active() === "memory" || tabs().all().includes("memory"))
   const openedTabs = tabState.openedTabs
   const activeTabInternal = tabState.activeTab
   const activeTab = createMemo(() => {
@@ -278,7 +278,7 @@ export function SessionSidePanel(props: {
                                     icon="close-small"
                                     variant="ghost"
                                     class="h-5 w-5"
-                                    onClick={() => setMemoryOpen(false)}
+                                    onClick={() => tabs().close("memory")}
                                     aria-label={language.t("common.closeTab")}
                                   />
                                 </TooltipKeybind>
@@ -322,19 +322,7 @@ export function SessionSidePanel(props: {
                         <SortableProvider ids={openedTabs()}>
                           <For each={openedTabs()}>{(tab) => <SortableTab tab={tab} onTabClose={tabs().close} />}</For>
                         </SortableProvider>
-                        <div class="bg-background-stronger h-full shrink-0 sticky right-0 z-10 flex items-center justify-center pr-0">
-                          <Show when={!memoryOpen()}>
-                            <TooltipKeybind title="Memory" class="flex items-center">
-                              <IconButton
-                                icon="archive"
-                                variant="ghost"
-                                iconSize="small"
-                                class="!rounded-md"
-                                onClick={() => setMemoryOpen(true)}
-                                aria-label="Memory"
-                              />
-                            </TooltipKeybind>
-                          </Show>
+                        <div class="bg-background-stronger h-full shrink-0 sticky right-0 z-10 flex items-center justify-center pr-3">
                           <TooltipKeybind
                             title={language.t("command.file.open")}
                             keybind={command.keybind("file.open")}

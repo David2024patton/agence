@@ -437,10 +437,7 @@ export function SessionHeader() {
                     size="small"
                     variant="ghost"
                     class="w-6 h-6"
-                    onClick={() => {
-                      const t = tabs()
-                      t.all().includes("memory") ? t.close("memory") : t.open("memory")
-                    }}
+                    onClick={() => tabs().open("memory")}
                     aria-label="Memory"
                   />
                 </Tooltip>
