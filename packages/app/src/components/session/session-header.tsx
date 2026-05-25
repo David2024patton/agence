@@ -431,6 +431,19 @@ export function SessionHeader() {
                     <StatusPopover />
                   </Tooltip>
                 </Show>
+                <Tooltip placement="bottom" value="Memory">
+                  <IconButton
+                    icon="archive"
+                    size="small"
+                    variant="ghost"
+                    class="w-6 h-6"
+                    onClick={() => {
+                      const t = tabs()
+                      t.all().includes("memory") ? t.close("memory") : t.open("memory")
+                    }}
+                    aria-label="Memory"
+                  />
+                </Tooltip>
                 <Show when={term()}>
                   <TooltipKeybind
                     title={language.t("command.terminal.toggle")}

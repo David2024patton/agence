@@ -2,6 +2,7 @@ import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onCle
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Tabs } from "@agence-ai/ui/tabs"
+import { Icon } from "@agence-ai/ui/icon"
 import { IconButton } from "@agence-ai/ui/icon-button"
 import { TooltipKeybind } from "@agence-ai/ui/tooltip"
 import { ResizeHandle } from "@agence-ai/ui/resize-handle"
