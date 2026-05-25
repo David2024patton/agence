@@ -494,7 +494,7 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                   </Show>
                   <Tooltip placement="bottom" value="Settings">
                     <Button variant="ghost" class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
-                      onClick={() => command.run("settings.open")}
+                      onClick={() => { try { command.run("settings.open") } catch {} }}
                       aria-label="Settings">
                       <Icon size="small" name="settings-gear" class="text-icon-weak" />
                     </Button>
