@@ -8,7 +8,7 @@ import { Spinner } from "@agence-ai/ui/spinner"
 import { showToast } from "@agence-ai/ui/toast"
 import { Tooltip, TooltipKeybind } from "@agence-ai/ui/tooltip"
 import { getFilename } from "@agence-ai/core/util/path"
-import { createEffect, createMemo, createSignal, For, onMount, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Portal } from "solid-js/web"
 import { useCommand } from "@/context/command"
@@ -139,6 +139,12 @@ export function SessionHeader() {
   const sync = useSync()
   const terminal = useTerminal()
   const { params, view } = useSessionLayout()
+
+  onMount(() => {
+    const h = () => view().terminal.toggle()
+    window.addEventListener("agence:terminal:toggle", h)
+    onCleanup(() => window.removeEventListener("agence:terminal:toggle", h))
+  })
 
   const projectDirectory = createMemo(() => decode64(params.dir) ?? "")
   const project = createMemo(() => {
