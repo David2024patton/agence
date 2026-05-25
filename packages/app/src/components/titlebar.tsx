@@ -474,6 +474,36 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                     </SDKProvider>
                   )}
                 </Show>
+                <Show when={currentSessionTab()?.dir}>
+                  <Tooltip placement="bottom" value="Memory">
+                      <IconButton
+                        icon="archive"
+                        variant="ghost"
+                        size="small"
+                        class="titlebar-icon w-6 h-6"
+                        aria-label="Memory"
+                      />
+                  </Tooltip>
+                </Show>
+                <Tooltip placement="bottom" value="Settings">
+                  <IconButton
+                    icon="settings"
+                    variant="ghost"
+                    size="small"
+                    class="titlebar-icon w-6 h-6"
+                    aria-label="Settings"
+                  />
+                </Tooltip>
+                <Tooltip placement="bottom" value="Help">
+                  <IconButton
+                    icon="help"
+                    variant="ghost"
+                    size="small"
+                    class="titlebar-icon w-6 h-6"
+                    onClick={() => window.open("https://github.com/David2024patton/agence", "_blank")}
+                    aria-label="Help"
+                  />
+                </Tooltip>
                 <TitlebarUpdatePill update={props.update} />
                 <Show when={windows() && !electronWindows()}>
                   <div data-tauri-decorum-tb class="flex flex-row" />
