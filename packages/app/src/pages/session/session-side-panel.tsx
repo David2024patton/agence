@@ -147,7 +147,7 @@ export function SessionSidePanel(props: {
   })
   const contextOpen = tabState.contextOpen
   const memoryOpen = createMemo(() => tabs().active() === "memory" || tabs().all().includes("memory"))
-  const openedTabs = tabState.openedTabs
+  const openedTabs = createMemo(() => tabState.openedTabs().filter((t) => t !== "memory"))
 
   onMount(() => {
     const handler = () => {
