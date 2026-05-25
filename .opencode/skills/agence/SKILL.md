@@ -1,6 +1,6 @@
 ---
 name: agence
-description: Complete architecture, extension guide, UI patterns, and fix knowledge base for the Agence project. Use whenever working on this codebase — adding features, debugging, understanding the monorepo structure, or modifying the desktop UI.
+description: Use ONLY when the user is working on the Agence codebase itself — editing Agence source files, adding features to Agence, debugging Agence internals, modifying the Agence desktop UI, or understanding the Agence monorepo structure. Do NOT use for general coding tasks, user projects, or anything outside the Agence repo.
 ---
 
 # Agence Skill

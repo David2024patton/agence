@@ -486,6 +486,29 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                       />
                   </Tooltip>
                 </Show>
+                <Show when={currentSessionTab()?.dir}>
+                  <Tooltip placement="bottom" value="Search">
+                    <IconButton
+                      icon="search"
+                      variant="ghost"
+                      size="small"
+                      class="titlebar-icon w-6 h-6"
+                      aria-label="Search"
+                    />
+                  </Tooltip>
+                </Show>
+                <Show when={currentSessionTab()?.dir}>
+                  <Tooltip placement="bottom" value="Terminal">
+                    <IconButton
+                      icon="terminal"
+                      variant="ghost"
+                      size="small"
+                      class="titlebar-icon w-6 h-6"
+                      onClick={() => window.dispatchEvent(new CustomEvent("agence:terminal:toggle"))}
+                      aria-label="Terminal"
+                    />
+                  </Tooltip>
+                </Show>
                 <Tooltip placement="bottom" value="Settings">
                   <IconButton
                     icon="settings"
