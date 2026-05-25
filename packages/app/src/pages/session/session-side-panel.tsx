@@ -159,7 +159,7 @@ export function SessionSidePanel(props: {
   })
   const activeTabInternal = tabState.activeTab
   const activeTab = createMemo(() => {
-    if (memoryOpen() && tabs().active() === "memory") return "memory"
+    if (memoryOpen()) return "memory"
     return activeTabInternal()
   })
   const activeFileTab = tabState.activeFileTab
