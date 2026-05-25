@@ -491,21 +491,7 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                         <Icon size="small" name="terminal" class="text-icon-weak" />
                       </Button>
                     </Tooltip>
-                  </Show>
-                  <Tooltip placement="bottom" value="Settings">
-                    <Button variant="ghost" class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
-                      onClick={() => { try { command.run("settings.open") } catch {} }}
-                      aria-label="Settings">
-                      <Icon size="small" name="settings-gear" class="text-icon-weak" />
-                    </Button>
-                  </Tooltip>
-                  <Tooltip placement="bottom" value="Help">
-                    <Button variant="ghost" class="titlebar-icon w-8 h-6 p-0 box-border shrink-0"
-                      onClick={() => window.open("https://github.com/David2024patton/agence", "_blank")}
-                      aria-label="Help">
-                      <Icon size="small" name="help" class="text-icon-weak" />
-                    </Button>
-                  </Tooltip>
+                </Show>
                 <TitlebarUpdatePill update={props.update} />
                 <Show when={windows() && !electronWindows()}>
                   <div data-tauri-decorum-tb class="flex flex-row" />
