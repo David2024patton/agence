@@ -2396,7 +2396,7 @@ export default function Layout(props: ParentProps) {
           aria-label={language.t("sidebar.nav.projectsAndSessions")}
           data-component="sidebar-nav-desktop"
           class="shrink-0 overflow-y-auto border-r border-border-weaker-base bg-background-base"
-          style={{ width: `${side()}px` }}
+          style="width: 300px"
           ref={(el) => { setState("nav", el) }}
           onMouseEnter={() => { disarm() }}
           onMouseLeave={() => { aim.reset(); if (!sidebarHovering()) return; arm() }}
