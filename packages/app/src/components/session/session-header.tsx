@@ -347,8 +347,33 @@ export function SessionHeader() {
                           <div class="flex size-5 shrink-0 items-center justify-center [&_[data-component=app-icon]]:size-5">
                             <Show when={opening()} fallback={<AppIcon id={current().icon} />}>
                               <Spinner class="size-3.5" style={{ color: tint() ?? "var(--icon-base)" }} />
-                            </Show>
-                          </div>
+                    </Show>
+
+                    <TooltipKeybind
+                      title={language.t("settings.title")}
+                      keybind={command.keybind("settings.open")}
+                    >
+                      <Button
+                        variant="ghost"
+                        class="titlebar-icon w-8 h-6 p-0 box-border"
+                        onClick={() => layout.settings.open()}
+                        aria-label={language.t("settings.title")}
+                      >
+                        <Icon size="small" name="settings" class="text-icon-weak" />
+                      </Button>
+                    </TooltipKeybind>
+
+                    <TooltipKeybind title={language.t("help.title")}>
+                      <Button
+                        variant="ghost"
+                        class="titlebar-icon w-8 h-6 p-0 box-border"
+                        onClick={() => window.open("https://github.com/David2024patton/agence", "_blank")}
+                        aria-label={language.t("help.title")}
+                      >
+                        <Icon size="small" name="help" class="text-icon-weak" />
+                      </Button>
+                    </TooltipKeybind>
+                  </div>
                         </Button>
                         <DropdownMenu
                           gutter={4}
