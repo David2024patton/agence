@@ -527,6 +527,27 @@ export function SessionHeader() {
                       </Button>
                     </TooltipKeybind>
                   </Show>
+
+                  <Tooltip placement="bottom" value="Settings">
+                    <Button
+                      variant="ghost"
+                      class="titlebar-icon w-8 h-6 p-0 box-border"
+                      aria-label="Settings"
+                    >
+                      <Icon size="small" name="settings" class="text-icon-weak" />
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip placement="bottom" value="Help">
+                    <Button
+                      variant="ghost"
+                      class="titlebar-icon w-8 h-6 p-0 box-border"
+                      onClick={() => window.open("https://github.com/David2024patton/agence", "_blank")}
+                      aria-label="Help"
+                    >
+                      <Icon size="small" name="help" class="text-icon-weak" />
+                    </Button>
+                  </Tooltip>
                 </div>
               </div>
             </div>
