@@ -276,22 +276,6 @@ export function SessionSidePanel(props: {
                         <Show when={memoryOpen()}>
                           <Tabs.Trigger
                               value="memory"
-                              closeButton={
-                                <TooltipKeybind
-                                  title={language.t("common.closeTab")}
-                                  keybind={command.keybind("tab.close")}
-                                  placement="bottom"
-                                  gutter={10}
-                                >
-                                  <IconButton
-                                    icon="close-small"
-                                    variant="ghost"
-                                    class="h-5 w-5"
-                                    onClick={() => tabs().close("memory")}
-                                    aria-label={language.t("common.closeTab")}
-                                  />
-                                </TooltipKeybind>
-                              }
                               hideCloseButton
                             >
                               <div class="flex items-center gap-2">
