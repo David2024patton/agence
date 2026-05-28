@@ -2368,16 +2368,78 @@ export default function Layout(props: ParentProps) {
       <div class="relative bg-v2-background-bg-deep flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text">
         {autoselecting() ?? ""}
         <Titlebar update={titlebarUpdate} />
-        <main
-          class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict bg-v2-background-bg-base"
-          classList={{
-            "m-2 mt-0 rounded-[10px] shadow-[var(--v2-elevation-raised)] overflow-hidden": !!params.id || !params.dir,
-          }}
-        >
-          <Show when={!autoselecting.loading} fallback={<div class="size-full" />}>
-            {props.children}
-          </Show>
-        </main>
+        <div class="flex-1 min-h-0 min-w-0 flex">
+          <div class="flex-1 min-h-0 relative">
+            <div class="size-full relative overflow-x-hidden">
+              <nav
+                aria-label={language.t("sidebar.nav.projectsAndSessions")}
+                data-component="sidebar-nav-desktop"
+                classList={{
+                  "block": true,
+                  "fixed top-11 left-0 bottom-0": true,
+                  "z-20": true,
+                }}
+                style={{ width: layout.sidebar.opened() ? `${side()}px` : "4rem" }}
+                ref={(el) => {
+                  setState("nav", el)
+                }}
+                onMouseEnter={() => {
+                  disarm()
+                }}
+                onMouseLeave={() => {
+                  aim.reset()
+                  if (!sidebarHovering()) return
+                  arm()
+                }}
+              >
+                <div class="@container w-full h-full contain-strict">{sidebarContent()}</div>
+              </nav>
+              <Show when={layout.sidebar.opened()}>
+                <div
+                  class="absolute inset-y-0 z-30 w-0 overflow-visible"
+                  style={{ left: `${side()}px` }}
+                  onPointerDown={() => setState("sizing", true)}
+                >
+                  <ResizeHandle
+                    direction="horizontal"
+                    size={layout.sidebar.width()}
+                    min={244}
+                    max={typeof window === "undefined" ? 1000 : window.innerWidth * 0.3 + 64}
+                    onResize={(w) => {
+                      setState("sizing", true)
+                      if (sizet !== undefined) clearTimeout(sizet)
+                      sizet = window.setTimeout(() => setState("sizing", false), 120)
+                      layout.sidebar.resize(w)
+                    }}
+                  />
+                </div>
+              </Show>
+              <div
+                classList={{
+                  "absolute inset-y-0 right-0 left-[var(--main-left)]": true,
+                  "z-10": true,
+                  "transition-[left] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[left] motion-reduce:transition-none":
+                    !state.sizing,
+                }}
+                style={{
+                  "--main-left": layout.sidebar.opened() ? `${side()}px` : "4rem",
+                }}
+              >
+                <main
+                  class="size-full overflow-x-hidden flex flex-col items-start contain-strict bg-v2-background-bg-base border-t border-v2-border-weak-base border-l rounded-tl-[12px]"
+                  classList={{
+                    "m-0 mt-0 rounded-[10px] shadow-[var(--v2-elevation-raised)] overflow-hidden":
+                      !!params.id || !params.dir,
+                  }}
+                >
+                  <Show when={!autoselecting.loading} fallback={<div class="size-full" />}>
+                    {props.children}
+                  </Show>
+                </main>
+              </div>
+            </div>
+          </div>
+        </div>
         {import.meta.env.DEV && <DebugBar />}
         <Toast.Region />
       </div>
@@ -2402,7 +2464,7 @@ export default function Layout(props: ParentProps) {
                 "fixed top-11 left-0 bottom-0": true,
                 "z-10": true,
               }}
-              style={{ width: `${side()}px` }}
+              style={{ width: layout.sidebar.opened() ? `${side()}px` : "4rem" }}
               ref={(el) => {
                 setState("nav", el)
               }}
@@ -2421,7 +2483,7 @@ export default function Layout(props: ParentProps) {
 
             <Show when={layout.sidebar.opened()}>
               <div
-                class="hidden xl:block absolute inset-y-0 z-30 w-0 overflow-visible"
+                class="absolute inset-y-0 z-30 w-0 overflow-visible"
                 style={{ left: `${side()}px` }}
                 onPointerDown={() => setState("sizing", true)}
               >
@@ -2472,8 +2534,7 @@ export default function Layout(props: ParentProps) {
 
             <div
               classList={{
-                "absolute inset-0": true,
-                "xl:inset-y-0 xl:right-0 xl:left-[var(--main-left)]": true,
+                "absolute inset-y-0 right-0 left-[var(--main-left)]": true,
                 "z-20": true,
                 "transition-[left] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[left] motion-reduce:transition-none":
                   !state.sizing,
