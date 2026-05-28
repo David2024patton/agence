@@ -144,6 +144,7 @@ const table = sqliteTable("session", {
 - Wants a desktop **Settings → Memory** panel to tune capture/consolidation/pruning and inspect or delete stored learnings.
 - Values granular memory metadata (`layer` plus tags such as `UI`, `workflow`) for categorization and better recall ranking.
 - After `packages/agence` backend changes while running desktop dev, restart with `bun dev:desktop` so `predev` rebuilds the sidecar bundle; hard-refresh or fully relaunch Electron if a stale bundled chunk still causes runtime errors.
+- Treat **Build**, **Plan**, and **Deep research** as prompt **chat modes** (server-enforced tool restrictions), not separate agents; mode persists in global `prompt-chat-mode` store.
 
 ## Learned Workspace Facts
 
@@ -154,3 +155,6 @@ const table = sqliteTable("session", {
 - This codebase uses Effect v4 APIs: `Effect.catch` (not `Effect.catchAll`) and `Effect.forkDetach` (not `Effect.forkDaemon`).
 - Desktop esbuild may omit symbols on namespace re-exports (`export * as SystemPrompt`); import sidecar-critical functions directly from their source modules.
 - `SystemPrompt.defaultLayer` must `Layer.provide(Skill.defaultLayer)` because sibling layers in the HTTP server stack do not satisfy each other's requirements during construction.
+- Project heartbeat reads **`HEARTBEAT.md`**; last-run times in **`.agence/heartbeat.json`**; prompts prefixed **`cmd:`** or **`fn:`** run scripts or built-ins without an LLM.
+- App Memory HTTP uses **`packages/app/src/utils/instance-http.ts`** because the typed SDK client has no raw `.get()` / `.post()`.
+- Fix/incident notes live in **`AGENCE.md`** and **`docs/solutions/*.md`**; ingest to vector memory via **`ingestMarkdownDocToMemory`** (heartbeat **`fn:memory-ingest-doc <path>`** or **`packages/agence/scripts/ingest-fixes-doc.ts`**).

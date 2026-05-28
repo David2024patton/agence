@@ -34,6 +34,7 @@ export type FollowupDraft = {
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
+  tools?: Record<string, boolean>
 }
 
 type FollowupSendInput = {
@@ -159,6 +160,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       messageID,
       parts: requestParts,
       variant: input.draft.variant,
+      tools: input.draft.tools,
     })
     return true
   } catch (err) {
@@ -176,6 +178,7 @@ type PromptSubmitInput = {
   commentCount: Accessor<number>
   autoAccept: Accessor<boolean>
   mode: Accessor<"normal" | "shell">
+  agentMode: Accessor<"build" | "plan" | "research">
   working: Accessor<boolean>
   editor: () => HTMLDivElement | undefined
   queueScroll: () => void
@@ -394,6 +397,18 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       providerID: currentModel.provider.id,
     }
     const agent = currentAgent.name
+    const tools = (() => {
+      if (input.agentMode() === "plan") return { "*": false } as Record<string, boolean>
+      if (input.agentMode() === "research")
+        return {
+          edit: false,
+          shell: false,
+          task: false,
+          repo_clone: false,
+          external_directory: false,
+        } as Record<string, boolean>
+      return undefined
+    })()
     const context = prompt.context.items().slice()
     const draft: FollowupDraft = {
       sessionID: session.id,
@@ -403,6 +418,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       agent,
       model,
       variant,
+      tools,
     }
 
     const clearInput = () => {

@@ -32,6 +32,8 @@ export interface Settings {
     shellToolPartsExpanded: boolean
     editToolPartsExpanded: boolean
     showSessionProgressBar: boolean
+    debugMode: boolean
+    uiLabels: boolean
   }
   updates: {
     startup: boolean
@@ -117,6 +119,8 @@ const defaultSettings: Settings = {
     shellToolPartsExpanded: false,
     editToolPartsExpanded: false,
     showSessionProgressBar: true,
+    debugMode: false,
+    uiLabels: false,
   },
   updates: {
     startup: true,
@@ -235,6 +239,20 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         ),
         setShowSessionProgressBar(value: boolean) {
           setStore("general", "showSessionProgressBar", value)
+        },
+        debugMode: withFallback(
+          () => store.general?.debugMode,
+          defaultSettings.general.debugMode,
+        ),
+        setDebugMode(value: boolean) {
+          setStore("general", "debugMode", value)
+        },
+        uiLabels: withFallback(
+          () => store.general?.uiLabels,
+          defaultSettings.general.uiLabels,
+        ),
+        setUiLabels(value: boolean) {
+          setStore("general", "uiLabels", value)
         },
       },
       updates: {
