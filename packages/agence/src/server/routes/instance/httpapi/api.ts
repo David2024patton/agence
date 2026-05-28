@@ -20,7 +20,6 @@ import { SessionApi } from "./groups/session"
 import { SyncApi } from "./groups/sync"
 import { TuiApi } from "./groups/tui"
 import { WorkspaceApi } from "./groups/workspace"
-import { LibraryApi } from "./groups/library"
 import { MemoryApi } from "./groups/memory"
 import { V2Api } from "./groups/v2"
 import { Authorization } from "./middleware/authorization"
@@ -53,7 +52,6 @@ export const InstanceHttpApi = HttpApi.make("agence-instance")
   .addHttpApi(V2Api)
   .addHttpApi(TuiApi)
   .addHttpApi(WorkspaceApi)
-  .addHttpApi(LibraryApi)
   .addHttpApi(MemoryApi)
   .middleware(SchemaErrorMiddleware)
 

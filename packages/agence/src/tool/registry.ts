@@ -17,7 +17,6 @@ import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool
 import { ImageDescribeTool } from "./image_describe"
 import { OpenClawGatewayTool } from "./openclaw_gateway"
 import { PluginMarketplaceTool, PluginInstallTool } from "./plugin_marketplace"
-import { KbSearchTool } from "./kb-search"
 import { MemoryAddTool, MemoryRecallTool, AgentGroupTool } from "./agent"
 import {
   BrowserInspectTool,
@@ -168,7 +167,6 @@ export const layer: Layer.Layer<
     const pluginInstall = yield* PluginInstallTool
     const memoryAdd = yield* MemoryAddTool
     const memoryRecall = yield* MemoryRecallTool
-    const kbSearch = yield* KbSearchTool
     const agentGroup = yield* AgentGroupTool
     const imageDescribe = yield* ImageDescribeTool
     const lsptool = yield* LspTool
@@ -313,7 +311,6 @@ export const layer: Layer.Layer<
           plugin_install: Tool.init(pluginInstall),
           memory_add: Tool.init(memoryAdd),
           memory_recall: Tool.init(memoryRecall),
-          kb_search: Tool.init(kbSearch),
           agent_group: Tool.init(agentGroup),
           image_describe: Tool.init(imageDescribe),
           search: Tool.init(websearch),
@@ -357,7 +354,6 @@ export const layer: Layer.Layer<
             tool.model_learn,
             tool.quality_gate,
             tool.vector_search,
-            tool.kb_search,
             tool.browser_inspect,
             tool.browser_tutorial,
             tool.browser_extract,
