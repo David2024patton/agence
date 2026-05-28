@@ -2,6 +2,7 @@ import { Effect } from "effect"
 import { Database } from "@/storage/db"
 import { eq, asc } from "drizzle-orm"
 import { LearningTable, EmbeddingCacheTable } from "./learning.sql"
+import { inferMemoryTags, mergeMemoryTags, tagMatchBoost } from "./memory-tags"
 import crypto from "crypto"
 
 export interface Learning {
@@ -44,6 +45,33 @@ export function cosineSimilarity(a: number[], b: number[]): number {
     dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]
   }
   return dot / (Math.sqrt(na) * Math.sqrt(nb))
+}
+
+export const GLOBAL_MEMORY_PROJECT_ID = "__global__"
+
+function parseMetadata(raw: string | null): Record<string, unknown> {
+  if (!raw) return {}
+  try {
+    return JSON.parse(raw) as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
+
+function decayScore(learning: Learning, now = Date.now()) {
+  const meta = learning.metadata ?? {}
+  const importance =
+    meta.importance === "critical" ? 4
+    : meta.importance === "high" ? 3
+    : meta.importance === "low" ? 1
+    : learning.confidence === "high" ? 3
+    : learning.confidence === "low" ? 1
+    : 2
+  const accessCount = typeof meta.accessCount === "number" ? meta.accessCount : 0
+  const ageDays = (now - learning.timeCreated) / (1000 * 60 * 60 * 24)
+  const ageFactor = Math.exp(-ageDays / (importance >= 3 ? 90 : importance === 2 ? 45 : 14))
+  const accessBoost = 1 + Math.min(accessCount, 20) * 0.05
+  return ageFactor * accessBoost * (importance / 4)
 }
 
 function rowToLearning(r: typeof LearningTable.$inferSelect): Learning {
@@ -105,6 +133,24 @@ export const storeLearning = (input: {
     const combined = `${input.concept}: ${input.description}`
     const embedding = yield* getEmbedding(combined)
     const embeddingJson = embedding.length > 0 ? JSON.stringify(embedding) : null
+    const layer = String(input.metadata?.layer ?? input.source)
+    const explicitTags = Array.isArray(input.metadata?.tags)
+      ? (input.metadata.tags as string[])
+      : undefined
+    const metadata = {
+      accessCount: 0,
+      ...input.metadata,
+      layer,
+      tags: mergeMemoryTags(
+        explicitTags,
+        inferMemoryTags({
+          layer,
+          concept: input.concept,
+          description: input.description,
+          reason: typeof input.metadata?.reason === "string" ? input.metadata.reason : undefined,
+        }),
+      ),
+    }
 
     yield* Effect.sync(() =>
       Database.transaction((db) => {
@@ -115,55 +161,158 @@ export const storeLearning = (input: {
           embedding: embeddingJson, confidence: input.confidence ?? "medium",
           related_to: input.relatedTo ? JSON.stringify(input.relatedTo) : null,
           skill_path: input.skillPath ?? null,
-          metadata: input.metadata ? JSON.stringify(input.metadata) : null,
+          metadata: JSON.stringify(metadata),
           time_created: Date.now(), time_updated: Date.now(),
         } as any).run()
       }),
     )
 
+    const { linkCrossLayer } = yield* Effect.promise(() => import("./memory-intelligence"))
+    yield* linkCrossLayer({
+      projectId: input.projectId,
+      memoryId: id,
+      layer: String(metadata.layer),
+      description: input.description,
+    }).pipe(Effect.catch(() => Effect.void))
+
     return id
   })
 
-export const searchLearnings = (params: { projectId: string; query: string; limit?: number }) =>
+export const searchLearnings = (params: {
+  projectId: string
+  query: string
+  limit?: number
+  includeGlobal?: boolean
+}) =>
   Effect.gen(function* () {
     const limit = params.limit ?? 10
     const queryEmbedding = yield* getEmbedding(params.query)
+    const projectIds = params.includeGlobal === false
+      ? [params.projectId]
+      : params.projectId === GLOBAL_MEMORY_PROJECT_ID
+        ? [GLOBAL_MEMORY_PROJECT_ID]
+        : [params.projectId, GLOBAL_MEMORY_PROJECT_ID]
 
     const rows = yield* Effect.sync(() =>
       Database.use((db) =>
-        db.select().from(LearningTable)
-          .where(eq(LearningTable.project_id, pid(params.projectId)))
-          .orderBy(asc(LearningTable.time_created)).all(),
+        db
+          .select()
+          .from(LearningTable)
+          .all()
+          .filter((r) => projectIds.includes(r.project_id as string)),
       ),
     )
 
+    const bumpAccess = (ids: string[]) =>
+      Effect.sync(() =>
+        Database.transaction((db) => {
+          for (const id of ids) {
+            const row = db.select().from(LearningTable).where(eq(LearningTable.id, id)).get()
+            if (!row) continue
+            const meta = parseMetadata(row.metadata)
+            meta.accessCount = (typeof meta.accessCount === "number" ? meta.accessCount : 0) + 1
+            meta.lastAccessed = Date.now()
+            db.update(LearningTable)
+              .set({ metadata: JSON.stringify(meta), time_updated: Date.now() } as any)
+              .where(eq(LearningTable.id, id))
+              .run()
+          }
+        }),
+      )
+
     if (queryEmbedding.length === 0) {
-      return rows.filter((r) =>
-        r.concept.toLowerCase().includes(params.query.toLowerCase()) ||
-        r.description.toLowerCase().includes(params.query.toLowerCase()),
-      ).slice(0, limit).map(rowToLearning)
+      const matched = rows
+        .filter(
+          (r) =>
+            r.concept.toLowerCase().includes(params.query.toLowerCase()) ||
+            r.description.toLowerCase().includes(params.query.toLowerCase()),
+        )
+        .map(rowToLearning)
+        .map((l) => {
+          const tags = Array.isArray(l.metadata?.tags) ? (l.metadata.tags as string[]) : undefined
+          l.score = decayScore(l) * tagMatchBoost(params.query, tags)
+          return l
+        })
+        .filter((l) => (l.score ?? 0) > 0.05)
+        .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+        .slice(0, limit)
+      yield* bumpAccess(matched.map((m) => m.id))
+      return matched
     }
 
-    return rows.map((r) => {
-      const l = rowToLearning(r)
-      const embed = r.embedding ? JSON.parse(r.embedding) as number[] : null
-      l.score = embed ? cosineSimilarity(queryEmbedding, embed) : 0
-      return l
-    }).sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, limit)
+    const ranked = rows
+      .map((r) => {
+        const l = rowToLearning(r)
+        const embed = r.embedding ? (JSON.parse(r.embedding) as number[]) : null
+        const similarity = embed ? cosineSimilarity(queryEmbedding, embed) : 0
+        const tags = Array.isArray(l.metadata?.tags) ? (l.metadata.tags as string[]) : undefined
+        l.score = similarity * decayScore(l) * tagMatchBoost(params.query, tags)
+        return l
+      })
+      .filter((l) => (l.score ?? 0) > 0.03)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, limit)
+
+    yield* bumpAccess(ranked.map((r) => r.id))
+    return ranked
   })
+
+export const listLearnings = (params: {
+  projectId: string
+  layer?: string
+  includeGlobal?: boolean
+  limit?: number
+}) =>
+  Effect.gen(function* () {
+    const limit = params.limit ?? 200
+    const projectIds =
+      params.includeGlobal === false
+        ? [params.projectId]
+        : params.projectId === GLOBAL_MEMORY_PROJECT_ID
+          ? [GLOBAL_MEMORY_PROJECT_ID]
+          : [params.projectId, GLOBAL_MEMORY_PROJECT_ID]
+    const rows = yield* Effect.sync(() =>
+      Database.use((db) =>
+        db
+          .select()
+          .from(LearningTable)
+          .all()
+          .filter((r) => projectIds.includes(r.project_id as string))
+          .filter((r) => (params.layer ? r.source === params.layer : true)),
+      ),
+    )
+    return rows
+      .map(rowToLearning)
+      .map((l) => ({ ...l, decay: decayScore(l) }))
+      .sort((a, b) => b.decay - a.decay)
+      .slice(0, limit)
+  })
+
+export const deleteLearning = (id: string) =>
+  Effect.sync(() =>
+    Database.use((db) => db.delete(LearningTable).where(eq(LearningTable.id, id)).run()),
+  )
 
 export const recentLearnings = (params: { projectId: string; source?: string; limit?: number }) =>
   Effect.gen(function* () {
     const limit = params.limit ?? 10
+    const projectIds =
+      params.projectId === GLOBAL_MEMORY_PROJECT_ID
+        ? [GLOBAL_MEMORY_PROJECT_ID]
+        : [params.projectId, GLOBAL_MEMORY_PROJECT_ID]
     const rows = yield* Effect.sync(() =>
-      Database.use((db) => {
-        let q = db.select().from(LearningTable).where(eq(LearningTable.project_id, pid(params.projectId)))
-        if (params.source) {
-          q = db.select().from(LearningTable)
-            .where(eq(LearningTable.project_id, pid(params.projectId)))
-        }
-        return q.orderBy(asc(LearningTable.time_created)).limit(limit).all()
-      }),
+      Database.use((db) =>
+        db
+          .select()
+          .from(LearningTable)
+          .all()
+          .filter((r) => projectIds.includes(r.project_id as string))
+          .filter((r) => (params.source ? r.source === params.source : true)),
+      ),
     )
-    return rows.map(rowToLearning)
+    return rows
+      .map(rowToLearning)
+      .filter((l) => decayScore(l) > 0.05)
+      .sort((a, b) => decayScore(b) - decayScore(a))
+      .slice(0, limit)
   })

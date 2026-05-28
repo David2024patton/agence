@@ -8,14 +8,16 @@ import { SettingsGeneral } from "./settings-general"
 import { SettingsKeybinds } from "./settings-keybinds"
 import { SettingsProviders } from "./settings-providers"
 import { SettingsModels } from "./settings-models"
+import { SettingsDebug } from "./settings-debug"
+import { SettingsMemory } from "./settings-memory"
 
-export const DialogSettings: Component = () => {
+export const DialogSettings: Component<{ initialTab?: string }> = (props) => {
   const language = useLanguage()
   const platform = usePlatform()
 
   return (
     <Dialog size="x-large" transition>
-      <Tabs orientation="vertical" variant="settings" defaultValue="general" class="h-full settings-dialog">
+      <Tabs orientation="vertical" variant="settings" defaultValue={props.initialTab ?? "general"} class="h-full settings-dialog">
         <Tabs.List>
           <div class="flex flex-col justify-between h-full w-full">
             <div class="flex flex-col gap-3 w-full pt-3">
@@ -31,6 +33,10 @@ export const DialogSettings: Component = () => {
                       <Icon name="keyboard" />
                       {language.t("settings.tab.shortcuts")}
                     </Tabs.Trigger>
+                    <Tabs.Trigger value="memory">
+                      <Icon name="brain" />
+                      {language.t("settings.tab.memory")}
+                    </Tabs.Trigger>
                   </div>
                 </div>
 
@@ -44,6 +50,10 @@ export const DialogSettings: Component = () => {
                     <Tabs.Trigger value="models">
                       <Icon name="models" />
                       {language.t("settings.models.title")}
+                    </Tabs.Trigger>
+                    <Tabs.Trigger value="debug">
+                      <Icon name="warning" />
+                      Debug
                     </Tabs.Trigger>
                   </div>
                 </div>
@@ -61,11 +71,17 @@ export const DialogSettings: Component = () => {
         <Tabs.Content value="shortcuts" class="no-scrollbar">
           <SettingsKeybinds />
         </Tabs.Content>
+        <Tabs.Content value="memory" class="no-scrollbar">
+          <SettingsMemory />
+        </Tabs.Content>
         <Tabs.Content value="providers" class="no-scrollbar">
           <SettingsProviders />
         </Tabs.Content>
         <Tabs.Content value="models" class="no-scrollbar">
           <SettingsModels />
+        </Tabs.Content>
+        <Tabs.Content value="debug" class="no-scrollbar">
+          <SettingsDebug />
         </Tabs.Content>
       </Tabs>
     </Dialog>

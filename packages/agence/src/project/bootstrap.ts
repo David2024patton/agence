@@ -49,6 +49,14 @@ export const layer = Layer.effect(
         (s) => s.init().pipe(Effect.catchCause((cause) => Effect.logWarning("init failed", { cause }))),
         { concurrency: "unbounded", discard: true },
       ).pipe(Effect.withSpan("InstanceBootstrap.init"))
+
+      const { startHeartbeatLoop } = yield* Effect.promise(() => import("../background/heartbeat"))
+      yield* startHeartbeatLoop().pipe(
+        Effect.catch((err) => {
+          console.error("[Heartbeat] Startup failed:", err)
+          return Effect.void
+        }),
+      )
     }).pipe(Effect.withSpan("InstanceBootstrap"))
 
     return Service.of({ run })

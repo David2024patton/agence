@@ -324,3 +324,19 @@ Remaining alerts in `enterprise/`, `console/`, `function/` packages (unused).
 | Corrupted database crash | `db.bun.ts` + `db.node.ts` — try/catch with `.corrupted` quarantine + fresh DB |
 | Migration loading crash | `db.ts` — try/catch around `readdirSync`/`readFileSync` for migration files |
 | Desktop build Vite SSR bug | `todo.ts` — simplified `extractPatterns()` to avoid byte-position corruption in CJS wrapper |
+
+## Critical Chat & Tool Resolution Fixes & Diagnostics System (2026-05-27)
+
+| Issue / Feature | Description & Resolution |
+|---|---|
+| **JSON Request Parsing Crash** | Fixed critical crash in `domResultRoute` inside `packages/agence/src/server/routes/instance/httpapi/server.ts` by safely parsing raw `request.text` instead of raw body readers, preventing local/API messaging crashes. |
+| **KbSearchTool Definition Type-Safety** | Resolved compiler/typecheck blocker in `packages/agence/src/tool/kb-search.ts` by adding explicit generic type parameters `Tool.define<typeof Parameters, { matches: number }, any>()`. |
+| **Tool Registry Sanitization** | Commented out incomplete DOM tools (`ExecuteJavascriptTool`, `ClickElementTool`, etc.) in `packages/agence/src/tool/registry.ts` to unblock compilation and prevent internal dependencies leakage. |
+| **Effect v4 Configuration Restoral** | Restored original `@opencode-ai/plugin` config module path name in `packages/agence/src/config/config.ts` to allow standard package resolution on boot. |
+| **Wiki I/O Safety** | Refactored `loadWikiContext` generator in `packages/agence/src/session/system.ts` to properly handle and swallow file access exceptions using `Effect.tryPromise` rather than invalid inline `try/catch` wrapper. |
+| **Startup Diagnostics System** | Implemented `packages/agence/src/server/diagnostics.ts` running at early boot in `server.ts` to dry-run integrity verification on configuration, database connectivity, and Tool Registry initialization with visual terminal cards. |
+
+## Recent incident writeups
+
+- `docs/solutions/prompt-footer-modes-and-memory-ui.md` - prompt footer dropdowns and Memory UI breakages, root causes, fixes, and verification commands.
+

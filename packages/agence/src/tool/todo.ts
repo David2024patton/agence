@@ -10,6 +10,7 @@ import QGATE_DESC from "./quality_gate.txt"
 import { Todo } from "../session/todo"
 import type { SessionID } from "../session/schema"
 import { storeLearning, searchLearnings } from "../learning"
+import { searchArchives } from "../learning/archive"
 import { AppFileSystem } from "@agence-ai/core/filesystem"
 import { InstanceState } from "@/effect/instance-state"
 import path from "path"
@@ -179,8 +180,22 @@ export const ModelLearnTool = Tool.define<typeof ModelLearnParameters, { concept
               description: params.description,
               confidence: params.confidence ?? "medium",
               relatedTo: params.relatedTo ? [...params.relatedTo] : undefined,
-            }).pipe(Effect.catch(() => Effect.succeed("")))
+              metadata: { layer: "context", source: "model_learn" },
+            }).pipe(Effect.catchCause(() => Effect.succeed("")))
           }).pipe(Effect.orDie)
+
+          if (learningId) {
+            const { refineConceptRelationships } = yield* Effect.promise(() =>
+              import("../learning/memory-intelligence"),
+            )
+            yield* refineConceptRelationships({
+              projectId: instance.project.id,
+              memoryId: learningId,
+              concept: params.concept,
+              description: params.description,
+              relatedTo: params.relatedTo,
+            }).pipe(Effect.catch(() => Effect.void))
+          }
 
           // Also store in JSONL file for backwards compatibility
           let existing = ""
@@ -338,7 +353,7 @@ export const QualityGateTool = Tool.define<typeof QGateParameters, { check: stri
               confidence: params.passed ? "high" : "low",
               skillPath: skillPath || undefined,
               metadata: { taskRef: params.taskRef, check: params.check, passed: params.passed },
-            }).pipe(Effect.catch(() => Effect.succeed("")))
+            }).pipe(Effect.catchCause(() => Effect.succeed("")))
           }).pipe(Effect.orDie)
 
           // Store the lesson
@@ -402,25 +417,46 @@ export const VectorSearchTool = Tool.define<typeof VSearchParameters, { count: n
             projectId: instance.project.id,
             query: params.query,
             limit: params.limit ?? 10,
-          }).pipe(Effect.catch(() => Effect.succeed([])))
+          }).pipe(Effect.catchCause(() => Effect.succeed([])))
 
-          if (results.length === 0) {
+          const archives = yield* searchArchives({
+            projectId: instance.project.id,
+            query: params.query,
+            limit: params.limit ?? 5,
+          }).pipe(Effect.catchCause(() => Effect.succeed([])))
+
+          const allEmpty = results.length === 0 && archives.length === 0
+          if (allEmpty) {
             return { title: "Vector Search", metadata: { count: 0 }, output: `No results found for "${params.query}". Try model_learn to create concepts first.` }
           }
 
-          const lines = [`Found ${results.length} results for "${params.query}":`, ""]
-          for (const r of results) {
-            const score = r.score ? ` (${(r.score * 100).toFixed(0)}% match)` : ""
-            lines.push(`## ${r.concept} [${r.source}]${score}`)
-            lines.push(`  ${r.description.slice(0, 200)}`)
-            if (r.skillPath) lines.push(`  Skill: ${r.skillPath}`)
-            if (r.confidence !== "medium") lines.push(`  Confidence: ${r.confidence}`)
-            lines.push("")
+          const lines: string[] = []
+          if (results.length > 0) {
+            lines.push(`Found ${results.length} results for "${params.query}":`, "")
+            for (const r of results) {
+              const score = r.score ? ` (${(r.score * 100).toFixed(0)}% match)` : ""
+              lines.push(`## ${r.concept} [${r.source}]${score}`)
+              lines.push(`  ${r.description.slice(0, 200)}`)
+              if (r.skillPath) lines.push(`  Skill: ${r.skillPath}`)
+              if (r.confidence !== "medium") lines.push(`  Confidence: ${r.confidence}`)
+              lines.push("")
+            }
+          }
+
+          if (archives.length > 0) {
+            lines.push(`Found ${archives.length} conversation archives:`, "")
+            for (const a of archives) {
+              const score = a.score ? ` (${(a.score * 100).toFixed(0)}% match)` : ""
+              lines.push(`## ${a.title.slice(0, 100)} [archive]${score}`)
+              lines.push(`  ${a.subject}`)
+              lines.push(`  ID: ${a.id} | ${a.messageCount} msgs | ${a.tokenCount} tokens`)
+              lines.push("")
+            }
           }
 
           return {
             title: `Vector Search: ${params.query}`,
-            metadata: { count: results.length },
+            metadata: { count: results.length + archives.length },
             output: lines.join("\n"),
           }
         }).pipe(Effect.orDie),

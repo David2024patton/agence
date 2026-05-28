@@ -138,7 +138,7 @@ export function SessionHeader() {
   const settings = useSettings()
   const sync = useSync()
   const terminal = useTerminal()
-  const { params, view } = useSessionLayout()
+  const { params, view, tabs } = useSessionLayout()
 
   onMount(() => {
     const h = () => view().terminal.toggle()
@@ -362,14 +362,14 @@ export function SessionHeader() {
                       <Button
                         variant="ghost"
                         class="titlebar-icon w-8 h-6 p-0 box-border"
-                        onClick={() => layout.settings.open()}
+                        onClick={() => command.trigger("settings.open")}
                         aria-label={language.t("settings.title")}
                       >
-                        <Icon size="small" name="settings" class="text-icon-weak" />
+                        <Icon size="small" name="settings-gear" class="text-icon-weak" />
                       </Button>
                     </TooltipKeybind>
 
-                    <TooltipKeybind title={language.t("help.title")}>
+                    <TooltipKeybind title={language.t("help.title")} keybind={command.keybind("help.open")}>
                       <Button
                         variant="ghost"
                         class="titlebar-icon w-8 h-6 p-0 box-border"
@@ -540,7 +540,7 @@ export function SessionHeader() {
                       class="titlebar-icon w-8 h-6 p-0 box-border"
                       aria-label="Settings"
                     >
-                      <Icon size="small" name="settings" class="text-icon-weak" />
+                      <Icon size="small" name="settings-gear" class="text-icon-weak" />
                     </Button>
                   </Tooltip>
 

@@ -137,3 +137,20 @@ const table = sqliteTable("session", {
 ## Type Checking
 
 - Always run `bun typecheck` from package directories (e.g., `packages/agence`), never `tsc` directly.
+
+## Learned User Preferences
+
+- Expects automated memory intelligence (auto-capture, consolidation, decay scoring, cross-layer links, global preference/identity recall) rather than relying only on manual `memory_add`.
+- Wants a desktop **Settings → Memory** panel to tune capture/consolidation/pruning and inspect or delete stored learnings.
+- Values granular memory metadata (`layer` plus tags such as `UI`, `workflow`) for categorization and better recall ranking.
+- After `packages/agence` backend changes while running desktop dev, restart with `bun dev:desktop` so `predev` rebuilds the sidecar bundle; hard-refresh or fully relaunch Electron if a stale bundled chunk still causes runtime errors.
+
+## Learned Workspace Facts
+
+- Local desktop dev entry is `bun dev:desktop` (run from repo root; script `--cwd packages/desktop`); `scripts/predev.ts` rebuilds the agence node bundle the Electron sidecar loads.
+- Learning and memory code lives under `packages/agence/src/learning/` (including `memory-intelligence`, `memory-settings`, `memory-tags`) with HTTP routes under `/memory/*`.
+- Per-project memory toggles persist in `.agence/memory-settings.json`; optional JSON export snapshot is `.agence/memory-export.json`.
+- Cross-project learnings use global scope via project id `__global__` (preferences, identity, and critical items).
+- This codebase uses Effect v4 APIs: `Effect.catch` (not `Effect.catchAll`) and `Effect.forkDetach` (not `Effect.forkDaemon`).
+- Desktop esbuild may omit symbols on namespace re-exports (`export * as SystemPrompt`); import sidecar-critical functions directly from their source modules.
+- `SystemPrompt.defaultLayer` must `Layer.provide(Skill.defaultLayer)` because sibling layers in the HTTP server stack do not satisfy each other's requirements during construction.

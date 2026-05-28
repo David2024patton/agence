@@ -3,6 +3,9 @@ import { createEffect, createMemo, createSignal, For, Match, onCleanup, Switch }
 // command counts, recent events, and LLM endpoint documentation.
 // Auto-refreshes every 5 seconds. Route: /monitor
 import { useGlobalSDK } from "@/context/global-sdk"
+import { usePlatform } from "@/context/platform"
+import { useServer } from "@/context/server"
+import { instanceHttpRequest } from "@/utils/instance-http"
 
 type MonitorState = {
   server: { uptime: number; version: string; channel: string; healthy: true }
@@ -19,6 +22,8 @@ function formatUptime(s: number) {
 
 export default function MonitorPage() {
   const gsdk = useGlobalSDK()
+  const server = useServer()
+  const platform = usePlatform()
   const [state, setState] = createSignal<MonitorState | null>(null)
   const [liveEvents, setLiveEvents] = createSignal<string[]>([])
   const [error, setError] = createSignal("")
@@ -28,9 +33,14 @@ export default function MonitorPage() {
 
   const fetchState = async () => {
     try {
-      const client = gsdk.createClient({ server: { type: "instance" } })
-      const res = await client.get("/monitor/state")
-      if (res) setState(res as MonitorState)
+      const res = await instanceHttpRequest<MonitorState>({
+        baseUrl: gsdk.url,
+        server: server.current,
+        fetch: platform.fetch,
+        method: "GET",
+        path: "/monitor/state",
+      })
+      if (res) setState(res)
     } catch (e) {
       setError(String(e))
     }
@@ -103,7 +113,7 @@ export default function MonitorPage() {
                       <For each={s.events.recent.slice(-20).reverse()}>
                         {(e) => (
                           <div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-                            <span style={{ color: e.type.includes('error') ? '#f44747' : '#569cd6', fontSize: 11 }}>{e.type}</span>
+                            <span style={{ color: e.type.includes('error') ? '#f44747' : '#569cd6', "font-size": "11px" }}>{e.type}</span>
                             <span style="color:#666;margin-left:6px;font-size:11px">{new Date(e.timestamp).toLocaleTimeString()}</span>
                           </div>
                         )}

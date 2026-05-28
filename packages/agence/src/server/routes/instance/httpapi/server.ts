@@ -6,6 +6,7 @@ import {
   HttpMiddleware,
   HttpRouter,
   HttpServer,
+  HttpServerRequest,
   HttpServerResponse,
 } from "effect/unstable/http"
 import * as Socket from "effect/unstable/socket/Socket"
@@ -80,10 +81,13 @@ import { syncHandlers } from "./handlers/sync"
 import { tuiHandlers } from "./handlers/tui"
 import { v2Handlers } from "./handlers/v2"
 import { workspaceHandlers } from "./handlers/workspace"
+import { libraryHandlers } from "./handlers/library"
+import { memoryHandlers } from "./handlers/memory"
 import { instanceContextLayer, instanceRouterMiddleware } from "./middleware/instance-context"
 import { workspaceRouterMiddleware, workspaceRoutingLayer } from "./middleware/workspace-routing"
 import { disposeMiddleware } from "./lifecycle"
 import { memoMap } from "@agence-ai/core/effect/memo-map"
+import { resolveDomResult } from "@/dom/dom-bridge"
 import { compressionLayer } from "./middleware/compression"
 import { corsVaryFix } from "./middleware/cors-vary"
 import { errorLayer } from "./middleware/error"
@@ -140,10 +144,31 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     v2Handlers,
     tuiHandlers,
     workspaceHandlers,
+    libraryHandlers,
+    memoryHandlers,
   ]),
 )
 
-const rawInstanceRoutes = Layer.mergeAll(ptyConnectRoute).pipe(Layer.provide(instanceRouterLayer))
+const domResultRoute = HttpRouter.use((router) =>
+  Effect.gen(function* () {
+    yield* router.add(
+      "POST",
+      "/dom/result",
+      Effect.gen(function* () {
+        const request = yield* HttpServerRequest.HttpServerRequest
+        const rawBody = yield* request.text
+        const body = JSON.parse(rawBody) as Record<string, unknown>
+        if (body && typeof body === "object" && "cmdId" in body && "result" in body) {
+          resolveDomResult(body.cmdId as string, body.result)
+          return HttpServerResponse.text("ok")
+        }
+        return HttpServerResponse.text("bad request", { status: 400 })
+      }).pipe(Effect.catch(() => Effect.succeed(HttpServerResponse.text("error", { status: 500 })))),
+    )
+  }),
+).pipe(Layer.provide(authOnlyRouterLayer))
+
+const rawInstanceRoutes = Layer.mergeAll(ptyConnectRoute, domResultRoute).pipe(Layer.provide(instanceRouterLayer))
 const instanceRoutes = Layer.mergeAll(rawInstanceRoutes, instanceApiRoutes).pipe(
   Layer.provide([
     httpApiAuthLayer,

@@ -3,6 +3,7 @@ node_modules
 .worktrees
 .sst
 .env
+.env*
 .env.local
 .idea
 .vscode
@@ -28,5 +29,12 @@ target
 opencode-dev
 UPCOMING_CHANGELOG.md
 logs/
+.cursor/
+.agence/
+**/typecheck*.log
+server*.log
+server*.txt
+server.err
+server.out
 *.bun-build
 tsconfig.tsbuildinfo

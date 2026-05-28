@@ -1,7 +1,9 @@
 import { Effect, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
 import { AppFileSystem } from "@agence-ai/core/filesystem"
-import { storeLearning, searchLearnings, recentLearnings, getEmbedding } from "../learning"
+import { storeLearning, searchLearnings, recentLearnings, getEmbedding, GLOBAL_MEMORY_PROJECT_ID } from "../learning"
+import { ensureGlobalMemoryProject } from "../learning/memory-intelligence"
+import { searchArchives } from "../learning/archive"
 import path from "path"
 import crypto from "crypto"
 import * as Tool from "./tool"
@@ -22,19 +24,21 @@ export const MemoryAddTool = Tool.define<typeof MemoryAddParameters, { layer: st
   "memory_add",
   Effect.gen(function* () {
     return {
-      description: "Store a memory in the multi-layer memory system. Layers: activity (events), context (situations), experience (lessons learned), identity (people/roles), preference (how to behave). The gatekeeper automatically decides which layer to store in. Use this to build persistent understanding across sessions.",
+      description: "Store a memory in the multi-layer memory system. Agence also auto-captures preferences, corrections, and tool failures after sessions — use this for critical facts you want guaranteed. Layers: activity (events), context (situations), experience (lessons), identity (people/roles), preference (behavior). Preferences and identity sync to global scope across projects.",
       parameters: MemoryAddParameters,
       execute: (params: { layer: string; content: string; importance?: string; tags?: readonly string[]; relatedTo?: string }, _ctx: Tool.Context) =>
         Effect.gen(function* () {
           const instance = yield* InstanceState.context
+          const global = params.layer === "preference" || params.layer === "identity"
+          if (global) yield* ensureGlobalMemoryProject()
           const id = yield* storeLearning({
-            projectId: instance.project.id,
+            projectId: global ? GLOBAL_MEMORY_PROJECT_ID : instance.project.id,
             source: params.layer,
             concept: `${params.layer}: ${params.content.slice(0, 60)}`,
             description: `[${params.importance ?? "medium"}] ${params.content}${params.relatedTo ? ` (related: ${params.relatedTo})` : ""}`,
             confidence: params.importance === "critical" ? "high" : params.importance ?? "medium",
             metadata: { layer: params.layer, importance: params.importance ?? "medium", tags: params.tags ? [...params.tags] : [], relatedTo: params.relatedTo },
-          }).pipe(Effect.catch(() => Effect.succeed("")))
+          }).pipe(Effect.catchCause(() => Effect.succeed("")))
 
           return {
             title: `Memory: ${params.layer}`,
@@ -75,27 +79,53 @@ export const MemoryRecallTool = Tool.define<typeof MemoryRecallParameters, { cou
             projectId: instance.project.id,
             query: params.query,
             limit: params.limit ?? 5,
-          }).pipe(Effect.catch(() => Effect.succeed([])))
+            includeGlobal: true,
+          }).pipe(Effect.catchCause(() => Effect.succeed([])))
+
+          const archives = yield* searchArchives({
+            projectId: instance.project.id,
+            query: params.query,
+            limit: params.limit ?? 3,
+          }).pipe(Effect.catchCause(() => Effect.succeed([])))
 
           const filtered = params.layer
             ? results.filter((r) => r.source === params.layer)
             : results
 
-          if (filtered.length === 0) {
+          const allEmpty = filtered.length === 0 && archives.length === 0
+          if (allEmpty) {
             return { title: "Memory Recall", metadata: { count: 0 }, output: `No memories found for "${params.query}". Use memory_add to store some first.` }
           }
 
-          const lines = [`Found ${filtered.length} memories:`, ""]
-          for (const r of filtered) {
-            const score = r.score ? ` (${(r.score * 100).toFixed(0)}%)` : ""
-            lines.push(`[${r.source}]${score} ${r.concept}`)
-            const desc = r.description.replace(/^\[[^\]]*\]\s*/, "")
-            lines.push(`  ${desc.slice(0, 200)}`)
-            if (r.confidence !== "medium") lines.push(`  Confidence: ${r.confidence}`)
-            lines.push("")
+          const lines: string[] = []
+          if (filtered.length > 0) {
+            lines.push(`Found ${filtered.length} memories:`, "")
+            for (const r of filtered) {
+              const score = r.score ? ` (${(r.score * 100).toFixed(0)}%)` : ""
+              lines.push(`[${r.source}]${score} ${r.concept}`)
+              const desc = r.description.replace(/^\[[^\]]*\]\s*/, "")
+              lines.push(`  ${desc.slice(0, 200)}`)
+              if (r.confidence !== "medium") lines.push(`  Confidence: ${r.confidence}`)
+              lines.push("")
+            }
           }
 
-          return { title: "Memory Recall", metadata: { count: filtered.length }, output: lines.join("\n") }
+          if (archives.length > 0) {
+            lines.push(`Found ${archives.length} conversation archives:`, "")
+            for (const a of archives) {
+              const score = a.score ? ` (${(a.score * 100).toFixed(0)}%)` : ""
+              lines.push(`[archive]${score} ${a.title.slice(0, 100)}`)
+              lines.push(`  ${a.subject}`)
+              lines.push(`  ID: ${a.id} | ${a.messageCount} msgs | ${a.tokenCount} tokens`)
+              const summaryLines = a.summary.split("\n").filter(Boolean).slice(0, 5)
+              for (const sl of summaryLines) {
+                lines.push(`    ${sl.slice(0, 120)}`)
+              }
+              lines.push("")
+            }
+          }
+
+          return { title: "Memory Recall", metadata: { count: filtered.length + archives.length }, output: lines.join("\n") }
         }).pipe(Effect.orDie),
     }
   }),

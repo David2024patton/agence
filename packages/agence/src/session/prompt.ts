@@ -1224,6 +1224,15 @@ export const layer = Layer.effect(
         yield* sessions.setPermission({ sessionID: session.id, permission: permissions })
       }
 
+      if (input.compact) {
+        yield* compaction.create({
+          sessionID: input.sessionID,
+          agent: message.info.agent,
+          model: message.info.model,
+          auto: false,
+        })
+      }
+
       if (input.noReply === true) return message
       return yield* loop({ sessionID: input.sessionID })
     })
@@ -1236,8 +1245,8 @@ export const layer = Layer.effect(
       throw new Error("Impossible")
     })
 
-    const runLoop: (sessionID: SessionID) => Effect.Effect<MessageV2.WithParts> = Effect.fn("SessionPrompt.run")(
-      function* (sessionID: SessionID) {
+    const runLoop = (sessionID: SessionID): Effect.Effect<MessageV2.WithParts> =>
+      Effect.gen(function* () {
         const ctx = yield* InstanceState.context
         const slog = elog.with({ sessionID })
         let structured: unknown
@@ -1477,8 +1486,12 @@ export const layer = Layer.effect(
         }
 
         yield* compaction.prune({ sessionID }).pipe(Effect.ignore, Effect.forkIn(scope))
+        const { reflectAndLearn } = yield* Effect.promise(() => import("../learning/reflect"))
+        yield* reflectAndLearn(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
+        const { autoCaptureFromSession } = yield* Effect.promise(() => import("../learning/memory-intelligence"))
+        yield* autoCaptureFromSession(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
         return yield* lastAssistant(sessionID)
-      },
+      }
     )
 
     const loop: (input: LoopInput) => Effect.Effect<MessageV2.WithParts> = Effect.fn("SessionPrompt.loop")(function* (
@@ -1668,6 +1681,7 @@ export const PromptInput = Schema.Struct({
   model: Schema.optional(ModelRef),
   agent: Schema.optional(Schema.String),
   noReply: Schema.optional(Schema.Boolean),
+  compact: Schema.optional(Schema.Boolean),
   tools: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)).annotate({
     description:
       "@deprecated tools and permissions have been merged, you can set permissions on the session itself now",
