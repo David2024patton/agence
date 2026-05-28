@@ -66,21 +66,53 @@ nix run nixpkgs#agence           # or github:anomalyco/agence for latest dev bra
 
 ### Desktop App (BETA)
 
-Agence is also available as a desktop application. Download directly from the [releases page](https://github.com/anomalyco/opencode/releases) or [agence.ai/download](https://github.com/David2024patton/agence/download).
+Agence ships as an Electron desktop app. **Latest stable:** `v1.16.1` on branch **`main`**.
 
-| Platform              | Download                           |
-| --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
-| Linux                 | `.deb`, `.rpm`, or `.AppImage`     |
+> [!IMPORTANT]
+> This repository is **private**. The [releases page](https://github.com/David2024patton/agence/releases/latest) and direct download URLs return **404** unless you are signed into GitHub with access to `David2024patton/agence`. That is expected for private repos, not a missing build.
 
-```bash
-# macOS (Homebrew)
-brew install --cask opencode-desktop
-# Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+#### Download (Windows, signed in to GitHub)
+
+1. Open **[Releases](https://github.com/David2024patton/agence/releases/latest)** while logged in.
+2. Download **`agence-desktop-win-x64.exe`** from the latest release (currently **v1.16.1**).
+
+Or use the GitHub CLI (authenticated):
+
+```powershell
+gh auth login
+gh release download v1.16.1 -R David2024patton/agence -p agence-desktop-win-x64.exe -D .
 ```
+
+Direct asset URL (same login requirement):
+
+`https://github.com/David2024patton/agence/releases/download/v1.16.1/agence-desktop-win-x64.exe`
+
+#### Build the installer locally
+
+From the repo root (after `bun install`):
+
+```powershell
+cd packages/desktop
+$env:AGENCE_CHANNEL = "prod"
+bun run prebuild
+bun run build
+bun run package:win
+# Installer: packages/desktop/dist/agence-desktop-win-x64.exe
+```
+
+#### Dev (live reload)
+
+```powershell
+# Repo root — not packages/desktop
+bun dev:desktop
+```
+
+Packaged installs check **GitHub Releases** on `David2024patton/agence` for updates (`electron-updater`).
+
+| Platform              | Release asset (when published)   |
+| --------------------- | -------------------------------- |
+| Windows               | `agence-desktop-win-x64.exe`     |
+| macOS / Linux         | Build locally (`package:mac` / `package:linux`) |
 
 #### Installation Directory
 
