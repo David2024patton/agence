@@ -8,7 +8,6 @@ import { SettingsGeneral } from "./settings-general"
 import { SettingsKeybinds } from "./settings-keybinds"
 import { SettingsProviders } from "./settings-providers"
 import { SettingsModels } from "./settings-models"
-import { SettingsDebug } from "./settings-debug"
 import { SettingsMemory } from "./settings-memory"
 
 export const DialogSettings: Component<{ initialTab?: string }> = (props) => {
@@ -51,10 +50,6 @@ export const DialogSettings: Component<{ initialTab?: string }> = (props) => {
                       <Icon name="models" />
                       {language.t("settings.models.title")}
                     </Tabs.Trigger>
-                    <Tabs.Trigger value="debug">
-                      <Icon name="warning" />
-                      Debug
-                    </Tabs.Trigger>
                   </div>
                 </div>
               </div>
@@ -79,9 +74,6 @@ export const DialogSettings: Component<{ initialTab?: string }> = (props) => {
         </Tabs.Content>
         <Tabs.Content value="models" class="no-scrollbar">
           <SettingsModels />
-        </Tabs.Content>
-        <Tabs.Content value="debug" class="no-scrollbar">
-          <SettingsDebug />
         </Tabs.Content>
       </Tabs>
     </Dialog>
