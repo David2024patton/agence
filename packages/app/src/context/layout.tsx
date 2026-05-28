@@ -264,9 +264,13 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
       }),
     )
 
-    createEffect(() => {
-      if (!ready()) return
-      setStore("sidebar", "opened", false)
+    onMount(() => {
+      const collapseOnLaunch = () => setStore("sidebar", "opened", false)
+      if (ready()) {
+        collapseOnLaunch()
+        return
+      }
+      void ready.promise?.then(collapseOnLaunch)
     })
 
     const MAX_SESSION_KEYS = 50
