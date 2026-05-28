@@ -50,6 +50,7 @@ import { useCheckServerHealth } from "./utils/server-health"
 const HomeRoute = lazy(() => import("@/pages/home"))
 const Session = lazy(() => import("@/pages/session"))
 const Monitor = lazy(() => import("@/pages/monitor"))
+const Library = lazy(() => import("@/pages/library"))
 
 const SessionRoute = Object.assign(
   () => (
@@ -313,6 +314,7 @@ export function AppInterface(props: {
                 >
                   <Route path="/" component={HomeRoute} />
                   <Route path="/monitor" component={Monitor} />
+                  <Route path="/library" component={Library} />
                   <Route path="/:dir" component={DirectoryLayout}>
                     <Route path="/" component={() => <Navigate href="session" />} />
                     <Route path="/session/:id?" component={SessionRoute} />

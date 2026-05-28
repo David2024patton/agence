@@ -76,6 +76,7 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
   const windows = createMemo(() => platform.platform === "desktop" && platform.os === "windows")
   const electronWindows = createMemo(() => windows() && !tauriApi())
   const linux = createMemo(() => platform.platform === "desktop" && platform.os === "linux")
+  const desktop = createMemo(() => platform.platform === "desktop")
   const web = createMemo(() => platform.platform === "web")
   const zoom = () => platform.webviewZoom?.() ?? 1
   const titlebarZoom = () => (windows() ? Math.max(zoom(), minTitlebarZoom) : zoom())
@@ -412,6 +413,24 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                 <Show when={windows() || linux()}>
                   <WindowsAppMenu command={command} platform={platform} variant="v2" />
                 </Show>
+                <Tooltip placement="bottom" value={language.t("command.sidebar.toggle")}>
+                  <IconButtonV2
+                    type="button"
+                    variant="ghost-muted"
+                    size="large"
+                    class="!w-9 shrink-0"
+                    icon={
+                      <Icon
+                        size="small"
+                        name={layout.sidebar.opened() ? "sidebar-active" : "sidebar"}
+                        class="text-icon-weak"
+                      />
+                    }
+                    onClick={layout.sidebar.toggle}
+                    aria-label={language.t("command.sidebar.toggle")}
+                    aria-expanded={layout.sidebar.opened()}
+                  />
+                </Tooltip>
                 <IconButtonV2
                   variant="ghost-muted"
                   size="large"
@@ -514,48 +533,55 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
               <Show when={windows() || linux()}>
                 <WindowsAppMenu command={command} platform={platform} />
               </Show>
-              <Show when={mac()}>
-                {/*<div class="h-full shrink-0" style={{ width: `${72 / zoom()}px` }} />*/}
-                <div class="xl:hidden w-10 shrink-0 flex items-center justify-center">
-                  <IconButton
-                    icon="menu"
-                    variant="ghost"
-                    class="titlebar-icon rounded-md"
-                    onClick={layout.mobileSidebar.toggle}
-                    aria-label={language.t("sidebar.menu.toggle")}
-                    aria-expanded={layout.mobileSidebar.opened()}
-                  />
-                </div>
-              </Show>
-              <Show when={!mac()}>
-                <div class="xl:hidden w-[48px] shrink-0 flex items-center justify-center">
-                  <IconButton
-                    icon="menu"
-                    variant="ghost"
-                    class="titlebar-icon rounded-md"
-                    onClick={layout.mobileSidebar.toggle}
-                    aria-label={language.t("sidebar.menu.toggle")}
-                    aria-expanded={layout.mobileSidebar.opened()}
-                  />
-                </div>
+              <TooltipKeybind
+                class={
+                  desktop()
+                    ? "flex shrink-0 ml-2"
+                    : web()
+                      ? "hidden xl:flex shrink-0 ml-14"
+                      : "hidden xl:flex shrink-0 ml-2"
+                }
+                placement="bottom"
+                title={language.t("command.sidebar.toggle")}
+                keybind={command.keybind("sidebar.toggle")}
+              >
+                <Button
+                  variant="ghost"
+                  class="group/sidebar-toggle titlebar-icon w-8 h-6 p-0 box-border"
+                  onClick={layout.sidebar.toggle}
+                  aria-label={language.t("command.sidebar.toggle")}
+                  aria-expanded={layout.sidebar.opened()}
+                >
+                  <Icon size="small" name={layout.sidebar.opened() ? "sidebar-active" : "sidebar"} />
+                </Button>
+              </TooltipKeybind>
+              <Show when={!desktop()}>
+                <Show when={mac()}>
+                  <div class="xl:hidden w-10 shrink-0 flex items-center justify-center">
+                    <IconButton
+                      icon="menu"
+                      variant="ghost"
+                      class="titlebar-icon rounded-md"
+                      onClick={layout.mobileSidebar.toggle}
+                      aria-label={language.t("sidebar.menu.toggle")}
+                      aria-expanded={layout.mobileSidebar.opened()}
+                    />
+                  </div>
+                </Show>
+                <Show when={!mac()}>
+                  <div class="xl:hidden w-[48px] shrink-0 flex items-center justify-center">
+                    <IconButton
+                      icon="menu"
+                      variant="ghost"
+                      class="titlebar-icon rounded-md"
+                      onClick={layout.mobileSidebar.toggle}
+                      aria-label={language.t("sidebar.menu.toggle")}
+                      aria-expanded={layout.mobileSidebar.opened()}
+                    />
+                  </div>
+                </Show>
               </Show>
               <div class="flex items-center gap-1 shrink-0">
-                <TooltipKeybind
-                  class={web() ? "hidden xl:flex shrink-0 ml-14" : "hidden xl:flex shrink-0 ml-2"}
-                  placement="bottom"
-                  title={language.t("command.sidebar.toggle")}
-                  keybind={command.keybind("sidebar.toggle")}
-                >
-                  <Button
-                    variant="ghost"
-                    class="group/sidebar-toggle titlebar-icon w-8 h-6 p-0 box-border"
-                    onClick={layout.sidebar.toggle}
-                    aria-label={language.t("command.sidebar.toggle")}
-                    aria-expanded={layout.sidebar.opened()}
-                  >
-                    <Icon size="small" name={layout.sidebar.opened() ? "sidebar-active" : "sidebar"} />
-                  </Button>
-                </TooltipKeybind>
                 <div class="hidden xl:flex items-center shrink-0">
                   <Show when={params.dir}>
                     <div

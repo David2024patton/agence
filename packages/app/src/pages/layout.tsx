@@ -1234,6 +1234,12 @@ export default function Layout(props: ParentProps) {
     })
   }
 
+  function openKnowledge() {
+    const project = currentProject()
+    const directory = project?.worktree
+    navigate(directory ? `/library?directory=${encodeURIComponent(directory)}` : "/library")
+  }
+
   function projectRoot(directory: string) {
     const key = pathKey(directory)
     const project = layout.projects
@@ -2355,6 +2361,8 @@ export default function Layout(props: ParentProps) {
       settingsLabel={() => language.t("sidebar.settings")}
       settingsKeybind={() => command.keybind("settings.open")}
       onOpenSettings={openSettings}
+      knowledgeLabel={() => language.t("sidebar.knowledge")}
+      onOpenKnowledge={openKnowledge}
       helpLabel={() => language.t("sidebar.help")}
       onOpenHelp={() => platform.openLink("https://github.com/David2024patton/agence/desktop-feedback")}
       renderPanel={() =>
@@ -2461,7 +2469,7 @@ export default function Layout(props: ParentProps) {
               data-component="sidebar-nav-desktop"
               classList={{
                 "block": true,
-                "fixed top-11 left-0 bottom-0": true,
+                "fixed top-10 left-0 bottom-0": true,
                 "z-10": true,
               }}
               style={{ width: layout.sidebar.opened() ? `${side()}px` : "4rem" }}
