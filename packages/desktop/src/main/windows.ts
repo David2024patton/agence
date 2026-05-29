@@ -415,8 +415,8 @@ function addRendererHeaders(value: string, headers: Record<string, any>) {
   if (isRendererUrl(value)) {
     const isPackaged = app.isPackaged
     const csp = isPackaged
-      ? "default-src 'self' oc:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*"
-      : "default-src 'self' oc: http://localhost:* http://127.0.0.1:*; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* http://127.0.0.1:*; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://localhost:* http://127.0.0.1:*; connect-src 'self' ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:*"
+      ? "default-src 'self' oc:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* data:"
+      : "default-src 'self' oc: http://localhost:* http://127.0.0.1:*; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* http://127.0.0.1:*; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://localhost:* http://127.0.0.1:*; connect-src 'self' ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:* data:"
     upsertKeyValue(headers, "Content-Security-Policy", [csp])
   }
 }

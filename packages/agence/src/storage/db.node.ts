@@ -18,3 +18,24 @@ export function init(path: string) {
     }
   }
 }
+
+import crypto from "node:crypto"
+
+export function applyMigrations(db: any, entries: any[]) {
+  const migrations = entries.map((entry) => {
+    const sqlStatements = entry.sql
+      .split("--> statement-breakpoint")
+      .map((it: string) => it.trim())
+      .filter(Boolean)
+    const hash = crypto.createHash("sha256").update(entry.sql).digest("hex")
+    return {
+      sql: sqlStatements,
+      bps: true,
+      folderMillis: entry.timestamp,
+      hash,
+      name: entry.name,
+    }
+  })
+  db.dialect.migrate(migrations, db.session)
+}
+

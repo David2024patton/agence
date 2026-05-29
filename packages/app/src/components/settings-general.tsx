@@ -342,7 +342,11 @@ export const SettingsGeneral: Component = () => {
 
         <SettingsRow
           title={language.t("command.permissions.autoaccept.enable")}
-          description={language.t("toast.permissions.autoaccept.on.description")}
+          description={
+            dir()
+              ? language.t("toast.permissions.autoaccept.on.description")
+              : language.t("settings.learning.noProject")
+          }
           tooltip={gt("autoAccept", "toast.permissions.autoaccept.on.description")}
         >
           <div data-action="settings-auto-accept-permissions">
