@@ -5,6 +5,7 @@ import { Tag } from "@agence-ai/ui/tag"
 import { showToast } from "@agence-ai/ui/toast"
 import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { createMemo, type Component, For, Show } from "solid-js"
+import { produce } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useGlobalSDK } from "@/context/global-sdk"
 import { useGlobalSync } from "@/context/global-sync"
@@ -12,12 +13,14 @@ import { DialogConnectProvider } from "./dialog-connect-provider"
 import { DialogSelectProvider } from "./dialog-select-provider"
 import { DialogCustomProvider } from "./dialog-custom-provider"
 import { SettingsList } from "./settings-list"
+import { SettingsSectionTitle } from "./settings-row"
+import { settingsTip, SettingsHelpTrigger } from "./settings-tooltip"
 
 type ProviderSource = "env" | "api" | "config" | "custom"
 type ProviderItem = ReturnType<ReturnType<typeof useProviders>["connected"]>[number]
 
 const PROVIDER_NOTES = [
-  { match: (id: string) => id === "agence", key: "dialog.provider.opencode.note" },
+  { match: (id: string) => id === "agence" || id === "opencode", key: "dialog.provider.opencode.note" },
   { match: (id: string) => id === "opencode-go", key: "dialog.provider.opencodeGo.tagline" },
   { match: (id: string) => id === "anthropic", key: "dialog.provider.anthropic.note" },
   { match: (id: string) => id.startsWith("github-copilot"), key: "dialog.provider.copilot.note" },
@@ -37,7 +40,10 @@ export const SettingsProviders: Component = () => {
   const connected = createMemo(() => {
     return providers
       .connected()
-      .filter((p) => p.id !== "agence" || Object.values(p.models).find((m) => m.cost?.input))
+      .filter(
+        (p) =>
+          (p.id !== "agence" && p.id !== "opencode") || Object.values(p.models).find((m) => m.cost?.input),
+      )
   })
 
   const popular = createMemo(() => {
@@ -104,21 +110,30 @@ export const SettingsProviders: Component = () => {
   }
 
   const disconnect = async (providerID: string, name: string) => {
+    const finish = async () => {
+      globalSync.set(
+        "provider_auth",
+        produce((draft) => {
+          delete draft[providerID]
+        }),
+      )
+      await globalSDK.client.global.dispose()
+      globalSync.invalidateProviders()
+    }
+
     if (isConfigCustom(providerID)) {
       await globalSDK.client.auth.remove({ providerID }).catch(() => undefined)
       await disableProvider(providerID, name)
+      await finish()
       return
     }
+
     await globalSDK.client.auth
       .remove({ providerID })
       .then(async () => {
-        await globalSDK.client.global.dispose()
-        showToast({
-          variant: "success",
-          icon: "circle-check",
-          title: language.t("provider.disconnect.toast.disconnected.title", { provider: name }),
-          description: language.t("provider.disconnect.toast.disconnected.description", { provider: name }),
-        })
+        const disabled = globalSync.data.config.disabled_providers ?? []
+        if (!disabled.includes(providerID)) await disableProvider(providerID, name)
+        await finish()
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : String(err)
@@ -127,16 +142,25 @@ export const SettingsProviders: Component = () => {
   }
 
   return (
-    <div class="flex flex-col h-full overflow-y-auto no-scrollbar px-4 pb-10 sm:px-10 sm:pb-10">
+    <div class="flex flex-col h-full overflow-y-auto settings-scrollbar px-4 pb-10 sm:px-10 sm:pb-10">
       <div class="sticky top-0 z-10 bg-[linear-gradient(to_bottom,var(--surface-stronger-non-alpha)_calc(100%_-_24px),transparent)]">
         <div class="flex flex-col gap-1 pt-6 pb-8 max-w-[720px]">
-          <h2 class="text-16-medium text-text-strong">{language.t("settings.providers.title")}</h2>
+          <div class="flex items-center gap-1.5">
+            <h2 class="text-16-medium text-text-strong">{language.t("settings.providers.title")}</h2>
+            <SettingsHelpTrigger
+              tooltip={settingsTip(language, "settings.providers.tooltip.page")}
+              label={language.t("settings.providers.title")}
+            />
+          </div>
         </div>
       </div>
 
       <div class="flex flex-col gap-8 max-w-[720px]">
         <div class="flex flex-col gap-1" data-component="connected-providers-section">
-          <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.providers.section.connected")}</h3>
+          <SettingsSectionTitle
+            title={language.t("settings.providers.section.connected")}
+            tooltip={settingsTip(language, "settings.providers.tooltip.connected")}
+          />
           <SettingsList>
             <Show
               when={connected().length > 0}
@@ -174,7 +198,10 @@ export const SettingsProviders: Component = () => {
         </div>
 
         <div class="flex flex-col gap-1">
-          <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.providers.section.popular")}</h3>
+          <SettingsSectionTitle
+            title={language.t("settings.providers.section.popular")}
+            tooltip={settingsTip(language, "settings.providers.tooltip.popular")}
+          />
           <SettingsList>
             <For each={popular()}>
               {(item) => (
@@ -217,6 +244,10 @@ export const SettingsProviders: Component = () => {
                   <ProviderIcon id="synthetic" class="size-5 shrink-0 icon-strong-base" />
                   <span class="text-14-medium text-text-strong">{language.t("provider.custom.title")}</span>
                   <Tag>{language.t("settings.providers.tag.custom")}</Tag>
+                  <SettingsHelpTrigger
+                    tooltip={settingsTip(language, "settings.providers.tooltip.custom")}
+                    label={language.t("provider.custom.title")}
+                  />
                 </div>
                 <span class="text-12-regular text-text-weak pl-8">
                   {language.t("settings.providers.custom.description")}

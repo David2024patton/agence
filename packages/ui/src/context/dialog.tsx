@@ -74,6 +74,12 @@ function init() {
   })
 
   const show = (element: DialogElement, owner: Owner, onClose?: () => void) => {
+    // Blur the active element before showing the dialog to avoid aria-hidden focus retention warnings
+    const activeEl = document.activeElement as HTMLElement | null
+    if (activeEl && typeof activeEl.blur === "function") {
+      activeEl.blur()
+    }
+
     // Immediately dispose any existing dialog when showing a new one
     const current = active()
     if (current) {
