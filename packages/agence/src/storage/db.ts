@@ -1,5 +1,3 @@
-import { type SQLiteBunDatabase } from "drizzle-orm/bun-sqlite"
-import { migrate } from "drizzle-orm/bun-sqlite/migrator"
 import { type SQLiteTransaction } from "drizzle-orm/sqlite-core"
 export * from "drizzle-orm"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -9,10 +7,11 @@ import * as Log from "@agence-ai/core/util/log"
 import { NamedError } from "@agence-ai/core/util/error"
 import path from "path"
 import { readFileSync, readdirSync, existsSync } from "fs"
+import { fileURLToPath } from "node:url"
 import { Flag } from "@agence-ai/core/flag/flag"
 import { InstallationChannel } from "@agence-ai/core/installation/version"
 import { EffectBridge } from "@/effect/bridge"
-import { init } from "#db"
+import { init, applyMigrations } from "#db"
 import { Effect, Schema } from "effect"
 
 declare const AGENCE_MIGRATIONS: { sql: string; timestamp: number; name: string }[] | undefined
@@ -49,12 +48,6 @@ type Client = ReturnType<typeof init>
 
 type Journal = { sql: string; timestamp: number; name: string }[]
 
-// Drizzle's migrate overloads trigger expensive variance checks here; narrow to the journal overload we actually use.
-const migrateFromJournal = migrate as unknown as (db: SQLiteBunDatabase, entries: Journal) => void
-
-function applyMigrations(db: SQLiteBunDatabase, entries: Journal) {
-  migrateFromJournal(db, entries)
-}
 
 function time(tag: string) {
   const match = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(tag)
@@ -116,10 +109,20 @@ export const Client = Object.assign(
     db.run("PRAGMA wal_checkpoint(PASSIVE)")
 
     // Apply schema migrations
+    const dirname =
+      (typeof import.meta !== "undefined" && import.meta.dirname) ||
+      (typeof __dirname !== "undefined" ? __dirname : "") ||
+      (() => {
+        try {
+          return path.dirname(fileURLToPath(import.meta.url))
+        } catch {
+          return ""
+        }
+      })()
     const entries =
       typeof AGENCE_MIGRATIONS !== "undefined"
         ? AGENCE_MIGRATIONS
-        : migrations(path.join(import.meta.dirname, "../../migration"))
+        : migrations(path.join(dirname, "../../migration"))
     if (entries.length > 0) {
       log.info("applying migrations", {
         count: entries.length,
