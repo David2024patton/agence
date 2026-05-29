@@ -409,8 +409,16 @@ function isTrustedRendererUrl(value?: string) {
 
 function addRendererHeaders(value: string, headers: Record<string, any>) {
   upsertKeyValue(headers, "Access-Control-Allow-Origin", ["*"])
-  upsertKeyValue(headers, "Access-Control-Allow-Headers", ["*"])
+  upsertKeyValue(headers, "Access-Control-Allow-Headers", ["*, Authorization"])
   if (isRendererUrl(value, true)) upsertKeyValue(headers, documentPolicyHeader, [jsCallStacksDocumentPolicy])
+
+  if (isRendererUrl(value)) {
+    const isPackaged = app.isPackaged
+    const csp = isPackaged
+      ? "default-src 'self' oc:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*"
+      : "default-src 'self' oc: http://localhost:* http://127.0.0.1:*; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* http://127.0.0.1:*; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://localhost:* http://127.0.0.1:*; connect-src 'self' ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:*"
+    upsertKeyValue(headers, "Content-Security-Policy", [csp])
+  }
 }
 
 function isRendererUrl(value?: string, html = false) {

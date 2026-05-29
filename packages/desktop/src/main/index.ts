@@ -120,6 +120,7 @@ const main = Effect.gen(function* () {
   } catch {}
 
   process.env.AGENCE_DISABLE_EMBEDDED_WEB_UI = "true"
+  process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true"
 
   const appId = app.isPackaged ? APP_IDS[CHANNEL] : "ai.agence.desktop.dev"
   const onboardingTestRoot = ((): string | undefined => {
