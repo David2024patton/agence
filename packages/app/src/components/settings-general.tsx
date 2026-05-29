@@ -1,11 +1,9 @@
 import { Component, Show, createMemo, createResource, onMount, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Button } from "@agence-ai/ui/button"
-import { Icon } from "@agence-ai/ui/icon"
 import { Select } from "@agence-ai/ui/select"
 import { Switch } from "@agence-ai/ui/switch"
 import { TextField } from "@agence-ai/ui/text-field"
-import { Tooltip } from "@agence-ai/ui/tooltip"
 import { useTheme, type ColorScheme } from "@agence-ai/ui/theme/context"
 import { showToast } from "@agence-ai/ui/toast"
 import { useParams } from "@solidjs/router"
@@ -28,8 +26,11 @@ import {
 } from "@/context/settings"
 import { decode64 } from "@/utils/base64"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
+import { useSettingsWorkspaceDirectory } from "@/utils/settings-learning"
 import { Link } from "./link"
 import { SettingsList } from "./settings-list"
+import { SettingsRow, SettingsSectionTitle } from "./settings-row"
+import { rowTooltip, settingsTip, SettingsHelpTrigger } from "./settings-tooltip"
 
 let demoSoundState = {
   cleanup: undefined as (() => void) | undefined,
@@ -94,7 +95,8 @@ export const SettingsGeneral: Component = () => {
   })
 
   const linux = createMemo(() => platform.platform === "desktop" && platform.os === "linux")
-  const dir = createMemo(() => decode64(params.dir))
+  const workspaceDirectory = useSettingsWorkspaceDirectory()
+  const dir = createMemo(() => workspaceDirectory() || decode64(params.dir))
   const accepting = createMemo(() => {
     const value = dir()
     if (!value) return false
@@ -314,12 +316,16 @@ export const SettingsGeneral: Component = () => {
     triggerVariant: "settings" as const,
   })
 
+  const gt = (id: string, descKey: string) =>
+    rowTooltip(language, `settings.general.tooltip.${id}`, language.t(descKey))
+
   const GeneralSection = () => (
     <div class="flex flex-col gap-1">
       <SettingsList>
         <SettingsRow
           title={language.t("settings.general.row.language.title")}
           description={language.t("settings.general.row.language.description")}
+          tooltip={gt("language", "settings.general.row.language.description")}
         >
           <Select
             data-action="settings-language"
@@ -337,6 +343,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("command.permissions.autoaccept.enable")}
           description={language.t("toast.permissions.autoaccept.on.description")}
+          tooltip={gt("autoAccept", "toast.permissions.autoaccept.on.description")}
         >
           <div data-action="settings-auto-accept-permissions">
             <Switch checked={accepting()} disabled={!dir()} onChange={toggleAccept} />
@@ -346,6 +353,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.shell.title")}
           description={language.t("settings.general.row.shell.description")}
+          tooltip={gt("shell", "settings.general.row.shell.description")}
         >
           <Select
             data-action="settings-shell"
@@ -368,6 +376,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.reasoningSummaries.title")}
           description={language.t("settings.general.row.reasoningSummaries.description")}
+          tooltip={gt("reasoningSummaries", "settings.general.row.reasoningSummaries.description")}
         >
           <div data-action="settings-feed-reasoning-summaries">
             <Switch
@@ -380,6 +389,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.shellToolPartsExpanded.title")}
           description={language.t("settings.general.row.shellToolPartsExpanded.description")}
+          tooltip={gt("shellToolPartsExpanded", "settings.general.row.shellToolPartsExpanded.description")}
         >
           <div data-action="settings-feed-shell-tool-parts-expanded">
             <Switch
@@ -392,6 +402,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.editToolPartsExpanded.title")}
           description={language.t("settings.general.row.editToolPartsExpanded.description")}
+          tooltip={gt("editToolPartsExpanded", "settings.general.row.editToolPartsExpanded.description")}
         >
           <div data-action="settings-feed-edit-tool-parts-expanded">
             <Switch
@@ -404,6 +415,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.showSessionProgressBar.title")}
           description={language.t("settings.general.row.showSessionProgressBar.description")}
+          tooltip={gt("showSessionProgressBar", "settings.general.row.showSessionProgressBar.description")}
         >
           <div data-action="settings-show-session-progress-bar">
             <Switch
@@ -418,12 +430,16 @@ export const SettingsGeneral: Component = () => {
 
   const AdvancedSection = () => (
     <div class="flex flex-col gap-1">
-      <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.general.section.advanced")}</h3>
+      <SettingsSectionTitle
+        title={language.t("settings.general.section.advanced")}
+        tooltip={settingsTip(language, "settings.general.tooltip.sectionAdvanced")}
+      />
 
       <SettingsList>
         <SettingsRow
           title={language.t("settings.general.row.showFileTree.title")}
           description={language.t("settings.general.row.showFileTree.description")}
+          tooltip={gt("showFileTree", "settings.general.row.showFileTree.description")}
         >
           <div data-action="settings-show-file-tree">
             <Switch
@@ -436,6 +452,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.showNavigation.title")}
           description={language.t("settings.general.row.showNavigation.description")}
+          tooltip={gt("showNavigation", "settings.general.row.showNavigation.description")}
         >
           <div data-action="settings-show-navigation">
             <Switch
@@ -448,6 +465,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.showSearch.title")}
           description={language.t("settings.general.row.showSearch.description")}
+          tooltip={gt("showSearch", "settings.general.row.showSearch.description")}
         >
           <div data-action="settings-show-search">
             <Switch
@@ -460,6 +478,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.showTerminal.title")}
           description={language.t("settings.general.row.showTerminal.description")}
+          tooltip={gt("showTerminal", "settings.general.row.showTerminal.description")}
         >
           <div data-action="settings-show-terminal">
             <Switch
@@ -472,6 +491,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.showStatus.title")}
           description={language.t("settings.general.row.showStatus.description")}
+          tooltip={gt("showStatus", "settings.general.row.showStatus.description")}
         >
           <div data-action="settings-show-status">
             <Switch
@@ -486,12 +506,16 @@ export const SettingsGeneral: Component = () => {
 
   const AppearanceSection = () => (
     <div class="flex flex-col gap-1">
-      <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.general.section.appearance")}</h3>
+      <SettingsSectionTitle
+        title={language.t("settings.general.section.appearance")}
+        tooltip={settingsTip(language, "settings.general.tooltip.sectionAppearance")}
+      />
 
       <SettingsList>
         <SettingsRow
           title={language.t("settings.general.row.colorScheme.title")}
           description={language.t("settings.general.row.colorScheme.description")}
+          tooltip={gt("colorScheme", "settings.general.row.colorScheme.description")}
         >
           <Select
             data-action="settings-color-scheme"
@@ -520,6 +544,7 @@ export const SettingsGeneral: Component = () => {
               <Link href="https://github.com/David2024patton/agence/docs/themes/">{language.t("common.learnMore")}</Link>
             </>
           }
+          tooltip={gt("theme", "settings.general.row.theme.description")}
         >
           <Select
             data-action="settings-theme"
@@ -545,6 +570,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.uiFont.title")}
           description={language.t("settings.general.row.uiFont.description")}
+          tooltip={gt("uiFont", "settings.general.row.uiFont.description")}
         >
           <div class="w-full sm:w-[220px]">
             <TextField
@@ -568,6 +594,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.font.title")}
           description={language.t("settings.general.row.font.description")}
+          tooltip={gt("font", "settings.general.row.font.description")}
         >
           <div class="w-full sm:w-[220px]">
             <TextField
@@ -591,6 +618,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.terminalFont.title")}
           description={language.t("settings.general.row.terminalFont.description")}
+          tooltip={gt("terminalFont", "settings.general.row.terminalFont.description")}
         >
           <div class="w-full sm:w-[220px]">
             <TextField
@@ -616,12 +644,16 @@ export const SettingsGeneral: Component = () => {
 
   const NotificationsSection = () => (
     <div class="flex flex-col gap-1">
-      <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.general.section.notifications")}</h3>
+      <SettingsSectionTitle
+        title={language.t("settings.general.section.notifications")}
+        tooltip={settingsTip(language, "settings.general.tooltip.sectionNotifications")}
+      />
 
       <SettingsList>
         <SettingsRow
           title={language.t("settings.general.notifications.agent.title")}
           description={language.t("settings.general.notifications.agent.description")}
+          tooltip={gt("notifAgent", "settings.general.notifications.agent.description")}
         >
           <div data-action="settings-notifications-agent">
             <Switch
@@ -634,6 +666,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.notifications.permissions.title")}
           description={language.t("settings.general.notifications.permissions.description")}
+          tooltip={gt("notifPermissions", "settings.general.notifications.permissions.description")}
         >
           <div data-action="settings-notifications-permissions">
             <Switch
@@ -646,6 +679,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.notifications.errors.title")}
           description={language.t("settings.general.notifications.errors.description")}
+          tooltip={gt("notifErrors", "settings.general.notifications.errors.description")}
         >
           <div data-action="settings-notifications-errors">
             <Switch
@@ -660,12 +694,16 @@ export const SettingsGeneral: Component = () => {
 
   const SoundsSection = () => (
     <div class="flex flex-col gap-1">
-      <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.general.section.sounds")}</h3>
+      <SettingsSectionTitle
+        title={language.t("settings.general.section.sounds")}
+        tooltip={settingsTip(language, "settings.general.tooltip.sectionSounds")}
+      />
 
       <SettingsList>
         <SettingsRow
           title={language.t("settings.general.sounds.agent.title")}
           description={language.t("settings.general.sounds.agent.description")}
+          tooltip={gt("soundAgent", "settings.general.sounds.agent.description")}
         >
           <Select
             data-action="settings-sounds-agent"
@@ -681,6 +719,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.sounds.permissions.title")}
           description={language.t("settings.general.sounds.permissions.description")}
+          tooltip={gt("soundPermissions", "settings.general.sounds.permissions.description")}
         >
           <Select
             data-action="settings-sounds-permissions"
@@ -696,6 +735,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.sounds.errors.title")}
           description={language.t("settings.general.sounds.errors.description")}
+          tooltip={gt("soundErrors", "settings.general.sounds.errors.description")}
         >
           <Select
             data-action="settings-sounds-errors"
@@ -713,12 +753,16 @@ export const SettingsGeneral: Component = () => {
 
   const UpdatesSection = () => (
     <div class="flex flex-col gap-1">
-      <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.general.section.updates")}</h3>
+      <SettingsSectionTitle
+        title={language.t("settings.general.section.updates")}
+        tooltip={settingsTip(language, "settings.general.tooltip.sectionUpdates")}
+      />
 
       <SettingsList>
         <SettingsRow
           title={language.t("settings.updates.row.startup.title")}
           description={language.t("settings.updates.row.startup.description")}
+          tooltip={gt("updatesStartup", "settings.updates.row.startup.description")}
         >
           <div data-action="settings-updates-startup">
             <Switch
@@ -732,6 +776,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.general.row.releaseNotes.title")}
           description={language.t("settings.general.row.releaseNotes.description")}
+          tooltip={gt("releaseNotes", "settings.general.row.releaseNotes.description")}
         >
           <div data-action="settings-release-notes">
             <Switch
@@ -744,6 +789,7 @@ export const SettingsGeneral: Component = () => {
         <SettingsRow
           title={language.t("settings.updates.row.check.title")}
           description={language.t("settings.updates.row.check.description")}
+          tooltip={gt("updatesCheck", "settings.updates.row.check.description")}
         >
           <Button size="small" variant="secondary" disabled={store.checking || !platform.checkUpdate} onClick={check}>
             {store.checking
@@ -758,12 +804,16 @@ export const SettingsGeneral: Component = () => {
   const DisplaySection = () => (
     <Show when={desktop()}>
       <div class="flex flex-col gap-1">
-        <h3 class="text-14-medium text-text-strong pb-2">{language.t("settings.general.section.display")}</h3>
+        <SettingsSectionTitle
+          title={language.t("settings.general.section.display")}
+          tooltip={settingsTip(language, "settings.general.tooltip.sectionDisplay")}
+        />
 
         <SettingsList>
           <SettingsRow
             title={language.t("settings.general.row.pinchZoom.title")}
             description={language.t("settings.general.row.pinchZoom.description")}
+            tooltip={gt("pinchZoom", "settings.general.row.pinchZoom.description")}
           >
             <div data-action="settings-pinch-zoom">
               <Switch checked={pinchZoom.latest} onChange={onPinchZoomChange} />
@@ -773,6 +823,7 @@ export const SettingsGeneral: Component = () => {
           <SettingsRow
             title={language.t("settings.general.row.externalServer.title")}
             description={language.t("settings.general.row.externalServer.description")}
+            tooltip={gt("externalServer", "settings.general.row.externalServer.description")}
           >
             <div data-action="settings-external-server">
               <Switch checked={externalServer.latest} onChange={onExternalServerChange} />
@@ -781,17 +832,9 @@ export const SettingsGeneral: Component = () => {
 
           <Show when={linux()}>
             <SettingsRow
-              title={
-                <div class="flex items-center gap-2">
-                  <span>{language.t("settings.general.row.wayland.title")}</span>
-                  <Tooltip value={language.t("settings.general.row.wayland.tooltip")} placement="top">
-                    <span class="text-text-weak">
-                      <Icon name="help" size="small" />
-                    </span>
-                  </Tooltip>
-                </div>
-              }
+              title={language.t("settings.general.row.wayland.title")}
               description={language.t("settings.general.row.wayland.description")}
+              tooltip={gt("wayland", "settings.general.row.wayland.description")}
             >
               <div data-action="settings-wayland">
                 <Switch checked={displayBackend.latest === "wayland"} onChange={onDisplayBackendChange} />
@@ -803,12 +846,17 @@ export const SettingsGeneral: Component = () => {
     </Show>
   )
 
-  console.log(import.meta.env)
   return (
-    <div class="flex flex-col h-full overflow-y-auto no-scrollbar px-4 pb-10 sm:px-10 sm:pb-10">
+    <div class="flex flex-col h-full overflow-y-auto settings-scrollbar px-4 pb-10 sm:px-10 sm:pb-10">
       <div class="sticky top-0 z-10 bg-[linear-gradient(to_bottom,var(--surface-stronger-non-alpha)_calc(100%_-_24px),transparent)]">
         <div class="flex flex-col gap-1 pt-6 pb-8">
-          <h2 class="text-16-medium text-text-strong">{language.t("settings.tab.general")}</h2>
+          <div class="flex items-center gap-1.5">
+            <h2 class="text-16-medium text-text-strong">{language.t("settings.tab.general")}</h2>
+            <SettingsHelpTrigger
+              tooltip={settingsTip(language, "settings.nav.general")}
+              label={language.t("settings.tab.general")}
+            />
+          </div>
         </div>
       </div>
 
@@ -825,7 +873,7 @@ export const SettingsGeneral: Component = () => {
 
         <DisplaySection />
 
-        <Show when={desktop() && import.meta.env.VITE_AGENCE_CHANNEL === "beta"}>
+        <Show when={desktop()}>
           <AdvancedSection />
         </Show>
       </div>
@@ -833,20 +881,3 @@ export const SettingsGeneral: Component = () => {
   )
 }
 
-interface SettingsRowProps {
-  title: string | JSX.Element
-  description: string | JSX.Element
-  children: JSX.Element
-}
-
-const SettingsRow: Component<SettingsRowProps> = (props) => {
-  return (
-    <div class="flex flex-wrap items-center gap-4 py-3 border-b border-border-weak-base last:border-none sm:flex-nowrap">
-      <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span class="text-14-medium text-text-strong">{props.title}</span>
-        <span class="text-12-regular text-text-weak">{props.description}</span>
-      </div>
-      <div class="flex w-full justify-end sm:w-auto sm:shrink-0">{props.children}</div>
-    </div>
-  )
-}
