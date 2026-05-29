@@ -1230,14 +1230,46 @@ export default function Layout(props: ParentProps) {
     const run = ++dialogRun
     void import("@/components/dialog-settings").then((x) => {
       if (dialogDead || dialogRun !== run) return
-      dialog.show(() => <x.DialogSettings />)
+      dialog.show(() => <x.DialogSettings projectDirectory={currentProject()?.worktree} />)
     })
+  }
+
+  function openMonitor() {
+    navigate("/monitor")
   }
 
   function openKnowledge() {
     const project = currentProject()
     const directory = project?.worktree
     navigate(directory ? `/library?directory=${encodeURIComponent(directory)}` : "/library")
+  }
+
+  function openProjectHub() {
+    const project = currentProject()
+    const directory = project?.worktree ?? ""
+    const run = ++dialogRun
+    void import("@/components/dialog-project-hub").then((x) => {
+      if (dialogDead || dialogRun !== run) return
+      dialog.show(() => <x.DialogProjectHub directory={directory} />)
+    })
+  }
+
+  function openMemory() {
+    if (/\/session(\/|$)/.test(location.pathname)) {
+      window.dispatchEvent(new CustomEvent("agence:memory:toggle"))
+      return
+    }
+    const run = ++dialogRun
+    void import("@/components/dialog-settings").then((x) => {
+      if (dialogDead || dialogRun !== run) return
+      dialog.show(() => (
+        <x.DialogSettings initialTab="memory" memorySubTab="memories" projectDirectory={currentProject()?.worktree} />
+      ))
+    })
+  }
+
+  function toggleTerminal() {
+    window.dispatchEvent(new CustomEvent("agence:terminal:toggle"))
   }
 
   function projectRoot(directory: string) {
@@ -1403,6 +1435,7 @@ export default function Layout(props: ParentProps) {
 
     handleDeepLinks(drainPendingDeepLinks(window))
     makeEventListener(window, deepLinkEvent, handler as EventListener)
+    makeEventListener(window, "agence:open-memory-settings", () => openMemory())
   })
 
   async function renameProject(project: LocalProject, next: string) {
@@ -2361,8 +2394,16 @@ export default function Layout(props: ParentProps) {
       settingsLabel={() => language.t("sidebar.settings")}
       settingsKeybind={() => command.keybind("settings.open")}
       onOpenSettings={openSettings}
+      monitorLabel={() => language.t("sidebar.monitor")}
+      onOpenMonitor={openMonitor}
       knowledgeLabel={() => language.t("sidebar.knowledge")}
       onOpenKnowledge={openKnowledge}
+      hubLabel={() => language.t("sidebar.hub")}
+      onOpenHub={openProjectHub}
+      memoryLabel={() => language.t("sidebar.memory")}
+      onToggleMemory={openMemory}
+      terminalLabel={() => language.t("sidebar.terminal")}
+      onToggleTerminal={toggleTerminal}
       helpLabel={() => language.t("sidebar.help")}
       onOpenHelp={() => platform.openLink("https://github.com/David2024patton/agence/desktop-feedback")}
       renderPanel={() =>
@@ -2440,7 +2481,15 @@ export default function Layout(props: ParentProps) {
                       !!params.id || !params.dir,
                   }}
                 >
-                  <Show when={!autoselecting.loading} fallback={<div class="size-full" />}>
+                  <Show
+                    when={!autoselecting.loading}
+                    fallback={
+                      <div class="size-full flex items-center justify-center text-12-regular text-text-weak">
+                        {language.t("common.loading")}
+                        {language.t("common.loading.ellipsis")}
+                      </div>
+                    }
+                  >
                     {props.children}
                   </Show>
                 </main>
@@ -2448,7 +2497,7 @@ export default function Layout(props: ParentProps) {
             </div>
           </div>
         </div>
-        {import.meta.env.DEV && <DebugBar />}
+        {settings.general.debugMode() && <DebugBar />}
         <Toast.Region />
       </div>
     )
@@ -2556,7 +2605,15 @@ export default function Layout(props: ParentProps) {
                   "size-full overflow-x-hidden flex flex-col items-start contain-strict border-t border-border-weak-base bg-background-base xl:border-l xl:rounded-tl-[12px]": true,
                 }}
               >
-                <Show when={!autoselecting.loading} fallback={<div class="size-full" />}>
+                <Show
+                  when={!autoselecting.loading}
+                  fallback={
+                    <div class="size-full flex items-center justify-center text-12-regular text-text-weak">
+                      {language.t("common.loading")}
+                      {language.t("common.loading.ellipsis")}
+                    </div>
+                  }
+                >
                   {props.children}
                 </Show>
               </main>
@@ -2601,7 +2658,7 @@ export default function Layout(props: ParentProps) {
             </div>
           </div>
         </div>
-        {import.meta.env.DEV && <DebugBar />}
+        {settings.general.debugMode() && <DebugBar />}
       </div>
       <Toast.Region />
     </div>
