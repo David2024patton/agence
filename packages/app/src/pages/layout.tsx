@@ -1234,19 +1234,15 @@ export default function Layout(props: ParentProps) {
     })
   }
 
-  function openMonitor() {
-    navigate("/monitor")
-  }
-
-  function openKnowledge() {
-    const project = currentProject()
-    const directory = project?.worktree
-    navigate(directory ? `/library?directory=${encodeURIComponent(directory)}` : "/library")
-  }
-
-  function openProjectHub() {
-    const project = currentProject()
-    const directory = project?.worktree ?? ""
+  function openProjectHubForDirectory(directory: string) {
+    if (!directory) {
+      showToast({
+        variant: "error",
+        title: language.t("common.requestFailed"),
+        description: language.t("directory.error.projectRequired"),
+      })
+      return
+    }
     const run = ++dialogRun
     void import("@/components/dialog-project-hub").then((x) => {
       if (dialogDead || dialogRun !== run) return
@@ -1254,16 +1250,29 @@ export default function Layout(props: ParentProps) {
     })
   }
 
+  function openProjectHub() {
+    openProjectHubForDirectory(currentProject()?.worktree ?? "")
+  }
+
   function openMemory() {
     if (/\/session(\/|$)/.test(location.pathname)) {
       window.dispatchEvent(new CustomEvent("agence:memory:toggle"))
+      return
+    }
+    const directory = currentProject()?.worktree
+    if (!directory) {
+      showToast({
+        variant: "error",
+        title: language.t("common.requestFailed"),
+        description: language.t("directory.error.projectRequired"),
+      })
       return
     }
     const run = ++dialogRun
     void import("@/components/dialog-settings").then((x) => {
       if (dialogDead || dialogRun !== run) return
       dialog.show(() => (
-        <x.DialogSettings initialTab="memory" memorySubTab="memories" projectDirectory={currentProject()?.worktree} />
+        <x.DialogSettings initialTab="memory" memorySubTab="memories" projectDirectory={directory} />
       ))
     })
   }
@@ -2060,6 +2069,7 @@ export default function Layout(props: ParentProps) {
     openSidebar: () => layout.sidebar.open(),
     closeProject,
     showEditProjectDialog,
+    openProjectHub: openProjectHubForDirectory,
     toggleProjectWorkspaces,
     workspacesEnabled: (project) => project.vcs === "git" && layout.sidebar.workspaces(project.worktree)(),
     workspaceIds,
@@ -2212,6 +2222,17 @@ export default function Layout(props: ParentProps) {
                           <DropdownMenu.ItemLabel>{language.t("common.edit")}</DropdownMenu.ItemLabel>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item
+                          data-action="project-hub"
+                          data-project={slug()}
+                          onSelect={() => {
+                            const dir = worktree()
+                            if (!dir) return
+                            openProjectHubForDirectory(dir)
+                          }}
+                        >
+                          <DropdownMenu.ItemLabel>{language.t("sidebar.project.hub")}</DropdownMenu.ItemLabel>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
                           data-action="project-workspaces-toggle"
                           data-project={slug()}
                           disabled={!canToggle()}
@@ -2258,7 +2279,7 @@ export default function Layout(props: ParentProps) {
                   when={workspacesEnabled()}
                   fallback={
                     <>
-                      <div class="shrink-0 py-4">
+                      <div class="shrink-0 py-4 flex flex-col gap-2">
                         <Button
                           size="large"
                           icon="new-session"
@@ -2270,6 +2291,15 @@ export default function Layout(props: ParentProps) {
                           }}
                         >
                           {language.t("command.session.new")}
+                        </Button>
+                        <Button
+                          size="large"
+                          variant="secondary"
+                          icon="dot-grid"
+                          class="w-full"
+                          onClick={() => openProjectHubForDirectory(worktree())}
+                        >
+                          {language.t("sidebar.hub")}
                         </Button>
                       </div>
                       <div class="flex-1 min-h-0">
@@ -2284,7 +2314,7 @@ export default function Layout(props: ParentProps) {
                   }
                 >
                   <>
-                    <div class="shrink-0 py-4">
+                    <div class="shrink-0 py-4 flex flex-col gap-2">
                       <Button
                         size="large"
                         icon="plus-small"
@@ -2294,6 +2324,15 @@ export default function Layout(props: ParentProps) {
                         }}
                       >
                         {language.t("workspace.new")}
+                      </Button>
+                      <Button
+                        size="large"
+                        variant="secondary"
+                        icon="dot-grid"
+                        class="w-full"
+                        onClick={() => openProjectHubForDirectory(worktree())}
+                      >
+                        {language.t("sidebar.hub")}
                       </Button>
                     </div>
                     <div class="relative flex-1 min-h-0">
@@ -2395,9 +2434,20 @@ export default function Layout(props: ParentProps) {
       settingsKeybind={() => command.keybind("settings.open")}
       onOpenSettings={openSettings}
       monitorLabel={() => language.t("sidebar.monitor")}
-      onOpenMonitor={openMonitor}
+      onOpenMonitor={() => navigate("/monitor")}
       knowledgeLabel={() => language.t("sidebar.knowledge")}
-      onOpenKnowledge={openKnowledge}
+      onOpenKnowledge={() => {
+        const directory = currentProject()?.worktree
+        if (!directory) {
+          showToast({
+            variant: "error",
+            title: language.t("common.requestFailed"),
+            description: language.t("directory.error.projectRequired"),
+          })
+          return
+        }
+        navigate(`/library?directory=${encodeURIComponent(directory)}`)
+      }}
       hubLabel={() => language.t("sidebar.hub")}
       onOpenHub={openProjectHub}
       memoryLabel={() => language.t("sidebar.memory")}
