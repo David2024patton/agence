@@ -156,6 +156,11 @@ const writeManagedSettingsEffect = (settings: object, filename?: string) =>
 
 async function writeConfig(dir: string, config: object, name = "opencode.json") {
   await Filesystem.write(path.join(dir, name), JSON.stringify(config))
+  if (name === "opencode.json") {
+    await Filesystem.write(path.join(dir, "agence.json"), JSON.stringify(config))
+  } else if (name === "opencode.jsonc") {
+    await Filesystem.write(path.join(dir, "agence.jsonc"), JSON.stringify(config))
+  }
 }
 
 const writeConfigEffect = (dir: string, config: object, name = "opencode.json") =>
@@ -422,17 +427,16 @@ it.instance("ignores legacy tui keys in agence config", () =>
 it.instance("loads JSONC config file", () =>
   Effect.gen(function* () {
     const test = yield* TestInstance
-    yield* Effect.promise(() =>
-      Filesystem.write(
-        path.join(test.directory, "opencode.jsonc"),
-        `{
+    const content = `{
         // This is a comment
         "$schema": "https://github.com/David2024patton/agence/config.json",
         "model": "test/model",
         "username": "testuser"
-      }`,
-      ),
-    )
+      }`
+    yield* Effect.promise(async () => {
+      await Filesystem.write(path.join(test.directory, "opencode.jsonc"), content)
+      await Filesystem.write(path.join(test.directory, "agence.jsonc"), content)
+    })
     const config = yield* Config.use.get()
     expect(config.model).toBe("test/model")
     expect(config.username).toBe("testuser")
@@ -484,19 +488,18 @@ it.instance("preserves env variables when adding $schema to config", () =>
     Effect.gen(function* () {
       const test = yield* TestInstance
       // Config without $schema - should trigger auto-add
-      yield* Effect.promise(() =>
-        Filesystem.write(
-          path.join(test.directory, "opencode.json"),
-          JSON.stringify({
-            username: "{env:PRESERVE_VAR}",
-          }),
-        ),
-      )
+      yield* Effect.promise(async () => {
+        const payload = JSON.stringify({
+          username: "{env:PRESERVE_VAR}",
+        })
+        await Filesystem.write(path.join(test.directory, "opencode.json"), payload)
+        await Filesystem.write(path.join(test.directory, "agence.json"), payload)
+      })
       const config = yield* Config.use.get()
       expect(config.username).toBe("secret_value")
 
       // Read the file to verify the env variable was preserved
-      const content = yield* Effect.promise(() => Filesystem.readText(path.join(test.directory, "opencode.json")))
+      const content = yield* Effect.promise(() => Filesystem.readText(path.join(test.directory, "agence.json")))
       expect(content).toContain("{env:PRESERVE_VAR}")
       expect(content).not.toContain("secret_value")
       expect(content).toContain("$schema")
@@ -604,7 +607,10 @@ it.instance("validates config schema and throws on invalid fields", () =>
 it.instance("throws error for invalid JSON", () =>
   Effect.gen(function* () {
     const test = yield* TestInstance
-    yield* Effect.promise(() => Filesystem.write(path.join(test.directory, "opencode.json"), "{ invalid json }"))
+    yield* Effect.promise(async () => {
+      await Filesystem.write(path.join(test.directory, "opencode.json"), "{ invalid json }")
+      await Filesystem.write(path.join(test.directory, "agence.json"), "{ invalid json }")
+    })
     const exit = yield* Config.use.get().pipe(Effect.exit)
     expect(Exit.isFailure(exit)).toBe(true)
   }),
@@ -1005,13 +1011,12 @@ test("merges plugin arrays from global and local configs", async () => {
       await fs.mkdir(opencodeDir, { recursive: true })
 
       // Global config with plugins
-      await Filesystem.write(
-        path.join(dir, "opencode.json"),
-        JSON.stringify({
-          $schema: "https://github.com/David2024patton/agence/config.json",
-          plugin: ["global-plugin-1", "global-plugin-2"],
-        }),
-      )
+      const globalConfig = JSON.stringify({
+        $schema: "https://github.com/David2024patton/agence/config.json",
+        plugin: ["global-plugin-1", "global-plugin-2"],
+      })
+      await Filesystem.write(path.join(dir, "opencode.json"), globalConfig)
+      await Filesystem.write(path.join(dir, "agence.json"), globalConfig)
 
       // Local .opencode config with different plugins
       await Filesystem.write(
@@ -1072,13 +1077,12 @@ test("merges instructions arrays from global and local configs", async () => {
       const opencodeDir = path.join(projectDir, ".opencode")
       await fs.mkdir(opencodeDir, { recursive: true })
 
-      await Filesystem.write(
-        path.join(dir, "opencode.json"),
-        JSON.stringify({
-          $schema: "https://github.com/David2024patton/agence/config.json",
-          instructions: ["global-instructions.md", "shared-rules.md"],
-        }),
-      )
+      const globalConfig = JSON.stringify({
+        $schema: "https://github.com/David2024patton/agence/config.json",
+        instructions: ["global-instructions.md", "shared-rules.md"],
+      })
+      await Filesystem.write(path.join(dir, "opencode.json"), globalConfig)
+      await Filesystem.write(path.join(dir, "agence.json"), globalConfig)
 
       await Filesystem.write(
         path.join(opencodeDir, "opencode.json"),
@@ -1111,13 +1115,12 @@ test("deduplicates duplicate instructions from global and local configs", async 
       const opencodeDir = path.join(projectDir, ".opencode")
       await fs.mkdir(opencodeDir, { recursive: true })
 
-      await Filesystem.write(
-        path.join(dir, "opencode.json"),
-        JSON.stringify({
-          $schema: "https://github.com/David2024patton/agence/config.json",
-          instructions: ["duplicate.md", "global-only.md"],
-        }),
-      )
+      const globalConfig = JSON.stringify({
+        $schema: "https://github.com/David2024patton/agence/config.json",
+        instructions: ["duplicate.md", "global-only.md"],
+      })
+      await Filesystem.write(path.join(dir, "opencode.json"), globalConfig)
+      await Filesystem.write(path.join(dir, "agence.json"), globalConfig)
 
       await Filesystem.write(
         path.join(opencodeDir, "opencode.json"),
@@ -1155,13 +1158,12 @@ test("deduplicates duplicate plugins from global and local configs", async () =>
       await fs.mkdir(opencodeDir, { recursive: true })
 
       // Global config with plugins
-      await Filesystem.write(
-        path.join(dir, "opencode.json"),
-        JSON.stringify({
-          $schema: "https://github.com/David2024patton/agence/config.json",
-          plugin: ["duplicate-plugin", "global-plugin-1"],
-        }),
-      )
+      const globalConfig = JSON.stringify({
+        $schema: "https://github.com/David2024patton/agence/config.json",
+        plugin: ["duplicate-plugin", "global-plugin-1"],
+      })
+      await Filesystem.write(path.join(dir, "opencode.json"), globalConfig)
+      await Filesystem.write(path.join(dir, "agence.json"), globalConfig)
 
       // Local .opencode config with some overlapping plugins
       await Filesystem.write(
@@ -1205,13 +1207,12 @@ test("keeps plugin origins aligned with merged plugin list", async () => {
       const local = path.join(project, ".opencode")
       await fs.mkdir(local, { recursive: true })
 
-      await Filesystem.write(
-        path.join(dir, "opencode.json"),
-        JSON.stringify({
-          $schema: "https://github.com/David2024patton/agence/config.json",
-          plugin: [["shared-plugin@1.0.0", { source: "global" }], "global-only@1.0.0"],
-        }),
-      )
+      const globalConfig = JSON.stringify({
+        $schema: "https://github.com/David2024patton/agence/config.json",
+        plugin: [["shared-plugin@1.0.0", { source: "global" }], "global-only@1.0.0"],
+      })
+      await Filesystem.write(path.join(dir, "opencode.json"), globalConfig)
+      await Filesystem.write(path.join(dir, "agence.json"), globalConfig)
 
       await Filesystem.write(
         path.join(local, "opencode.json"),
@@ -1950,13 +1951,12 @@ describe("deduplicatePluginOrigins", () => {
         const pluginDir = path.join(opencodeDir, "plugin")
         await fs.mkdir(pluginDir, { recursive: true })
 
-        await Filesystem.write(
-          path.join(dir, "opencode.json"),
-          JSON.stringify({
-            $schema: "https://github.com/David2024patton/agence/config.json",
-            plugin: ["my-plugin@1.0.0"],
-          }),
-        )
+        const content = JSON.stringify({
+          $schema: "https://github.com/David2024patton/agence/config.json",
+          plugin: ["my-plugin@1.0.0"],
+        })
+        await Filesystem.write(path.join(dir, "opencode.json"), content)
+        await Filesystem.write(path.join(dir, "agence.json"), content)
 
         await Filesystem.write(path.join(pluginDir, "my-plugin.js"), "export default {}")
       },

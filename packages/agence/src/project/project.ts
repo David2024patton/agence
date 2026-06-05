@@ -1,6 +1,8 @@
 import { and } from "drizzle-orm"
+import { existsSync } from "fs"
 import { Database } from "@/storage/db"
 import { eq } from "drizzle-orm"
+import path from "path"
 import { ProjectTable } from "./project.sql"
 import { PermissionTable, SessionTable } from "../session/session.sql"
 import { WorkspaceTable } from "../control-plane/workspace.sql"
@@ -54,6 +56,7 @@ export const Info = Schema.Struct({
   commands: optionalOmitUndefined(ProjectCommands),
   time: ProjectTime,
   sandboxes: Schema.Array(Schema.String),
+  directoryMissing: optionalOmitUndefined(Schema.Boolean),
 }).annotate({ identifier: "Project" })
 export type Info = Types.DeepMutable<Schema.Schema.Type<typeof Info>>
 
@@ -127,6 +130,7 @@ export interface Interface {
   readonly list: () => Effect.Effect<Info[]>
   readonly get: (id: ProjectID) => Effect.Effect<Info | undefined>
   readonly update: (input: UpdateInput) => Effect.Effect<Info, NotFoundError>
+  readonly relocate: (input: { projectID: ProjectID; directory: string }) => Effect.Effect<Info, NotFoundError>
   readonly initGit: (input: { directory: string; project: Info }) => Effect.Effect<Info>
   readonly setInitialized: (id: ProjectID) => Effect.Effect<void>
   readonly sandboxes: (id: ProjectID) => Effect.Effect<string[]>
@@ -233,7 +237,34 @@ export const layer = Layer.effect(
     const fromDirectory = Effect.fn("Project.fromDirectory")(function* (directory: string) {
       log.info("fromDirectory", { directory })
 
-      const data = yield* projectV2.resolve(AbsolutePath.make(directory))
+      const normalized = path.resolve(directory)
+      const dbProjectRow = yield* db((d) => {
+        const allProjects = d.select().from(ProjectTable).all()
+        const matchPath = (p1: string, p2: string) => {
+          const n1 = path.resolve(p1).toLowerCase().replace(/\\/g, "/")
+          const n2 = path.resolve(p2).toLowerCase().replace(/\\/g, "/")
+          return n1 === n2
+        }
+        const proj = allProjects.find((p) => matchPath(p.worktree, normalized))
+        if (proj) return proj
+
+        const session = d.select().from(SessionTable).all().find((s) => matchPath(s.directory, normalized))
+        if (session) {
+          return allProjects.find((p) => p.id === session.project_id)
+        }
+        return undefined
+      })
+
+      let data
+      if (dbProjectRow) {
+        data = {
+          id: dbProjectRow.id,
+          directory: normalized,
+          vcs: dbProjectRow.vcs ? { type: dbProjectRow.vcs as "git", store: normalized } : undefined
+        }
+      } else {
+        data = yield* projectV2.resolve(AbsolutePath.make(directory))
+      }
       const worktree = data.id === ProjectV2.ID.make("global") && !data.vcs ? "/" : data.directory
 
       // Phase 2: upsert
@@ -321,7 +352,7 @@ export const layer = Layer.effect(
 
       yield* emitUpdated(result)
       if (projectID !== ProjectID.global && data.vcs?.type === "git") {
-        yield* projectV2.commit({ store: data.vcs.store, id: data.id })
+        yield* projectV2.commit({ store: AbsolutePath.make(data.vcs.store), id: ProjectV2.ID.make(data.id) })
       }
       return { project: result, sandbox: data.vcs ? data.directory : worktree }
     })
@@ -351,7 +382,13 @@ export const layer = Layer.effect(
     })
 
     const list = Effect.fn("Project.list")(function* () {
-      return yield* db((d) => d.select().from(ProjectTable).all().map(fromRow))
+      const rows = yield* db((d) => d.select().from(ProjectTable).all())
+      return rows.map((row) => {
+        const info = fromRow(row)
+        const missing = !existsSync(info.worktree)
+        if (missing) return { ...info, directoryMissing: true as const }
+        return info
+      })
     })
 
     const get = Effect.fn("Project.get")(function* (id: ProjectID) {
@@ -371,6 +408,22 @@ export const layer = Layer.effect(
             commands: input.commands,
             time_updated: Date.now(),
           })
+          .where(eq(ProjectTable.id, input.projectID))
+          .returning()
+          .get(),
+      )
+      if (!result) return yield* new NotFoundError({ projectID: input.projectID })
+      const data = fromRow(result)
+      yield* emitUpdated(data)
+      return data
+    })
+
+    const relocate = Effect.fn("Project.relocate")(function* (input: { projectID: ProjectID; directory: string }) {
+      const normalized = path.resolve(input.directory)
+      const result = yield* db((d) =>
+        d
+          .update(ProjectTable)
+          .set({ worktree: normalized, time_updated: Date.now() })
           .where(eq(ProjectTable.id, input.projectID))
           .returning()
           .get(),
@@ -468,6 +521,7 @@ export const layer = Layer.effect(
       list,
       get,
       update,
+      relocate,
       initGit,
       setInitialized,
       sandboxes,

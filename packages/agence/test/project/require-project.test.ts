@@ -20,14 +20,12 @@ describe("require-project", () => {
     }
   })
 
-  test("rejects missing path", async () => {
-    const error = await run(
-      assertProjectDirectory(`${process.cwd()}/.tmp-missing-project-${Date.now()}`).pipe(Effect.flip),
-    )
-    expect(error).toBeInstanceOf(NotAgenceProjectError)
-    if (error instanceof NotAgenceProjectError) {
-      expect(error._tag).toBe("NotAgenceProjectError")
-    }
+  test("allows missing path (failsafe) without scaffolding", async () => {
+    const dir = `${process.cwd()}/.tmp-missing-project-${Date.now()}`
+    const normalized = await run(assertProjectDirectory(dir))
+    expect(normalized).toBe(path.resolve(dir))
+    const exists = await Bun.file(`${dir}/.agence/project.json`).exists()
+    expect(exists).toBe(false)
   })
 
   test("scaffolds .agence for a new folder", async () => {

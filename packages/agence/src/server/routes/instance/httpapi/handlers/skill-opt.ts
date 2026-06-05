@@ -12,13 +12,15 @@ export const skillOptHandlers = HttpApiBuilder.group(InstanceHttpApi, "skillOpt"
       return yield* withProjectDirectory((directory) => getSkillOptOverview(directory)).pipe(
         Effect.catch((error) =>
           Effect.fail(
-            new InvalidRequestError({
-              message: String(error),
-              kind: "Query",
-              field: "directory",
-            })
-          )
-        )
+            (error as any)._tag === "InvalidRequestError"
+              ? error
+              : new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "directory",
+                }),
+          ),
+        ),
       )
     })
 
@@ -26,13 +28,15 @@ export const skillOptHandlers = HttpApiBuilder.group(InstanceHttpApi, "skillOpt"
       return yield* withProjectInstance(() => saveSkillOptSettings(ctx.payload)).pipe(
         Effect.catch((error) =>
           Effect.fail(
-            new InvalidRequestError({
-              message: String(error),
-              kind: "Query",
-              field: "directory",
-            })
-          )
-        )
+            (error as any)._tag === "InvalidRequestError"
+              ? error
+              : new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "directory",
+                }),
+          ),
+        ),
       )
     })
 
@@ -40,13 +44,15 @@ export const skillOptHandlers = HttpApiBuilder.group(InstanceHttpApi, "skillOpt"
       return yield* withProjectInstance(() => runSkillOptMaintenance()).pipe(
         Effect.catch((error) =>
           Effect.fail(
-            new InvalidRequestError({
-              message: String(error),
-              kind: "Query",
-              field: "directory",
-            })
-          )
-        )
+            (error as any)._tag === "InvalidRequestError"
+              ? error
+              : new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "directory",
+                }),
+          ),
+        ),
       )
     })
 

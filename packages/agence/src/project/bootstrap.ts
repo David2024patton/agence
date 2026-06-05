@@ -14,6 +14,7 @@ import { Effect, Layer } from "effect"
 import { Config } from "@/config/config"
 import { Service } from "./bootstrap-service"
 import { Reference } from "@/reference/reference"
+import { AppFileSystem } from "@agence-ai/core/filesystem"
 
 export { Service } from "./bootstrap-service"
 export type { Interface } from "./bootstrap-service"
@@ -28,6 +29,7 @@ export const layer = Layer.effect(
     const file = yield* File.Service
     const fileWatcher = yield* FileWatcher.Service
     const format = yield* Format.Service
+    const fs = yield* AppFileSystem.Service
     const lsp = yield* LSP.Service
     const plugin = yield* Plugin.Service
     const project = yield* Project.Service
@@ -68,7 +70,10 @@ export const layer = Layer.effect(
           return Effect.void
         }),
       )
-    }).pipe(Effect.withSpan("InstanceBootstrap"))
+    }).pipe(
+      Effect.provideService(AppFileSystem.Service, fs),
+      Effect.withSpan("InstanceBootstrap"),
+    )
 
     return Service.of({ run: run as any })
   }),
@@ -76,6 +81,7 @@ export const layer = Layer.effect(
 
 export const defaultLayer: Layer.Layer<Service> = layer.pipe(
   Layer.provide([
+    AppFileSystem.defaultLayer,
     Bus.layer,
     Config.defaultLayer,
     File.defaultLayer,

@@ -1,5 +1,6 @@
 import { Project } from "@/project/project"
 import { ProjectID } from "@/project/schema"
+import { AbsolutePath } from "@agence-ai/core/schema"
 import { Schema } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { ProjectNotFoundError } from "../errors"
@@ -14,6 +15,10 @@ const UpdatePayload = Schema.Struct({
   icon: Schema.optional(Project.Info.fields.icon),
   commands: Schema.optional(Project.Info.fields.commands),
 })
+
+const RelocatePayload = Schema.Struct({
+  directory: AbsolutePath,
+}).annotate({ identifier: "ProjectRelocateInput" })
 
 export const ProjectApi = HttpApi.make("project")
   .add(
@@ -60,6 +65,19 @@ export const ProjectApi = HttpApi.make("project")
             identifier: "project.update",
             summary: "Update project",
             description: "Update project properties such as name, icon, and commands.",
+          }),
+        ),
+        HttpApiEndpoint.post("relocate", `${root}/:projectID/relocate`, {
+          params: { projectID: ProjectID },
+          query: WorkspaceRoutingQuery,
+          payload: RelocatePayload,
+          success: described(Project.Info, "Relocated project information"),
+          error: [HttpApiError.BadRequest, ProjectNotFoundError],
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "project.relocate",
+            summary: "Relocate project",
+            description: "Update the directory path for a project whose folder has moved.",
           }),
         ),
       )

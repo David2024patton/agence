@@ -374,6 +374,7 @@ export type Project = {
     initialized?: number
   }
   sandboxes: Array<string>
+  directoryMissing?: boolean
 }
 
 export type Pty = {

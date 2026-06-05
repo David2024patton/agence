@@ -39,19 +39,27 @@ export const ProjectIcon = (props: {
   )
   const notify = createMemo(() => props.notify && (hasPermissions() || unseenCount() > 0))
   const name = createMemo(() => props.project.name || getFilename(props.project.worktree))
+  const isMissing = () => !!props.project.directoryMissing
 
   return (
     <div class={`relative size-8 shrink-0 rounded ${props.class ?? ""}`}>
-      <div class="size-full rounded overflow-clip">
+      <div class="size-full rounded overflow-clip" classList={{ "opacity-40": isMissing() }}>
         <Avatar
           fallback={name()}
           src={getProjectAvatarSource(props.project.id, props.project.icon)}
           {...getAvatarColors(props.project.icon?.color)}
           class="size-full rounded"
-          classList={{ "badge-mask": notify() }}
+          classList={{ "badge-mask": notify() && !isMissing() }}
         />
       </div>
-      <Show when={notify()}>
+      <Show when={isMissing()}>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="size-3 rounded-full bg-surface-error-base flex items-center justify-center">
+            <div class="size-1.5 rounded-full bg-icon-critical-base" />
+          </div>
+        </div>
+      </Show>
+      <Show when={!isMissing() && notify()}>
         <div
           classList={{
             "absolute top-px right-px size-1.5 rounded-full z-10": true,
@@ -61,7 +69,7 @@ export const ProjectIcon = (props: {
           }}
         />
       </Show>
-      <Show when={props.working}>
+      <Show when={!isMissing() && props.working}>
         <div class="absolute bottom-px right-px size-3 rounded-full bg-background-base z-10 flex items-center justify-center">
           <Spinner class="size-[9px]" />
         </div>
@@ -69,6 +77,7 @@ export const ProjectIcon = (props: {
     </div>
   )
 }
+
 
 export type SessionItemProps = {
   session: Session

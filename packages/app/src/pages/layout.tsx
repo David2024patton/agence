@@ -1385,8 +1385,12 @@ export default function Layout(props: ParentProps) {
   async function navigateToProject(directory: string | undefined) {
     if (!directory) return
     const root = projectRoot(directory)
-    server.projects.touch(root)
     const project = layout.projects.list().find((item) => item.worktree === root)
+    if (project?.directoryMissing) {
+      showProjectMissingDialog(project)
+      return
+    }
+    server.projects.touch(root)
     let dirs = project
       ? effectiveWorkspaceOrder(root, [root, ...(project.sandboxes ?? [])], store.workspaceOrder[root])
       : [root]
@@ -1559,6 +1563,14 @@ export default function Layout(props: ParentProps) {
     void import("@/components/dialog-edit-project").then((x) => {
       if (dialogDead || dialogRun !== run) return
       dialog.show(() => <x.DialogEditProject project={project} />)
+    })
+  }
+
+  const showProjectMissingDialog = (project: LocalProject) => {
+    const run = ++dialogRun
+    void import("@/components/dialog-project-missing").then((x) => {
+      if (dialogDead || dialogRun !== run) return
+      dialog.show(() => <x.DialogProjectMissing project={project} />)
     })
   }
 

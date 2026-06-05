@@ -93,13 +93,13 @@ export async function tmpdir<T>(options?: TmpDirOptions<T>) {
     await $`git commit --allow-empty -m "root commit ${dirpath}"`.cwd(dirpath).quiet()
   }
   if (options?.config) {
-    await Bun.write(
-      path.join(dirpath, "opencode.json"),
-      JSON.stringify({
-        $schema: "https://github.com/David2024patton/agence/config.json",
-        ...options.config,
-      }),
-    )
+    const content = JSON.stringify({
+      $schema: "https://github.com/David2024patton/agence/config.json",
+      ...options.config,
+    })
+    await Bun.write(path.join(dirpath, "opencode.json"), content)
+    await fs.mkdir(path.join(dirpath, ".opencode"), { recursive: true })
+    await Bun.write(path.join(dirpath, ".opencode", "opencode.json"), content)
   }
   const realpath = sanitizePath(await fs.realpath(dirpath))
   const extra = await options?.init?.(realpath)
@@ -150,12 +150,12 @@ export function tmpdirScoped(options?: {
 
     if (options?.config) {
       const resolved = typeof options.config === "function" ? options.config() : options.config
-      yield* Effect.promise(() =>
-        fs.writeFile(
-          path.join(dir, "opencode.json"),
-          JSON.stringify({ $schema: "https://github.com/David2024patton/agence/config.json", ...resolved }),
-        ),
-      )
+      const content = JSON.stringify({ $schema: "https://github.com/David2024patton/agence/config.json", ...resolved })
+      yield* Effect.promise(async () => {
+        await fs.writeFile(path.join(dir, "opencode.json"), content)
+        await fs.mkdir(path.join(dir, ".opencode"), { recursive: true })
+        await fs.writeFile(path.join(dir, ".opencode", "opencode.json"), content)
+      })
     }
 
     return dir

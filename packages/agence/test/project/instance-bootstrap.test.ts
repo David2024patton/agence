@@ -45,7 +45,7 @@ const bootstrapFixture = Effect.gen(function* () {
   )
   yield* Effect.promise(() =>
     Bun.write(
-      path.join(dir, "opencode.json"),
+      path.join(dir, "agence.json"),
       JSON.stringify({
         $schema: "https://github.com/David2024patton/agence/config.json",
         plugin: [pathToFileURL(pluginFile).href],

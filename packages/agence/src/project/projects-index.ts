@@ -96,12 +96,55 @@ export function registerProject(directory: string, name?: string) {
   })
 }
 
+export function tryRemapDriveLetter(directory: string): string | undefined {
+  if (!directory) return undefined
+  const match = directory.match(/^([a-zA-Z]):(.*)$/)
+  if (!match) return undefined
+
+  const originalDrive = match[1].toUpperCase()
+  const pathPart = match[2]
+
+  const driveLetters = ["C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+  for (const drive of driveLetters) {
+    if (drive === originalDrive) continue
+    const candidate = `${drive}:${pathPart}`
+    try {
+      if (existsSync(candidate)) {
+        if (
+          existsSync(path.join(candidate, ".agence")) ||
+          existsSync(path.join(candidate, "agence.json")) ||
+          existsSync(path.join(candidate, "package.json")) ||
+          existsSync(path.join(candidate, ".git"))
+        ) {
+          return path.resolve(candidate)
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  return undefined
+}
+
 export function listKnownProjects() {
   const index = loadProjectsIndex()
   const merged = new Map<string, ProjectIndexEntry>()
+  let indexChanged = false
   for (const item of [...readDesktopProjects(), ...index.projects]) {
-    const key = path.resolve(item.directory)
-    const hasHub = existsSync(manifestPath(key)) || existsSync(path.join(key, ".agence"))
+    let key = path.resolve(item.directory)
+    if (!existsSync(key)) {
+      const remapped = tryRemapDriveLetter(key)
+      if (remapped) {
+        key = remapped
+        indexChanged = true
+        const idx = index.projects.findIndex((p) => path.resolve(p.directory) === path.resolve(item.directory))
+        if (idx !== -1) {
+          index.projects[idx].directory = remapped
+        }
+      }
+    }
+    const exists = existsSync(key)
+    const hasHub = !exists || existsSync(manifestPath(key)) || existsSync(path.join(key, ".agence"))
     if (!hasHub) continue
     const prev = merged.get(key)
     merged.set(key, {
@@ -109,6 +152,13 @@ export function listKnownProjects() {
       name: item.name ?? prev?.name,
       lastSeenMs: Math.max(item.lastSeenMs, prev?.lastSeenMs ?? 0),
     })
+  }
+  if (indexChanged) {
+    try {
+      saveProjectsIndex(index)
+    } catch {
+      // Ignore
+    }
   }
   return [...merged.values()].sort((a, b) => b.lastSeenMs - a.lastSeenMs)
 }

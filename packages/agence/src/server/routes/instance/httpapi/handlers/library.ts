@@ -67,11 +67,13 @@ export const libraryHandlers = HttpApiBuilder.group(InstanceHttpApi, "library", 
       return yield* withProjectDirectory((directory) => listWiki(directory)).pipe(
         Effect.catch((error) =>
           Effect.fail(
-            new InvalidRequestError({
-              message: String(error),
-              kind: "Query",
-              field: "directory",
-            }),
+            (error as any)._tag === "InvalidRequestError"
+              ? error
+              : new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "directory",
+                }),
           ),
         ),
       )
@@ -81,11 +83,13 @@ export const libraryHandlers = HttpApiBuilder.group(InstanceHttpApi, "library", 
       return yield* withProjectDirectory((directory) => readHeartbeatState(directory)).pipe(
         Effect.catch((error) =>
           Effect.fail(
-            new InvalidRequestError({
-              message: String(error),
-              kind: "Query",
-              field: "directory",
-            }),
+            (error as any)._tag === "InvalidRequestError"
+              ? error
+              : new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "directory",
+                }),
           ),
         ),
       )
@@ -111,11 +115,13 @@ export const libraryHandlers = HttpApiBuilder.group(InstanceHttpApi, "library", 
       ).pipe(
         Effect.catch((error) =>
           Effect.fail(
-            new InvalidRequestError({
-              message: String(error),
-              kind: "Query",
-              field: "directory",
-            }),
+            (error as any)._tag === "InvalidRequestError"
+              ? error
+              : new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "directory",
+                }),
           ),
         ),
       )
@@ -133,11 +139,13 @@ export const libraryHandlers = HttpApiBuilder.group(InstanceHttpApi, "library", 
       ).pipe(
         Effect.catch((error) =>
           Effect.fail(
-            new InvalidRequestError({
-              message: String(error),
-              kind: "Query",
-              field: "directory",
-            }),
+            (error as any)._tag === "InvalidRequestError"
+              ? error
+              : new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "directory",
+                }),
           ),
         ),
       )

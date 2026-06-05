@@ -107,7 +107,6 @@ const gatedRoutes: GateCase[] = [
   // Agent runtime / tools
   { name: "mcp list", path: "/mcp", field: "directory" },
   { name: "config get", path: "/config", field: "directory" },
-  { name: "provider list", path: "/provider", field: "directory" },
   { name: "agent list", path: "/agent", field: "directory" },
   { name: "skill list", path: "/skill", field: "directory" },
   { name: "instance path", path: "/path", field: "directory" },

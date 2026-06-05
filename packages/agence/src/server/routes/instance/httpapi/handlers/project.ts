@@ -48,6 +48,27 @@ export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", 
       )
     })
 
-    return handlers.handle("list", list).handle("current", current).handle("initGit", initGit).handle("update", update)
+    const relocate = Effect.fn("ProjectHttpApi.relocate")(function* (ctx: {
+      params: { projectID: ProjectID }
+      payload: { directory: string }
+    }) {
+      return yield* svc.relocate({ projectID: ctx.params.projectID, directory: ctx.payload.directory }).pipe(
+        Effect.catchTag("Project.NotFoundError", (error) =>
+          Effect.fail(
+            new ProjectNotFoundError({
+              projectID: error.projectID,
+              message: `Project not found: ${error.projectID}`,
+            }),
+          ),
+        ),
+      )
+    })
+
+    return handlers
+      .handle("list", list)
+      .handle("current", current)
+      .handle("initGit", initGit)
+      .handle("update", update)
+      .handle("relocate", relocate)
   }),
 )

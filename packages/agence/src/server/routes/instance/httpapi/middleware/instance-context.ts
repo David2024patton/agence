@@ -34,19 +34,22 @@ function provideInstanceContext<E, R>(
       Effect.provide(AppFileSystem.defaultLayer),
       Effect.flatMap((normalized) => store.load({ directory: normalized })),
       Effect.map((ctx) => ({ success: true as const, value: ctx })),
-      Effect.catch((error) =>
-        Effect.succeed({
+      Effect.catch((error) => {
+        const rawMsg = error.message
+        const prefix = error._tag ? `${error._tag}: ` : ""
+        const cleanMsg = prefix && rawMsg.startsWith(prefix) ? rawMsg.slice(prefix.length) : rawMsg
+        return Effect.succeed({
           success: false as const,
           response: HttpServerResponse.jsonUnsafe(
             new InvalidRequestError({
-              message: error.message,
+              message: cleanMsg,
               kind: "Query",
               field: "directory",
             }),
             { status: 400 },
           ),
-        }),
-      ),
+        })
+      }),
     )
     if (!ctxResult.success) {
       return ctxResult.response
