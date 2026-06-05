@@ -348,7 +348,7 @@ export const layer: Layer.Layer<Service, never, Git.Service | Bus.Service> = Lay
 
     return Service.of({
       init: Effect.fn("Vcs.init")(function* () {
-        yield* InstanceState.get(state).pipe(Effect.forkIn(scope))
+        yield* InstanceState.get(state)
       }),
       branch: Effect.fn("Vcs.branch")(function* () {
         return yield* InstanceState.use(state, (x) => x.current)

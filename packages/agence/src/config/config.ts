@@ -5,7 +5,8 @@ import { pathToFileURL } from "url"
 import os from "os"
 import { mergeDeep } from "remeda"
 import { Global } from "@agence-ai/core/global"
-import fsNode from "fs/promises"
+import fsNode from "fs"
+import fsPromises from "fs/promises"
 import { NamedError } from "@agence-ai/core/util/error"
 import { Flag } from "@agence-ai/core/flag/flag"
 import { Auth } from "../auth"
@@ -469,8 +470,8 @@ export const layer = Layer.effect(
               if (provider && model) result.model = `${provider}/${model}`
               result["$schema"] = "https://github.com/David2024patton/agence/config.json"
               result = mergeConfig(result, rest)
-              await fsNode.writeFile(path.join(Global.Path.config, "config.json"), JSON.stringify(result, null, 2))
-              await fsNode.unlink(legacy)
+              await fsPromises.writeFile(path.join(Global.Path.config, "config.json"), JSON.stringify(result, null, 2))
+              await fsPromises.unlink(legacy)
             })
             .catch(() => {}),
         )
@@ -612,6 +613,13 @@ export const layer = Layer.effect(
           }
         }
 
+        const manifestModule = yield* Effect.promise(() => import("../project/manifest"))
+        const hubModule = yield* Effect.promise(() => import("../project/hub"))
+        const manifest = yield* manifestModule.loadManifest(ctx.directory).pipe(Effect.catch(() => Effect.succeed(undefined)))
+        if (manifest) {
+          result = mergeConfig(result, hubModule.applyManifestToConfig(manifest))
+        }
+
         result.agent = result.agent || {}
         result.mode = result.mode || {}
         result.plugin = result.plugin || []
@@ -668,6 +676,11 @@ export const layer = Layer.effect(
           // returns normalized Specs and we only need to attach origin metadata here.
           const list = yield* Effect.promise(() => ConfigPlugin.load(dir))
           yield* mergePluginOrigins(dir, list)
+        }
+
+        const agenceAgentsDir = path.join(ctx.directory, ".agence")
+        if (existsSync(agenceAgentsDir)) {
+          result.agent = mergeDeep(result.agent ?? {}, yield* Effect.promise(() => ConfigAgent.load(agenceAgentsDir)))
         }
 
         if (process.env.AGENCE_CONFIG_CONTENT) {
@@ -779,6 +792,40 @@ export const layer = Layer.effect(
             }
           })
           for (const { name, config } of entries) {
+            result.mcp = result.mcp ?? {}
+            ;(result.mcp as Record<string, unknown>)[name] = config
+          }
+        }
+
+        const installMcpRoot = path.join(ctx.directory, ".agence", "installs")
+        if (existsSync(installMcpRoot)) {
+          const installEntries = yield* Effect.promise(async () => {
+            const { Glob } = await import("@agence-ai/core/util/glob")
+            const files = await Glob.scan("**/*.{json,jsonc}", {
+              cwd: installMcpRoot,
+              absolute: true,
+              dot: true,
+            })
+            const out: Array<{ name: string; config: unknown }> = []
+            for (const source of files) {
+              const base = path.basename(source).replace(/\.jsonc?$/, "")
+              const prefix = path
+                .relative(installMcpRoot, path.dirname(source))
+                .split(path.sep)
+                .filter(Boolean)
+                .join("-")
+              const name = prefix ? `${prefix}-${base}` : base
+              try {
+                const content = await fsPromises.readFile(source, "utf-8")
+                const parsed = JSON.parse(content)
+                if (parsed.type && (parsed.command || parsed.url)) out.push({ name, config: parsed })
+              } catch {
+                // Skip malformed files
+              }
+            }
+            return out
+          })
+          for (const { name, config } of installEntries) {
             result.mcp = result.mcp ?? {}
             ;(result.mcp as Record<string, unknown>)[name] = config
           }

@@ -1,0 +1,16 @@
+<system-reminder>
+An active project Goal is in effect for this project. Treat it as a completion contract, not a one-off prompt.
+
+Goal objective:
+${objective}
+
+${projectGoalBlock}
+
+Rules:
+- Keep working toward the objective until concrete evidence shows it is satisfied or you are honestly blocked.
+- Before marking complete, verify against tests, benchmarks, command output, files, or other inspectable evidence — not intuition alone.
+- Record what changed, what you checked, and what remains after each iteration.
+- If blocked or no valid path remains under current limits, stop and report attempted paths, evidence gathered, the blocker, and what input would unlock progress.
+- Do not declare success without verification. Partial progress is not completion.
+- Use the goal_complete tool only when evidence supports completion or a clear blocked status.
+</system-reminder>

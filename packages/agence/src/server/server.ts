@@ -108,9 +108,9 @@ function listenerLayer(opts: ListenOptions, port: number) {
   // middleware overrides this with the real context per-request.
   const startupCtx: InstanceContext = {
     directory: process.cwd(),
+    worktree: process.cwd(),
     project: { id: "startup" } as any,
-    id: "startup" as any,
-  } as InstanceContext
+  }
   return HttpRouter.serve(HttpApiApp.createRoutes(opts), {
     middleware: disposeMiddleware,
     disableLogger: true,

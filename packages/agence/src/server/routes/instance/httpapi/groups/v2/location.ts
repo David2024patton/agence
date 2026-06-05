@@ -2,9 +2,12 @@ import { Catalog } from "@agence-ai/core/catalog"
 import { Location } from "@agence-ai/core/location"
 import { LocationServiceMap } from "@agence-ai/core/location-layer"
 import { PluginBoot } from "@agence-ai/core/plugin/boot"
+import { AppFileSystem } from "@agence-ai/core/filesystem"
+import { assertProjectDirectory } from "@/project/require-project"
 import { Effect, Layer, Schema } from "effect"
-import { HttpServerRequest } from "effect/unstable/http"
+import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiMiddleware, OpenApi } from "effect/unstable/httpapi"
+import { InvalidRequestError } from "../../errors"
 
 export const LocationQuery = Schema.Struct({
   location: Schema.optional(
@@ -37,10 +40,27 @@ export class V2LocationMiddleware extends HttpApiMiddleware.Service<
   }
 >()("@agence/ExperimentalHttpApiV2Location") {}
 
-function ref(request: HttpServerRequest.HttpServerRequest): Location.Ref {
+function decodeDirectory(input: string) {
+  try {
+    return decodeURIComponent(input)
+  } catch {
+    return input
+  }
+}
+
+function directoryFromRequest(request: HttpServerRequest.HttpServerRequest) {
+  const query = new URL(request.url, "http://localhost").searchParams
+  const fromQuery = query.get("location[directory]")
+  if (fromQuery) return decodeDirectory(fromQuery)
+  const fromHeader = request.headers["x-opencode-directory"]
+  if (typeof fromHeader === "string" && fromHeader.length > 0) return decodeDirectory(fromHeader)
+  return ""
+}
+
+function ref(request: HttpServerRequest.HttpServerRequest, directory: string): Location.Ref {
   const query = new URL(request.url, "http://localhost").searchParams
   return {
-    directory: query.get("location[directory]") || request.headers["x-opencode-directory"] || process.cwd(),
+    directory,
     workspaceID: query.get("location[workspace]") || request.headers["x-opencode-workspace"],
   }
 }
@@ -52,7 +72,27 @@ export const layer = Layer.effect(
     return V2LocationMiddleware.of((effect) =>
       Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest
-        return yield* effect.pipe(Effect.provide(locations.get(ref(request))))
+        const normalizedResult = yield* assertProjectDirectory(directoryFromRequest(request)).pipe(
+          Effect.provide(AppFileSystem.defaultLayer),
+          Effect.map((dir) => ({ success: true as const, directory: dir })),
+          Effect.catch((error) =>
+            Effect.succeed({
+              success: false as const,
+              response: HttpServerResponse.jsonUnsafe(
+                new InvalidRequestError({
+                  message: String((error as any).message ?? error),
+                  kind: "Query",
+                  field: "location[directory]",
+                }),
+                { status: 400 },
+              ),
+            }),
+          ),
+        )
+        if (!normalizedResult.success) {
+          return normalizedResult.response
+        }
+        return yield* effect.pipe(Effect.provide(locations.get(ref(request, normalizedResult.directory))))
       }),
     )
   }),

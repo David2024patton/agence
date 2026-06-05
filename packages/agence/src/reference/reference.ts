@@ -206,7 +206,7 @@ export const layer = Layer.effect(
     return Service.of({
       init: Effect.fn("Reference.init")(function* () {
         if (!flags.experimentalScout) return
-        yield* InstanceState.useEffect(state, (s) => s.materializeAll).pipe(Effect.forkIn(scope), Effect.asVoid)
+        yield* InstanceState.useEffect(state, (s) => s.materializeAll)
       }),
       list: Effect.fn("Reference.list")(function* () {
         return yield* InstanceState.use(state, (s) => s.references)

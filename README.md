@@ -66,7 +66,7 @@ nix run nixpkgs#agence           # or github:anomalyco/agence for latest dev bra
 
 ### Desktop App (BETA)
 
-Agence ships as an Electron desktop app. **Latest stable:** `v1.16.1` on branch **`main`**.
+Agence ships as an Electron desktop app. Check `packages/desktop/package.json` for the current version (e.g. **v1.16.5+**) on branch **`main`**.
 
 > [!IMPORTANT]
 > This repository is **private**. The [releases page](https://github.com/David2024patton/agence/releases/latest) and direct download URLs return **404** unless you are signed into GitHub with access to `David2024patton/agence`. That is expected for private repos, not a missing build.
@@ -129,24 +129,38 @@ AGENCE_INSTALL_DIR=/usr/local/bin curl -fsSL https://github.com/David2024patton/
 XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://github.com/David2024patton/agence/install | bash
 ```
 
-### Agents
+### Agents and chat modes
 
-Agence includes two built-in agents you can switch between with the `Tab` key.
+New users: see **[docs/getting-started.md](docs/getting-started.md)** for the full day-one flow (open project → connect provider → chat).
 
-- **build** - Default, full-access agent for development work
-- **plan** - Read-only agent for analysis and code exploration
-  - Denies file edits by default
-  - Asks permission before running bash commands
-  - Ideal for exploring unfamiliar codebases or planning changes
+Agence includes built-in agents you can switch with the `Tab` key (desktop app).
 
-Also included is a **general** subagent for complex searches and multistep tasks.
-This is used internally and can be invoked using `@general` in messages.
+- **build** — Default, full-access agent for development work
+- **plan** — Read-only agent for analysis (denies edits; permission on bash)
+- **research** — Read-focused mode with restricted write/shell/task tools (desktop)
 
-Learn more about [agents](https://github.com/David2024patton/agence/docs/agents).
+Also included is a **general** subagent for complex searches (`@general` in messages).
+
+Upstream-style agent docs may still live under `packages/web/src/content/docs/`.
+
+### Learning (Agence-only)
+
+| Feature | Where |
+| --- | --- |
+| **Memory** | SQLite learnings, auto-capture, Settings → Learning → Memory |
+| **Knowledge wiki** | `.agence/knowledge/wiki/`, sidebar **Knowledge** → Library |
+| **Heartbeat** | `HEARTBEAT.md` scheduled tasks, Settings → Learning → Heartbeat |
+
+Docs: [**docs/README.md**](docs/README.md) · [**Agence vs OpenCode**](docs/agence-vs-opencode.md)
 
 ### Documentation
 
-For more info on how to configure Agence, [**head over to our docs**](https://github.com/David2024patton/agence/docs).
+| Docs | Contents |
+| --- | --- |
+| [**docs/**](docs/README.md) | Agence fork: learning, desktop, vs OpenCode |
+| [**PROJECT-MAP.md**](PROJECT-MAP.md) | Architecture and how to add APIs/tools |
+| [**AGENCE.md**](AGENCE.md) | Tools list, paths, workflow |
+| `packages/web/src/content/docs/` | Inherited OpenCode user guide (verify paths say **agence**) |
 
 ### Contributing
 

@@ -1,4 +1,4 @@
-import { Effect } from "effect"
+import { Effect, pipe } from "effect"
 import { eq } from "drizzle-orm"
 import { Database } from "@/storage/db"
 import { LearningTable } from "./learning.sql"
@@ -8,6 +8,7 @@ import { inferMemoryTags } from "./memory-tags"
 import type { SessionID } from "@/session/schema"
 import path from "path"
 import crypto from "crypto"
+import fs from "node:fs/promises"
 
 const LAYERS = ["activity", "context", "experience", "identity", "preference"] as const
 export type MemoryLayer = (typeof LAYERS)[number]
@@ -151,29 +152,22 @@ function chunkMarkdown(input: string, maxChars = 1800): string[] {
   return out.filter(Boolean)
 }
 
-export const ingestMarkdownDocToMemory = (input: {
+export const ingestDocumentTextToMemory = (input: {
   projectId: string
   directory: string
-  docPath: string
+  docKey: string
+  text: string
   layer?: MemoryLayer
   tags?: string[]
 }) =>
   Effect.gen(function* () {
-    const fullPath = path.isAbsolute(input.docPath) ? input.docPath : path.join(input.directory, input.docPath)
-    const raw = yield* Effect.promise(async () => {
-      try {
-        return await Bun.file(fullPath).text()
-      } catch {
-        return ""
-      }
-    })
-    const text = raw.trim()
-    if (!text) return { chunks: 0, docPath: fullPath }
+    const text = input.text.trim()
+    if (!text) return { chunks: 0, docKey: input.docKey }
 
     const chunks = chunkMarkdown(text)
-    if (chunks.length === 0) return { chunks: 0, docPath: fullPath }
+    if (chunks.length === 0) return { chunks: 0, docKey: input.docKey }
 
-    const docRel = path.relative(input.directory, fullPath).replace(/\\/g, "/")
+    const docRel = input.docKey.replace(/\\/g, "/")
     const docId = `doc:${docRel}`
     const docHash = crypto.createHash("sha256").update(text).digest("hex").slice(0, 24)
 
@@ -198,30 +192,61 @@ export const ingestMarkdownDocToMemory = (input: {
 
     const { storeLearning } = yield* Effect.promise(() => import("./index"))
     const layer = input.layer ?? "experience"
-    const tags = Array.isArray(input.tags) ? input.tags : ["knowledge", "debug", "fix"]
+    const tags = Array.isArray(input.tags) ? input.tags : ["knowledge", "import", "docs"]
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i]
-      yield* storeLearning({
-        projectId: input.projectId,
-        source: layer,
-        concept: `${docId}#${i + 1}`,
-        description: chunk,
-        confidence: "high",
-        metadata: {
-          layer,
-          importance: "high",
-          autoCapture: false,
-          tags,
-          docPath: docRel,
-          docHash,
-          chunkIndex: i,
-          chunkCount: chunks.length,
-        },
-      }).pipe(Effect.catch(() => Effect.void))
+      yield* pipe(
+        storeLearning({
+          projectId: input.projectId,
+          source: layer,
+          concept: `${docId}#${i + 1}`,
+          description: chunk,
+          confidence: "high",
+          metadata: {
+            layer,
+            importance: "high",
+            autoCapture: false,
+            tags,
+            docPath: docRel,
+            docHash,
+            chunkIndex: i,
+            chunkCount: chunks.length,
+          },
+        }),
+        Effect.catch(() => Effect.void)
+      )
     }
 
-    return { chunks: chunks.length, docPath: fullPath }
+    return { chunks: chunks.length, docKey: docRel }
+  })
+
+export const ingestMarkdownDocToMemory = (input: {
+  projectId: string
+  directory: string
+  docPath: string
+  layer?: MemoryLayer
+  tags?: string[]
+}) =>
+  Effect.gen(function* () {
+    const fullPath = path.isAbsolute(input.docPath) ? input.docPath : path.join(input.directory, input.docPath)
+    const raw = yield* Effect.promise(async () => {
+      try {
+        return await fs.readFile(fullPath, "utf8")
+      } catch {
+        return ""
+      }
+    })
+    const docRel = path.relative(input.directory, fullPath).replace(/\\/g, "/")
+    const result = yield* ingestDocumentTextToMemory({
+      projectId: input.projectId,
+      directory: input.directory,
+      docKey: docRel,
+      text: raw,
+      layer: input.layer,
+      tags: input.tags,
+    })
+    return { chunks: result.chunks, docPath: fullPath }
   })
 
 export const ensureGlobalMemoryProject = () =>

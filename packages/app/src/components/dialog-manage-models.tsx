@@ -9,6 +9,7 @@ import { popularProviders } from "@/hooks/use-providers"
 import { useLanguage } from "@/context/language"
 import { useDialog } from "@agence-ai/ui/context/dialog"
 import { DialogSelectProvider } from "./dialog-select-provider"
+import { compareModelsFreeFirst } from "@/utils/model-sort"
 
 export const DialogManageModels: Component = () => {
   const local = useLocal()
@@ -44,7 +45,7 @@ export const DialogManageModels: Component = () => {
         key={(x) => `${x?.provider?.id}:${x?.id}`}
         items={local.model.list()}
         filterKeys={["provider.name", "name", "id"]}
-        sortBy={(a, b) => a.name.localeCompare(b.name)}
+        sortBy={compareModelsFreeFirst}
         groupBy={(x) => x.provider.id}
         groupHeader={(group) => {
           const provider = group.items[0].provider

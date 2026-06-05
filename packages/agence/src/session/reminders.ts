@@ -10,6 +10,8 @@ import * as Session from "./session"
 import PROMPT_PLAN from "./prompt/plan.txt"
 import BUILD_SWITCH from "./prompt/build-switch.txt"
 import PLAN_MODE from "./prompt/plan-mode.txt"
+import { ChatMode } from "./chat-mode"
+import { SessionGoal } from "./goal"
 
 export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
   messages: MessageV2.WithParts[]
@@ -21,6 +23,47 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
   const sessions = yield* Session.Service
   const userMessage = input.messages.findLast((msg) => msg.info.role === "user")
   if (!userMessage) return input.messages
+
+  const ctx = yield* InstanceState.context
+  const researchNudge = ChatMode.stepReminder(
+    userMessage.info.role === "user" ? userMessage.info.chatMode : undefined,
+    {
+      session: input.session,
+      ctx,
+      messages: input.messages,
+      userMessageID: userMessage.info.id,
+    }
+  )
+  const hasResearchNudge = userMessage.parts.some(
+    (part) => part.type === "text" && part.synthetic && part.text.includes("you have not saved the report"),
+  )
+  if (researchNudge && !hasResearchNudge) {
+    userMessage.parts.push({
+      id: PartID.ascending(),
+      messageID: userMessage.info.id,
+      sessionID: userMessage.info.sessionID,
+      type: "text",
+      text: researchNudge,
+      synthetic: true,
+    })
+  }
+
+  const goalState = yield* SessionGoal.resolveGoal(ctx.directory, ctx.worktree)
+  if (goalState?.status === "active") {
+    const hasGoalReminder = userMessage.parts.some(
+      (part) => part.type === "text" && part.synthetic && part.text.includes("active project Goal is in effect"),
+    )
+    if (!hasGoalReminder) {
+      userMessage.parts.push({
+        id: PartID.ascending(),
+        messageID: userMessage.info.id,
+        sessionID: userMessage.info.sessionID,
+        type: "text",
+        text: SessionGoal.syntheticReminder(goalState),
+        synthetic: true,
+      })
+    }
+  }
 
   if (!flags.experimentalPlanMode) {
     if (input.agent.name === "plan") {
@@ -49,7 +92,6 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
 
   const assistantMessage = input.messages.findLast((msg) => msg.info.role === "assistant")
   if (input.agent.name !== "plan" && assistantMessage?.info.agent === "plan") {
-    const ctx = yield* InstanceState.context
     const plan = Session.plan(input.session, ctx)
     const exists = yield* fsys.existsSafe(plan)
     const part = yield* sessions.updatePart({
@@ -68,7 +110,6 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
 
   if (input.agent.name !== "plan" || assistantMessage?.info.agent === "plan") return input.messages
 
-  const ctx = yield* InstanceState.context
   const plan = Session.plan(input.session, ctx)
   const exists = yield* fsys.existsSafe(plan)
   if (!exists) yield* fsys.ensureDir(path.dirname(plan)).pipe(Effect.catch(Effect.die))

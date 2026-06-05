@@ -491,6 +491,7 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "Не вдалося створити постійну іконку проєкту",
   "error.childStore.storeCreateFailed": "Не вдалося створити сховище",
   "directory.error.invalidUrl": "Недійсний каталог у URL.",
+  "directory.error.projectRequired": "Відкрийте проєкт, перш ніж використовувати агента, skills, MCP або personas.",
 
   "error.chain.unknown": "Невідома помилка",
   "error.server.invalidConfiguration": "Недійсна конфігурація",

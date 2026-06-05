@@ -1,0 +1,8 @@
+<system-reminder>
+The project Goal is still active. The thread is idle and you may continue toward the objective.
+
+Goal:
+${objective}
+
+Audit the latest evidence (files, tests, logs, benchmarks, artifacts). If the objective is not yet satisfied and you are not blocked, take the next best action. If the objective is complete, call goal_complete with evidence. If blocked, call goal_complete with status blocked and explain why.
+</system-reminder>

@@ -411,7 +411,7 @@ export const layer = Layer.effect(
     })
 
     const init = Effect.fn("File.init")(function* () {
-      yield* ensure().pipe(Effect.forkIn(scope))
+      yield* ensure()
     })
 
     const status = Effect.fn("File.status")(function* () {

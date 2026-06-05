@@ -5,6 +5,7 @@ import { filter, firstBy, flat, groupBy, mapValues, pipe, uniqueBy, values } fro
 import { createSimpleContext } from "@agence-ai/ui/context"
 import { useProviders } from "@/hooks/use-providers"
 import { Persist, persisted } from "@/utils/persist"
+import { compareModelsByProviderFreeFirst } from "@/utils/model-sort"
 
 export type ModelKey = { providerID: string; modelID: string }
 
@@ -93,11 +94,13 @@ export const { use: useModels, provider: ModelsProvider } = createSimpleContext(
     })
 
     const list = createMemo(() =>
-      available().map((m) => ({
-        ...m,
-        name: m.name.replace("(latest)", "").trim(),
-        latest: m.name.includes("(latest)"),
-      })),
+      available()
+        .map((m) => ({
+          ...m,
+          name: m.name.replace("(latest)", "").trim(),
+          latest: m.name.includes("(latest)"),
+        }))
+        .sort(compareModelsByProviderFreeFirst),
     )
 
     const find = (key: ModelKey) => list().find((m) => m.id === key.modelID && m.provider.id === key.providerID)

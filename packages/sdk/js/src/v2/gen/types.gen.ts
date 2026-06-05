@@ -6380,6 +6380,7 @@ export type SessionPromptData = {
     tools?: {
       [key: string]: boolean
     }
+    chatMode?: "build" | "plan" | "research"
     format?: OutputFormat
     system?: string
     variant?: string
@@ -6727,6 +6728,7 @@ export type SessionPromptAsyncData = {
     tools?: {
       [key: string]: boolean
     }
+    chatMode?: "build" | "plan" | "research"
     format?: OutputFormat
     system?: string
     variant?: string

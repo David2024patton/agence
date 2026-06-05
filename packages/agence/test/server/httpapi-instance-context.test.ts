@@ -5,6 +5,8 @@ import { HttpClient, HttpClientRequest, HttpRouter, HttpServerResponse } from "e
 import * as Socket from "effect/unstable/socket/Socket"
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
+import { Config } from "../../src/config/config"
+import { AppFileSystem } from "@agence-ai/core/filesystem"
 import { registerAdapter } from "../../src/control-plane/adapters"
 import { WorkspaceID } from "../../src/control-plane/schema"
 import type { WorkspaceAdapter } from "../../src/control-plane/types"
@@ -14,6 +16,7 @@ import { InstanceLayer } from "../../src/project/instance-layer"
 import { Project } from "../../src/project/project"
 import { disposeMiddleware, markInstanceForDisposal } from "../../src/server/routes/instance/httpapi/lifecycle"
 import { instanceRouterMiddleware } from "../../src/server/routes/instance/httpapi/middleware/instance-context"
+import { errorLayer } from "../../src/server/routes/instance/httpapi/middleware/error"
 import { workspaceRouterMiddleware } from "../../src/server/routes/instance/httpapi/middleware/workspace-routing"
 import { resetDatabase } from "../fixture/db"
 import { disposeAllInstances, tmpdirScoped } from "../fixture/fixture"
@@ -41,15 +44,21 @@ const it = testEffect(
     testStateLayer,
     NodeHttpServer.layerTest,
     NodeServices.layer,
+    AppFileSystem.defaultLayer,
+    Config.defaultLayer,
     InstanceLayer.layer,
     Project.defaultLayer,
     workspaceLayer,
   ),
 )
 
-const instanceContextTestLayer = instanceRouterMiddleware
-  .combine(workspaceRouterMiddleware)
-  .layer.pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal))
+const instanceContextTestLayer = (workspaceRouterMiddleware as any)
+  .combine(instanceRouterMiddleware as any)
+  .layer.pipe(
+    Layer.provide(Socket.layerWebSocketConstructorGlobal),
+    Layer.provide(AppFileSystem.defaultLayer),
+    Layer.provide(Config.defaultLayer),
+  )
 
 const localAdapter = (directory: string): WorkspaceAdapter => ({
   name: "Local Test",
@@ -91,6 +100,7 @@ const probeInstanceContext = Effect.gen(function* () {
 const serveProbe = (probePath: HttpRouter.PathInput = "/probe") =>
   HttpRouter.add("GET", probePath, probeInstanceContext).pipe(
     Layer.provide(instanceContextTestLayer),
+    Layer.provide(errorLayer),
     HttpRouter.serve,
     Layer.build,
   )
@@ -111,7 +121,7 @@ const serveDisposeProbe = () =>
         yield* markInstanceForDisposal(instance)
         return yield* HttpServerResponse.json(true)
       }),
-    ).pipe(Layer.provide(instanceContextTestLayer)),
+    ).pipe(Layer.provide(instanceContextTestLayer), Layer.provide(errorLayer)),
     { middleware: disposeMiddleware, disableListenLog: true, disableLogger: true },
   ).pipe(Layer.build)
 
@@ -135,13 +145,16 @@ describe("HttpApi instance context middleware", () => {
 
   it.live("falls back to the raw directory when URI decoding fails", () =>
     Effect.gen(function* () {
+      const weird = path.resolve("%E0%A4%A")
+      yield* Effect.promise(() => mkdir(weird, { recursive: true }))
+      yield* Project.use.fromDirectory(weird)
       yield* serveProbe()
 
       const response = yield* HttpClient.get("/probe?directory=%25E0%25A4%25A")
 
       expect(response.status).toBe(200)
       expect(yield* response.json).toMatchObject({
-        directory: path.join(process.cwd(), "%E0%A4%A"),
+        directory: weird,
       })
     }),
   )
@@ -298,6 +311,7 @@ describe("HttpApi instance context middleware", () => {
       const disposed = yield* waitDisposedEvent.pipe(Effect.forkScoped)
 
       const response = yield* HttpClientRequest.post(`/dispose-probe?workspace=${workspace.id}`).pipe(
+        HttpClientRequest.setHeader("x-opencode-directory", dir),
         HttpClient.execute,
       )
 

@@ -141,8 +141,8 @@ export const layer = Layer.effect(
       })
 
     return Service.of({
-      environment,
-      skills,
+      environment: environment as any,
+      skills: skills as any,
     })
   }),
 )

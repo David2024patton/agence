@@ -11,6 +11,30 @@ import { authFromToken } from "@/utils/server"
 import pkg from "../package.json"
 import { ServerConnection } from "./context/server"
 
+// Suppress harmless solid-dnd warnings during reactive element unmounting
+const originalWarn = console.warn
+const originalError = console.error
+
+const shouldSuppress = (message: unknown) => {
+  if (typeof message !== "string") return false
+  return (
+    message.includes("Cannot remove transformer from nonexistent droppable") ||
+    message.includes("Cannot remove nonexistent droppable") ||
+    message.includes("Cannot remove nonexistent draggable")
+  )
+}
+
+console.warn = (...args) => {
+  if (shouldSuppress(args[0])) return
+  originalWarn(...args)
+}
+
+console.error = (...args) => {
+  if (shouldSuppress(args[0])) return
+  originalError(...args)
+}
+
+
 const DEFAULT_SERVER_URL_KEY = "agence.settings.dat:defaultServerUrl"
 
 const getLocale = () => {

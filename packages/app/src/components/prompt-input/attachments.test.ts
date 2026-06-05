@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { attachmentMime } from "./files"
-import { pasteMode } from "./paste"
+import { createPasteTextFile, pasteMode } from "./paste"
 
 describe("attachmentMime", () => {
   test("keeps PDFs when the browser reports the mime", async () => {
@@ -40,5 +40,14 @@ describe("pasteMode", () => {
 
   test("uses manual paste for large text", () => {
     expect(pasteMode("x".repeat(8000))).toBe("manual")
+  })
+})
+
+describe("createPasteTextFile", () => {
+  test("builds a plain text file with a paste prefix name", () => {
+    const file = createPasteTextFile("line one\nline two")
+    expect(file.type).toBe("text/plain")
+    expect(file.name.startsWith("paste-")).toBe(true)
+    expect(file.name.endsWith(".txt")).toBe(true)
   })
 })

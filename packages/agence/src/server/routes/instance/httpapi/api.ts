@@ -22,6 +22,10 @@ import { TuiApi } from "./groups/tui"
 import { WorkspaceApi } from "./groups/workspace"
 import { MemoryApi } from "./groups/memory"
 import { LibraryApi } from "./groups/library"
+import { KnowledgeApi } from "./groups/knowledge"
+import { HeartbeatApi } from "./groups/heartbeat"
+import { HubApi } from "./groups/hub"
+import { SkillOptApi } from "./groups/skill-opt"
 import { V2Api } from "./groups/v2"
 import { Authorization } from "./middleware/authorization"
 import { SchemaErrorMiddleware } from "./middleware/schema-error"
@@ -55,6 +59,10 @@ export const InstanceHttpApi = HttpApi.make("agence-instance")
   .addHttpApi(WorkspaceApi)
   .addHttpApi(MemoryApi)
   .addHttpApi(LibraryApi)
+  .addHttpApi(KnowledgeApi)
+  .addHttpApi(HeartbeatApi)
+  .addHttpApi(HubApi)
+  .addHttpApi(SkillOptApi)
   .middleware(SchemaErrorMiddleware)
 
 export const AgenceHttpApi = HttpApi.make("agence")

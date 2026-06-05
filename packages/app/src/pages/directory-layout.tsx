@@ -4,7 +4,9 @@ import { base64Encode } from "@agence-ai/core/util/encode"
 import { useLocation, useNavigate, useParams } from "@solidjs/router"
 import { createEffect, createMemo, createResource, type ParentProps, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
+import { useLayout } from "@/context/layout"
 import { LocalProvider } from "@/context/local"
+import { useServer } from "@/context/server"
 import { SDKProvider } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { decode64 } from "@/utils/base64"
@@ -53,12 +55,21 @@ export function decodeDirectory(dir: string): ProjectDirString | undefined {
 export default function Layout(props: ParentProps) {
   const params = useParams()
   const language = useLanguage()
+  const layout = useLayout()
+  const server = useServer()
   const navigate = useNavigate()
   let invalid = ""
 
   const resolved = createMemo(() => {
     if (!params.dir) return ""
     return decodeDirectory(params.dir) ?? ""
+  })
+
+  createEffect(() => {
+    const dir = resolved()
+    if (!dir) return
+    layout.projects.open(dir)
+    server.projects.touch(dir)
   })
 
   createEffect(() => {

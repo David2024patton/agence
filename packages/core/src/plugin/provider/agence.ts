@@ -8,7 +8,9 @@ export const AgencePlugin = PluginV2.define({
     let hasKey = false
     return {
       "catalog.transform": Effect.fn(function* (evt) {
-        const item = evt.data.find((record) => record.provider.id === ProviderV2.ID.opencode)
+        const item = evt.data.find(
+          (record) => record.provider.id === ProviderV2.ID.agence || record.provider.id === ProviderV2.ID.opencode,
+        )
         if (!item) return
         hasKey = Boolean(
           process.env.AGENCE_API_KEY ||

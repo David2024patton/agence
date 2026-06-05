@@ -25,94 +25,98 @@ function instanceArgs(
 
 const body = <A, E, R>(value: Body<A, E, R>) => Effect.suspend(() => (typeof value === "function" ? value() : value))
 
-type Runner = <A, E, R, E2>(value: Body<A, E, R | Scope.Scope>, layer: Layer.Layer<R, E2>) => Promise<A>
+type Runner = <A, E, R, E2>(value: Body<A, any, any>, layer: Layer.Layer<R, E2>) => Promise<A>
 
 const isolatedRun: Runner = (value, layer) =>
-  Effect.gen(function* () {
-    const exit = yield* body(value).pipe(Effect.scoped, Effect.provide(layer), Effect.exit)
-    if (Exit.isFailure(exit)) {
-      for (const err of Cause.prettyErrors(exit.cause)) {
-        yield* Effect.logError(err)
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const exit = yield* body(value as any).pipe(Effect.scoped, Effect.provide(layer), Effect.exit)
+      if (Exit.isFailure(exit)) {
+        for (const err of Cause.prettyErrors(exit.cause)) {
+          yield* Effect.logError(err)
+        }
       }
-    }
-    return yield* exit
-  }).pipe(Effect.runPromise)
+      return yield* exit
+    }) as any,
+  )
 
 // Builds the test layer through the shared process-wide memoMap so cached
 // services (Bus, Session, …) match Server.Default's instances. Use for tests
 // that publish to an in-process HTTP server and need pub/sub identity with
 // the server's handlers.
 const sharedRun: Runner = (value, layer) =>
-  Effect.gen(function* () {
-    const scope = yield* Scope.make()
-    const ctx = yield* Layer.buildWithMemoMap(layer, memoMap, scope)
-    const exit = yield* body(value).pipe(Effect.scoped, Effect.provide(ctx), Effect.exit)
-    yield* Scope.close(scope, Exit.void)
-    if (Exit.isFailure(exit)) {
-      for (const err of Cause.prettyErrors(exit.cause)) {
-        yield* Effect.logError(err)
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const scope = yield* Scope.make()
+      const ctx = yield* Layer.buildWithMemoMap(layer, memoMap, scope)
+      const exit = yield* body(value as any).pipe(Effect.scoped, Effect.provide(ctx), Effect.exit)
+      yield* Scope.close(scope, Exit.void)
+      if (Exit.isFailure(exit)) {
+        for (const err of Cause.prettyErrors(exit.cause)) {
+          yield* Effect.logError(err)
+        }
       }
-    }
-    return yield* exit
-  }).pipe(Effect.runPromise)
+      return yield* exit
+    }) as any,
+  )
 
 const make = <R, E>(testLayer: Layer.Layer<R, E>, liveLayer: Layer.Layer<R, E>, run: Runner = isolatedRun) => {
-  const effect = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+  const effect = <A, E2>(name: string, value: Body<A, any, any>, opts?: number | TestOptions) =>
     test(name, () => run(value, testLayer), opts)
 
-  effect.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+  effect.only = <A, E2>(name: string, value: Body<A, any, any>, opts?: number | TestOptions) =>
     test.only(name, () => run(value, testLayer), opts)
 
-  effect.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+  effect.skip = <A, E2>(name: string, value: Body<A, any, any>, opts?: number | TestOptions) =>
     test.skip(name, () => run(value, testLayer), opts)
 
-  const live = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+  const live = <A, E2>(name: string, value: Body<A, any, any>, opts?: number | TestOptions) =>
     test(name, () => run(value, liveLayer), opts)
 
-  live.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+  live.only = <A, E2>(name: string, value: Body<A, any, any>, opts?: number | TestOptions) =>
     test.only(name, () => run(value, liveLayer), opts)
 
-  live.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+  live.skip = <A, E2>(name: string, value: Body<A, any, any>, opts?: number | TestOptions) =>
     test.skip(name, () => run(value, liveLayer), opts)
 
   const instance = <A, E2>(
     name: string,
-    value: Body<A, E2, R | TestInstance | Scope.Scope>,
+    value: Body<A, any, any>,
     options?: InstanceOptions | number | TestOptions,
     opts?: number | TestOptions,
   ) => {
     const args = instanceArgs(options, opts)
     return test(
       name,
-      () => run(body(value).pipe(withTmpdirInstance(args.instanceOptions)), liveLayer),
+      () => run(body(value as any).pipe(withTmpdirInstance(args.instanceOptions)), liveLayer),
       args.testOptions,
     )
   }
 
   instance.only = <A, E2>(
     name: string,
-    value: Body<A, E2, R | TestInstance | Scope.Scope>,
+    value: Body<A, any, any>,
     options?: InstanceOptions | number | TestOptions,
     opts?: number | TestOptions,
   ) => {
     const args = instanceArgs(options, opts)
     return test.only(
       name,
-      () => run(body(value).pipe(withTmpdirInstance(args.instanceOptions)), liveLayer),
+      () => run(body(value as any).pipe(withTmpdirInstance(args.instanceOptions)), liveLayer),
       args.testOptions,
     )
   }
 
   instance.skip = <A, E2>(
     name: string,
-    value: Body<A, E2, R | TestInstance | Scope.Scope>,
+    value: Body<A, any, any>,
     options?: InstanceOptions | number | TestOptions,
     opts?: number | TestOptions,
   ) => {
     const args = instanceArgs(options, opts)
     return test.skip(
       name,
-      () => run(body(value).pipe(withTmpdirInstance(args.instanceOptions)), liveLayer),
+      () => run(body(value as any).pipe(withTmpdirInstance(args.instanceOptions)), liveLayer),
       args.testOptions,
     )
   }

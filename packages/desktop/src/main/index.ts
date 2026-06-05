@@ -288,7 +288,11 @@ const main = Effect.gen(function* () {
     // Check for channel-specific DB path (e.g. agence-dev.db for dev)
     const channel = process.env.AGENCE_CHANNEL || "dev"
     const safe = channel.replace(/[^a-zA-Z0-9._-]/g, "-")
-    const dbName = ["latest", "beta", "prod"].includes(channel) ? "agence.db" : `agence-${safe}.db`
+    const dbName = ["latest", "beta", "prod"].includes(channel)
+      ? "agence.db"
+      : ["dev", "main", "local"].includes(channel)
+        ? "agence-local.db"
+        : `agence-${safe}.db`
     return !existsSync(join(base, "agence", dbName))
   })()
   let overlay: BrowserWindow | null = null

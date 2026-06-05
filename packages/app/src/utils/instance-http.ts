@@ -32,7 +32,31 @@ export async function instanceHttpRequest<T = unknown>(input: {
     body: input.body !== undefined ? JSON.stringify(input.body) : undefined,
   })
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`)
-  if (res.status === 204) return undefined as T
-  return (await res.json()) as T
+  const body = await res.text()
+  if (!res.ok) {
+    let message: string | undefined
+    if (body.trimStart().startsWith("{")) {
+      try {
+        const parsed = JSON.parse(body) as { message?: string; data?: { message?: string } }
+        message = parsed.message ?? parsed.data?.message
+      } catch {
+        // ignore malformed JSON error bodies
+      }
+    }
+    throw new Error(message ?? `HTTP ${res.status}: ${body.slice(0, 200)}`)
+  }
+  if (res.status === 204 || !body.trim()) return undefined as T
+
+  const trimmed = body.trimStart()
+  if (trimmed.startsWith("<")) {
+    throw new Error(
+      `API route ${input.path} returned HTML instead of JSON. Restart Agence Desktop so the sidecar rebuilds (bun dev:desktop from the repo), or install a build that includes Learning settings APIs.`,
+    )
+  }
+
+  try {
+    return JSON.parse(body) as T
+  } catch {
+    throw new Error(`Invalid JSON from ${input.path}: ${body.slice(0, 160)}`)
+  }
 }

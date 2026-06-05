@@ -95,15 +95,15 @@ const brokenPluginLayer = Layer.succeed(
   }),
 )
 
-const it = testEffect(Layer.mergeAll(registryLayer(), node, Agent.defaultLayer))
+const it = testEffect(Layer.mergeAll(registryLayer(), node, Agent.defaultLayer, AppFileSystem.defaultLayer))
 const scout = testEffect(
-  Layer.mergeAll(registryLayer({ flags: { experimentalScout: true } }), node, Agent.defaultLayer),
+  Layer.mergeAll(registryLayer({ flags: { experimentalScout: true } }), node, Agent.defaultLayer, AppFileSystem.defaultLayer),
 )
 const background = testEffect(
-  Layer.mergeAll(registryLayer({ flags: { experimentalBackgroundSubagents: true } }), node, Agent.defaultLayer),
+  Layer.mergeAll(registryLayer({ flags: { experimentalBackgroundSubagents: true } }), node, Agent.defaultLayer, AppFileSystem.defaultLayer),
 )
 const withBrokenPlugin = testEffect(
-  Layer.mergeAll(registryLayer({ plugin: brokenPluginLayer }), node, Agent.defaultLayer),
+  Layer.mergeAll(registryLayer({ plugin: brokenPluginLayer }), node, Agent.defaultLayer, AppFileSystem.defaultLayer),
 )
 
 afterEach(async () => {

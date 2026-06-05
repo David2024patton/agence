@@ -8,6 +8,7 @@ import path from "path"
 import crypto from "crypto"
 import * as Tool from "./tool"
 import type { SessionID } from "../session/schema"
+import { SessionGoal } from "@/session/goal"
 
 // ═══ memory_add ════════════════════════════════════════════════════════════
 // Multi-layer memory: Activity, Context, Experience, Identity, Preference
@@ -187,6 +188,54 @@ export const AgentGroupTool = Tool.define<typeof GroupParameters, { agents: numb
             output: lines.join("\n"),
           }
         }).pipe(Effect.orDie),
+    }
+  }),
+)
+
+export const GoalCompleteParameters = Schema.Struct({
+  evidence: Schema.String.annotate({
+    description: "Concrete evidence checked: test output, benchmark numbers, file paths, command logs, or artifact summary",
+  }),
+  status: Schema.Literals(["complete", "blocked"] as const).annotate({
+    description: "complete when the objective is verified; blocked when no defensible path remains",
+  }),
+  blockedReason: Schema.optional(Schema.String).annotate({
+    description: "Required when status is blocked",
+  }),
+})
+
+export const GoalCompleteTool = Tool.define<typeof GoalCompleteParameters, { status: string }, any>(
+  "goal_complete",
+  Effect.gen(function* () {
+    return {
+      description:
+        "Mark the active session Goal complete or blocked after verifying against concrete evidence. Do not call unless you inspected tests, benchmarks, files, or other proof.",
+      parameters: GoalCompleteParameters,
+      execute: ((
+        params: { evidence: string; status: "complete" | "blocked"; blockedReason?: string },
+        ctx: Tool.Context,
+      ) =>
+        Effect.gen(function* () {
+          if (params.status === "blocked" && !params.blockedReason?.trim()) {
+            return {
+              title: "Goal",
+              output: "blockedReason is required when status is blocked.",
+              metadata: { status: "error" as string },
+            }
+          }
+          const instance = yield* InstanceState.context
+          const result = yield* SessionGoal.markComplete({
+            worktree: instance.worktree,
+            evidence: params.evidence,
+            blocked: params.status === "blocked",
+            blockedReason: params.blockedReason,
+          })
+          return {
+            title: "Goal",
+            output: result.message,
+            metadata: { status: params.status as string },
+          }
+        }).pipe(Effect.orDie)) as any,
     }
   }),
 )

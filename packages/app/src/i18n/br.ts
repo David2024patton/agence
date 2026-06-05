@@ -416,6 +416,7 @@ export const dict = {
     "Elemento raiz não encontrado. Você esqueceu de adicioná-lo ao seu index.html? Ou talvez o atributo id foi escrito incorretamente?",
   "error.globalSync.connectFailed": "Não foi possível conectar ao servidor. Há um servidor executando em `{{url}}`?",
   "directory.error.invalidUrl": "Diretório inválido na URL.",
+  "directory.error.projectRequired": "Abra um projeto antes de usar o agente, skills, MCPs ou personas.",
   "error.chain.unknown": "Erro desconhecido",
   "error.chain.causedBy": "Causado por:",
   "error.chain.apiError": "Erro de API",

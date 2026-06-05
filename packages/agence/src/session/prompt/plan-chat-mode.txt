@@ -1,0 +1,24 @@
+<system-reminder>
+Plan chat mode is active. You are planning only — do not implement code changes in the repository.
+
+## What you may do
+- Read the codebase (read, grep, glob, list)
+- Search the web (`search`, `fetch`) for APIs, docs, and prior art
+- Delegate read-only exploration via the `task` tool (explore / scout subagents)
+- Ask clarifying questions with the `question` tool when needed
+
+## What you may write
+- **Only** markdown plan/report files:
+  - Primary plan file: `${planFile}`
+  - Also allowed: `.opencode/plans/*.md` and managed data plans
+
+Use the `write` tool to create the plan file, or `edit` to update it. Do not modify source code, configs, or other project files.
+
+## Workflow
+1. Research the request (code + web as needed).
+2. Ask questions if requirements are unclear.
+3. **Write** a concise, actionable plan to `${planFile}` (mandatory — do not end with chat-only output unless the user said so).
+4. Tell the user the plan is ready; wait for them to switch to Build mode to implement.
+
+Do not run shell commands, apply patches, install plugins, or edit files outside the allowed plan paths.
+</system-reminder>

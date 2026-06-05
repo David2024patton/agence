@@ -14,6 +14,8 @@ import {
   ServerConnection,
   useCommand,
 } from "@agence-ai/app"
+import { Splash } from "@agence-ai/ui/logo"
+import { Button } from "@agence-ai/ui/button"
 import * as Sentry from "@sentry/solid"
 import type { AsyncStorage } from "@solid-primitives/storage"
 import { MemoryRouter } from "@solidjs/router"
@@ -22,8 +24,32 @@ import { render } from "solid-js/web"
 import pkg from "../../package.json"
 import { initI18n, t } from "./i18n"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
-import "./styles.css"
 import { useTheme } from "@agence-ai/ui/theme"
+import "./styles.css"
+
+// Suppress harmless solid-dnd warnings during reactive element unmounting
+const originalWarn = console.warn
+const originalError = console.error
+
+const shouldSuppress = (message: unknown) => {
+  if (typeof message !== "string") return false
+  return (
+    message.includes("Cannot remove transformer from nonexistent droppable") ||
+    message.includes("Cannot remove nonexistent droppable") ||
+    message.includes("Cannot remove nonexistent draggable")
+  )
+}
+
+console.warn = (...args) => {
+  if (shouldSuppress(args[0])) return
+  originalWarn(...args)
+}
+
+console.error = (...args) => {
+  if (shouldSuppress(args[0])) return
+  originalError(...args)
+}
+
 
 const root = document.getElementById("root")
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
@@ -319,7 +345,7 @@ render(() => {
   const [windowCount] = createResource(() => window.api.getWindowCount())
 
   // Fetch sidecar credentials (available immediately, before health check)
-  const [sidecar] = createResource(() => window.api.awaitInitialization(() => undefined))
+  const [sidecar, { refetch: refetchSidecar }] = createResource(() => window.api.awaitInitialization(() => undefined))
 
   const [defaultServer] = createResource(() =>
     platform.getDefaultServer?.().then((url) => {
@@ -377,29 +403,63 @@ render(() => {
     })
   })
 
+  const booting = () =>
+    defaultServer.loading || sidecar.loading || windowConfig.loading || windowCount.loading || locale.loading
+
+  const sidecarError = () => {
+    const err = sidecar.error
+    if (!err) return ""
+    return err instanceof Error ? err.message : String(err)
+  }
+
   return (
     <PlatformProvider value={platform}>
       <AppBaseProviders locale={locale.latest}>
         <Show
-          when={
-            !defaultServer.loading &&
-            !sidecar.loading &&
-            !windowConfig.loading &&
-            !windowCount.loading &&
-            !locale.loading
+          when={!booting()}
+          fallback={
+            <div class="h-dvh w-screen flex flex-col items-center justify-center gap-4 bg-background-base">
+              <Splash class="w-16 h-20 opacity-50 animate-pulse" />
+              <p class="text-14-regular text-text-weak">Starting Agence…</p>
+            </div>
           }
         >
-          {(_) => {
-            return (
-              <AppInterface
-                defaultServer={defaultServer.latest ?? ServerConnection.Key.make("sidecar")}
-                servers={servers()}
-                router={MemoryRouter}
-              >
-                <Inner />
-              </AppInterface>
-            )
-          }}
+          <Show
+            when={sidecar() && !sidecar.error}
+            fallback={
+              <div class="h-dvh w-screen flex flex-col items-center justify-center gap-4 bg-background-base p-6 text-center">
+                <Splash class="w-12 h-15 opacity-40" />
+                <p class="text-14-medium text-text-strong">Local server failed to start</p>
+                <p class="text-12-regular text-text-weak max-w-md">{sidecarError() || "Unknown error"}</p>
+                <p class="text-12-regular text-text-weaker max-w-md">
+                  From the repo root run <code class="text-text-base">bun dev:desktop</code> so predev rebuilds the
+                  sidecar. Check the terminal for sidecar errors.
+                </p>
+                <div class="flex gap-2 pt-2">
+                  <Button size="small" onClick={() => void refetchSidecar()}>
+                    Retry
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="secondary"
+                    onClick={() => {
+                      void window.api.relaunch()
+                    }}
+                  >
+                    Relaunch
+                  </Button>
+                </div>
+              </div>
+            }
+          >
+            <AppInterface
+              defaultServer={defaultServer.latest ?? ServerConnection.Key.make("sidecar")}
+              servers={servers()}
+              router={MemoryRouter}
+            >
+              <Inner />
+            </AppInterface>
+          </Show>
         </Show>
       </AppBaseProviders>
     </PlatformProvider>

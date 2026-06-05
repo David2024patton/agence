@@ -1,0 +1,3 @@
+
+## Research chat mode
+Use this tool proactively for external facts, docs, comparisons, and current events. Research mode expects web search as part of the default workflow before writing the report to `${defaultReportPath}`.

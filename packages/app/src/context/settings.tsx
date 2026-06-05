@@ -110,14 +110,14 @@ const defaultSettings: Settings = {
     autoSave: true,
     releaseNotes: true,
     followup: "steer",
-    showFileTree: false,
-    showNavigation: false,
-    showSearch: false,
-    showStatus: false,
-    showTerminal: false,
-    showReasoningSummaries: false,
-    shellToolPartsExpanded: false,
-    editToolPartsExpanded: false,
+    showFileTree: true,
+    showNavigation: true,
+    showSearch: true,
+    showStatus: true,
+    showTerminal: true,
+    showReasoningSummaries: true,
+    shellToolPartsExpanded: true,
+    editToolPartsExpanded: true,
     showSessionProgressBar: true,
     debugMode: false,
     uiLabels: false,
@@ -167,8 +167,26 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     })
 
     createEffect(() => {
+      if (!ready()) return
+      if (store.general?.uiLabels && !store.general?.debugMode) {
+        setStore("general", "uiLabels", false)
+      }
+    })
+
+    createEffect(() => {
+      if (typeof document === "undefined") return
+      const root = document.documentElement
+      root.toggleAttribute("data-ui-labels", !!store.general?.debugMode && !!store.general?.uiLabels)
+    })
+
+    createEffect(() => {
       if (store.general?.followup !== "queue") return
       setStore("general", "followup", "steer")
+    })
+
+    createEffect(() => {
+      if (!ready()) return
+      if (store.general?.debugMode) setStore("general", "debugMode", false)
     })
 
     return {
@@ -246,6 +264,7 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         ),
         setDebugMode(value: boolean) {
           setStore("general", "debugMode", value)
+          if (!value) setStore("general", "uiLabels", false)
         },
         uiLabels: withFallback(
           () => store.general?.uiLabels,

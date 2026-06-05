@@ -28,8 +28,16 @@ export const SidebarContent = (props: {
   settingsLabel: Accessor<string>
   settingsKeybind: Accessor<string | undefined>
   onOpenSettings: () => void
+  monitorLabel: Accessor<string>
+  onOpenMonitor: () => void
   knowledgeLabel: Accessor<string>
   onOpenKnowledge: () => void
+  hubLabel: Accessor<string>
+  onOpenHub: () => void
+  memoryLabel: Accessor<string>
+  onToggleMemory: () => void
+  terminalLabel: Accessor<string>
+  onToggleTerminal: () => void
   helpLabel: Accessor<string>
   onOpenHelp: () => void
   renderPanel: () => JSX.Element
@@ -101,13 +109,49 @@ export const SidebarContent = (props: {
               aria-label={props.settingsLabel()}
             />
           </TooltipKeybind>
+          <Tooltip placement={placement()} value={props.monitorLabel()}>
+            <IconButton
+              icon="status"
+              variant="ghost"
+              size="large"
+              onClick={props.onOpenMonitor}
+              aria-label={props.monitorLabel()}
+            />
+          </Tooltip>
           <Tooltip placement={placement()} value={props.knowledgeLabel()}>
             <IconButton
-              icon="brain"
+              icon="archive"
               variant="ghost"
               size="large"
               onClick={props.onOpenKnowledge}
               aria-label={props.knowledgeLabel()}
+            />
+          </Tooltip>
+          <Tooltip placement={placement()} value={props.hubLabel()}>
+            <IconButton
+              icon="dot-grid"
+              variant="ghost"
+              size="large"
+              onClick={props.onOpenHub}
+              aria-label={props.hubLabel()}
+            />
+          </Tooltip>
+          <Tooltip placement={placement()} value={props.memoryLabel()}>
+            <IconButton
+              icon="brain"
+              variant="ghost"
+              size="large"
+              onClick={props.onToggleMemory}
+              aria-label={props.memoryLabel()}
+            />
+          </Tooltip>
+          <Tooltip placement={placement()} value={props.terminalLabel()}>
+            <IconButton
+              icon="terminal"
+              variant="ghost"
+              size="large"
+              onClick={props.onToggleTerminal}
+              aria-label={props.terminalLabel()}
             />
           </Tooltip>
           <Tooltip placement={placement()} value={props.helpLabel()}>

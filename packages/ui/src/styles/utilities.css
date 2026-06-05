@@ -23,6 +23,31 @@
   }
 }
 
+.settings-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong-base) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong-base);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--border-interactive-base);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

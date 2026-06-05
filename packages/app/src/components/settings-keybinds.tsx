@@ -11,6 +11,9 @@ import { formatKeybind, parseKeybind, useCommand } from "@/context/command"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { SettingsList } from "./settings-list"
+import { SettingsSectionTitle } from "./settings-row"
+import { settingsTip, SettingsHelpTrigger } from "./settings-tooltip"
+import { Tooltip } from "@agence-ai/ui/tooltip"
 
 const IS_MAC = typeof navigator === "object" && /(Mac|iPod|iPhone|iPad)/.test(navigator.platform)
 const PALETTE_ID = "command.palette"
@@ -372,14 +375,27 @@ export const SettingsKeybinds: Component = () => {
   })
 
   return (
-    <div class="flex flex-col h-full overflow-y-auto no-scrollbar px-4 pb-10 sm:px-10 sm:pb-10">
+    <div class="flex flex-col h-full overflow-y-auto settings-scrollbar px-4 pb-10 sm:px-10 sm:pb-10">
       <div class="sticky top-0 z-10 bg-[linear-gradient(to_bottom,var(--surface-stronger-non-alpha)_calc(100%_-_24px),transparent)]">
         <div class="flex flex-col gap-4 pt-6 pb-6 max-w-[720px]">
           <div class="flex items-center justify-between gap-4">
-            <h2 class="text-16-medium text-text-strong">{language.t("settings.shortcuts.title")}</h2>
-            <Button size="small" variant="secondary" onClick={resetAll} disabled={!hasOverrides()}>
-              {language.t("settings.shortcuts.reset.button")}
-            </Button>
+            <div class="flex items-center gap-1.5">
+              <h2 class="text-16-medium text-text-strong">{language.t("settings.shortcuts.title")}</h2>
+              <SettingsHelpTrigger
+                tooltip={settingsTip(language, "settings.shortcuts.tooltip.page")}
+                label={language.t("settings.shortcuts.title")}
+              />
+            </div>
+            <Tooltip
+              value={settingsTip(language, "settings.shortcuts.tooltip.reset")}
+              placement="top"
+              openDelay={400}
+              contentClass="settings-tooltip-popover"
+            >
+              <Button size="small" variant="secondary" onClick={resetAll} disabled={!hasOverrides()}>
+                {language.t("settings.shortcuts.reset.button")}
+              </Button>
+            </Tooltip>
           </div>
 
           <div class="flex items-center gap-2 px-3 h-9 rounded-lg bg-surface-base">
@@ -408,7 +424,10 @@ export const SettingsKeybinds: Component = () => {
           {(group) => (
             <Show when={(filtered().get(group) ?? []).length > 0}>
               <div class="flex flex-col gap-1">
-                <h3 class="text-14-medium text-text-strong pb-2">{language.t(groupKey[group])}</h3>
+                <SettingsSectionTitle
+                  title={language.t(groupKey[group])}
+                  tooltip={settingsTip(language, "settings.shortcuts.tooltip.group")}
+                />
                 <SettingsList>
                   <For each={filtered().get(group) ?? []}>
                     {(id) => (

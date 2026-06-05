@@ -3776,6 +3776,7 @@ export class Session2 extends HeyApiClient {
       tools?: {
         [key: string]: boolean
       }
+      chatMode?: "build" | "plan" | "research"
       format?: OutputFormat
       system?: string
       variant?: string
@@ -3796,6 +3797,7 @@ export class Session2 extends HeyApiClient {
             { in: "body", key: "agent" },
             { in: "body", key: "noReply" },
             { in: "body", key: "tools" },
+            { in: "body", key: "chatMode" },
             { in: "body", key: "format" },
             { in: "body", key: "system" },
             { in: "body", key: "variant" },

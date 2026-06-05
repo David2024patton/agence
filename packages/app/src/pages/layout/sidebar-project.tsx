@@ -5,6 +5,7 @@ import { Button } from "@agence-ai/ui/button"
 import { ContextMenu } from "@agence-ai/ui/context-menu"
 import { HoverCard } from "@agence-ai/ui/hover-card"
 import { Icon } from "@agence-ai/ui/icon"
+import { Tooltip } from "@agence-ai/ui/tooltip"
 import { createSortable } from "@thisbeyond/solid-dnd"
 import { useLayout, type LocalProject } from "@/context/layout"
 import { useGlobalSync } from "@/context/global-sync"
@@ -27,6 +28,7 @@ export type ProjectSidebarContext = {
   openSidebar: () => void
   closeProject: (directory: string) => void
   showEditProjectDialog: (project: LocalProject) => void
+  openProjectHub: (directory: string) => void
   toggleProjectWorkspaces: (project: LocalProject) => void
   workspacesEnabled: (project: LocalProject) => boolean
   workspaceIds: (project: LocalProject) => string[]
@@ -65,6 +67,7 @@ const ProjectTile = (props: {
   onProjectFocus: (worktree: string) => void
   navigateToProject: (directory: string) => void
   showEditProjectDialog: (project: LocalProject) => void
+  openProjectHub: (directory: string) => void
   toggleProjectWorkspaces: (project: LocalProject) => void
   workspacesEnabled: (project: LocalProject) => boolean
   closeProject: (directory: string) => void
@@ -152,6 +155,13 @@ const ProjectTile = (props: {
             <ContextMenu.ItemLabel>{props.language.t("common.edit")}</ContextMenu.ItemLabel>
           </ContextMenu.Item>
           <ContextMenu.Item
+            data-action="project-hub"
+            data-project={base64Encode(props.project.worktree)}
+            onSelect={() => props.openProjectHub(props.project.worktree)}
+          >
+            <ContextMenu.ItemLabel>{props.language.t("sidebar.project.hub")}</ContextMenu.ItemLabel>
+          </ContextMenu.Item>
+          <ContextMenu.Item
             data-action="project-workspaces-toggle"
             data-project={base64Encode(props.project.worktree)}
             disabled={props.project.vcs !== "git" && !props.workspacesEnabled(props.project)}
@@ -198,8 +208,13 @@ const ProjectPreviewPanel = (props: {
   language: ReturnType<typeof useLanguage>
 }): JSX.Element => (
   <div class="-m-3 p-2 flex flex-col w-72">
-    <div class="px-4 pt-2 pb-1 flex items-center gap-2">
+    <div class="px-4 pt-2 pb-1 flex items-center gap-1">
       <div class="text-14-medium text-text-strong truncate grow">{displayName(props.project)}</div>
+      <Tooltip placement="top" value={props.language.t("sidebar.project.hubHelp")}>
+        <span class="shrink-0 flex items-center justify-center size-6 text-icon-base cursor-help">
+          <Icon name="help" size="small" />
+        </span>
+      </Tooltip>
     </div>
     <div class="px-4 pb-2 text-12-medium text-text-weak">{props.language.t("sidebar.project.recentSessions")}</div>
     <div class="px-2 pb-2 flex flex-col gap-2">
@@ -251,7 +266,19 @@ const ProjectPreviewPanel = (props: {
         </For>
       </Show>
     </div>
-    <div class="px-2 py-2 border-t border-border-weak-base">
+    <div class="px-2 py-2 border-t border-border-weak-base flex flex-col gap-1">
+      <Button
+        variant="secondary"
+        size="large"
+        icon="dot-grid"
+        class="w-full"
+        onClick={() => {
+          props.ctx.openProjectHub(props.project.worktree)
+          props.ctx.onHoverOpenChanged(props.project.worktree, false)
+        }}
+      >
+        {props.language.t("sidebar.hub")}
+      </Button>
       <Button
         variant="ghost"
         class="flex w-full text-left justify-start text-text-base px-2 hover:bg-transparent active:bg-transparent"
@@ -291,7 +318,7 @@ export const SortableProject = (props: {
   const overlay = createMemo(() => !props.mobile && !props.ctx.sidebarOpened())
   const active = createMemo(() => state.menu || (preview() ? isHoverProject() : overlay() && isHoverProject()))
 
-  const hoverOpen = () => isHoverProject() && preview() && !selected() && !state.menu
+  const hoverOpen = () => isHoverProject() && !selected() && !state.menu
 
   const label = (directory: string) => {
     const [data] = globalSync.child(directory, { bootstrap: false })
@@ -329,6 +356,7 @@ export const SortableProject = (props: {
       onProjectFocus={props.ctx.onProjectFocus}
       navigateToProject={props.ctx.navigateToProject}
       showEditProjectDialog={props.ctx.showEditProjectDialog}
+      openProjectHub={props.ctx.openProjectHub}
       toggleProjectWorkspaces={props.ctx.toggleProjectWorkspaces}
       workspacesEnabled={props.ctx.workspacesEnabled}
       closeProject={props.ctx.closeProject}
@@ -342,7 +370,7 @@ export const SortableProject = (props: {
   return (
     // @ts-ignore
     <div use:sortable classList={{ "opacity-30": sortable.isActiveDraggable }}>
-      <Show when={preview() && !selected()} fallback={tile()}>
+      <Show when={!props.mobile && !selected()} fallback={tile()}>
         <HoverCard
           open={!state.suppressHover && hoverOpen() && !state.menu}
           openDelay={0}
@@ -353,6 +381,7 @@ export const SortableProject = (props: {
           onOpenChange={(value) => {
             if (state.menu) return
             if (value && state.suppressHover) return
+            if (value) globalSync.child(props.project.worktree, { bootstrap: true })
             props.ctx.onHoverOpenChanged(props.project.worktree, value)
           }}
         >

@@ -68,7 +68,8 @@ export function SessionSidePanel(props: {
 
   const reviewOpen = createMemo(() => isDesktop() && view().reviewPanel.opened())
   const fileOpen = createMemo(() => isDesktop() && shown() && layout.fileTree.opened())
-  const open = createMemo(() => reviewOpen() || fileOpen())
+  const memoryOpen = createMemo(() => tabs().active() === "memory" || tabs().all().includes("memory"))
+  const open = createMemo(() => reviewOpen() || fileOpen() || memoryOpen())
   const reviewTab = createMemo(() => isDesktop())
   const panelWidth = createMemo(() => {
     if (!open()) return "0px"
@@ -146,7 +147,6 @@ export function SessionSidePanel(props: {
     hasReview: props.canReview,
   })
   const contextOpen = tabState.contextOpen
-  const memoryOpen = createMemo(() => tabs().active() === "memory" || tabs().all().includes("memory"))
   const openedTabs = createMemo(() => tabState.openedTabs().filter((t) => t !== "memory"))
 
   onMount(() => {

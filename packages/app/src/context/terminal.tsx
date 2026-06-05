@@ -7,6 +7,7 @@ import type { Platform } from "./platform"
 import { ServerConnection, useServer } from "./server"
 import { defaultTitle, titleNumber } from "./terminal-title"
 import { Persist, persisted, removePersisted } from "@/utils/persist"
+import { isPtyNotFoundError } from "@/utils/pty-error"
 
 export type LocalPTY = {
   id: string
@@ -226,6 +227,10 @@ function createWorkspaceTerminalSession(
         size: pty.cols && pty.rows ? { rows: pty.rows, cols: pty.cols } : undefined,
       })
       .catch((error: unknown) => {
+        if (isPtyNotFoundError(error)) {
+          void clone(client, pty.id)
+          return
+        }
         if (previous) {
           const currentIndex = store.all.findIndex((item) => item.id === pty.id)
           if (currentIndex >= 0) setStore("all", currentIndex, previous)
@@ -265,6 +270,23 @@ function createWorkspaceTerminalSession(
         setStore("active", next.data.id)
       }
     })
+  }
+
+  let reconciling = false
+  const reconcileStaleSessions = async (client: ReturnType<typeof useSDK>["client"]) => {
+    if (reconciling || store.all.length === 0) return
+    reconciling = true
+    try {
+      const list = await client.pty.list().catch(() => undefined)
+      if (!list?.data) return
+      const live = new Set(list.data.map((item) => item.id).filter((id): id is string => !!id))
+      for (const pty of store.all) {
+        if (live.has(pty.id)) continue
+        await clone(client, pty.id)
+      }
+    } finally {
+      reconciling = false
+    }
   }
 
   return {
@@ -314,6 +336,9 @@ function createWorkspaceTerminalSession(
     },
     async clone(id: string) {
       await clone(sdk.client, id)
+    },
+    async reconcileStale() {
+      await reconcileStaleSessions(sdk.client)
     },
     bind() {
       const client = sdk.client
@@ -438,6 +463,16 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
 
     createEffect(
       on(
+        () => [workspace().ready(), server.healthy(), server.key, params.dir] as const,
+        ([persisted, healthy]) => {
+          if (!persisted || healthy !== true || !params.dir) return
+          void workspace().reconcileStale()
+        },
+      ),
+    )
+
+    createEffect(
+      on(
         () => ({ dir: params.dir, id: params.id, scope: scope() }),
         (next, prev) => {
           if (!prev?.dir) return
@@ -458,6 +493,7 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
       trim: (id: string) => workspace().trim(id),
       trimAll: () => workspace().trimAll(),
       clone: (id: string) => workspace().clone(id),
+      reconcileStale: () => workspace().reconcileStale(),
       bind: () => workspace(),
       open: (id: string) => workspace().open(id),
       close: (id: string) => workspace().close(id),

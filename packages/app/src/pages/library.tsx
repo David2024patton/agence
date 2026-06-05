@@ -1,9 +1,10 @@
-import { createSignal, createMemo, For, Show, onMount } from "solid-js"
+import { createSignal, createMemo, For, Show, createEffect } from "solid-js"
 import { useGlobalSDK } from "@/context/global-sdk"
+import { useLanguage } from "@/context/language"
 import { useNavigate, useSearchParams } from "@solidjs/router"
 import { useServer } from "@/context/server"
 import { usePlatform } from "@/context/platform"
-import { useLayout } from "@/context/layout"
+import { useSettingsWorkspaceDirectory } from "@/utils/settings-learning"
 import { instanceHttpRequest } from "@/utils/instance-http"
 
 const GITHUB_CSS = `
@@ -176,9 +177,10 @@ export default function LibraryPage() {
   const gsdk = useGlobalSDK()
   const server = useServer()
   const platform = usePlatform()
-  const layout = useLayout()
+  const language = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const workspaceDirectory = useSettingsWorkspaceDirectory()
   const [files, setFiles] = createSignal<WikiFile[]>([])
   const [selected, setSelected] = createSignal<string | null>(null)
   const [search, setSearch] = createSignal("")
@@ -186,18 +188,23 @@ export default function LibraryPage() {
   const [error, setError] = createSignal("")
   const [kbPath, setKbPath] = createSignal("")
 
-  const directory = () => {
+  const directory = createMemo(() => {
     const fromQuery = searchParams.directory
     if (typeof fromQuery === "string" && fromQuery.length > 0) return fromQuery
-    return layout.projects.list()[0]?.worktree
-  }
+    return workspaceDirectory() ?? ""
+  })
 
   const fetchFiles = async () => {
+    const dir = directory()
+    if (!dir) {
+      setFiles([])
+      setError(language.t("directory.error.projectRequired"))
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError("")
     try {
-      const dir = directory()
-      if (!dir) throw new Error("Open a project first, then open Knowledge from the sidebar.")
       const data = await instanceHttpRequest<{ path: string; files: WikiFile[] }>({
         baseUrl: gsdk.url,
         server: server.current,
@@ -214,7 +221,14 @@ export default function LibraryPage() {
       )
       setKbPath(data.path || "")
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      const message = e instanceof Error ? e.message : String(e)
+      if (message.includes("HTTP 500")) {
+        setError(
+          `${message} — quit Agence Desktop fully, run \`bun dev:desktop\` from the repo root (rebuilds the sidecar), then reopen Knowledge.`,
+        )
+        return
+      }
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -225,7 +239,16 @@ export default function LibraryPage() {
     setError("")
   }
 
-  onMount(() => fetchFiles())
+  createEffect(() => {
+    const dir = directory()
+    if (!dir) {
+      setFiles([])
+      setError(language.t("directory.error.projectRequired"))
+      setLoading(false)
+      return
+    }
+    void fetchFiles()
+  })
 
   const filtered = createMemo(() => {
     const s = search().toLowerCase()
@@ -291,6 +314,16 @@ export default function LibraryPage() {
 
       <div class="flex-1 min-w-0 overflow-y-auto bg-background-base"><div class="max-w-3xl mx-auto p-8">
         {(() => {
+          if (!directory()) {
+            return (
+              <div class="flex items-center justify-center h-full text-v2-text-text-faint text-13">
+                <div class="text-center max-w-sm">
+                  <div class="text-3xl mb-2">&#x1F4C1;</div>
+                  <div class="text-v2-text-text-base mb-1">{language.t("directory.error.projectRequired")}</div>
+                </div>
+              </div>
+            )
+          }
           const file = selectedFile()
           if (!file) return (
             <div class="flex items-center justify-center h-full text-v2-text-text-faint text-13">

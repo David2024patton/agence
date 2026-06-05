@@ -30,6 +30,8 @@ agence/                          # Monorepo root (Bun workspaces)
 │   │       │       └── middleware/ # Auth, instance context, workspace routing
 │   │       ├── session/         # Session management (messages, prompt templates)
 │   │       ├── skill/           # Skill system (SKILL.md discovery)
+│   │       ├── learning/        # Memory intelligence, wiki, knowledge paths, archive
+│   │       ├── background/      # Heartbeat scheduler (HEARTBEAT.md)
 │   │       ├── storage/         # SQLite database (Drizzle ORM)
 │   │       ├── sync/            # Sync engine (multi-client state)
 │   │       └── tool/            # Tool system (50+ tools)
@@ -74,8 +76,30 @@ agence/                          # Monorepo root (Bun workspaces)
 ├── infra/                       # SST infrastructure (AWS)
 ├── AGENCE.md                    # Agent knowledge base
 ├── PROJECT-MAP.md               # This file
+├── docs/                        # Agence-specific docs (vs OpenCode web docs)
+│   ├── agence-vs-opencode.md
+│   └── learning/                # Memory, wiki, heartbeat, desktop settings
 └── migration/                   # 23 Drizzle SQL migrations
 ```
+
+## Learning subsystem (Agence vs upstream OpenCode)
+
+OpenCode upstream does not ship this stack; see `docs/agence-vs-opencode.md`.
+
+| Concern | Location |
+| --- | --- |
+| Memory intelligence | `packages/agence/src/learning/memory-intelligence.ts`, `memory-settings.ts`, `memory-tags.ts` |
+| Wiki files | `packages/agence/src/learning/wiki.ts`, `knowledge-paths.ts` → `.agence/knowledge/wiki/` |
+| Session archive → KB | `packages/agence/src/learning/archive.ts` |
+| Heartbeat runner | `packages/agence/src/background/heartbeat.ts` → `HEARTBEAT.md` |
+| HTTP groups | `server/routes/instance/httpapi/groups/memory.ts`, `knowledge.ts`, `library.ts`, `heartbeat.ts` |
+| HTTP handlers | `handlers/memory.ts`, `knowledge.ts`, `library.ts` (+ heartbeat in library handler) |
+| Desktop settings UI | `packages/app/src/components/settings-memory.tsx`, `settings-knowledge.tsx`, `settings-heartbeat.tsx`, `dialog-settings.tsx` (Learning section) |
+| Library page | `packages/app/src/pages/library.tsx` → `/library` |
+| Instance HTTP client | `packages/app/src/utils/instance-http.ts`, `learning-settings-api.ts` |
+| On-disk settings | `.agence/memory-settings.json`, `.agence/heartbeat.json` |
+
+**Desktop:** run `bun dev:desktop` from repo root after server changes (`predev` rebuilds sidecar bundle).
 
 ## How the Effect Layer System Works
 
@@ -203,6 +227,11 @@ Here's exactly what we added to create the monitoring system:
 | Debug startup crashes | Check `InstanceRef` in `packages/agence/src/effect/instance-state.ts` |
 | Add desktop menu item | `packages/app/src/desktop-menu.ts` + route in `app.tsx` |
 | Add titlebar icon | `packages/app/src/components/titlebar.tsx` — add `<IconButton>` in the same row as `StatusPopover`. Use `window.dispatchEvent(new CustomEvent(...))` for click actions. Listen in the target component with `window.addEventListener`. |
+| Memory / learning API | `groups/memory.ts` (etc.) + `handlers/` + register in `api.ts` + `server.ts` — see `docs/learning/` |
+| Project directory gate | `packages/agence/src/project/require-project.ts` + `handlers/instance-scope.ts` + `middleware/instance-context.ts` |
+| New user guide | `docs/getting-started.md` (wiki-seed → `.agence/knowledge/wiki/getting-started.md`) |
+| Project Hub / bundle | `packages/agence/src/project/hub.ts`, `hub-bootstrap.ts`, `manifest.ts`, `registry.ts` — see `docs/project-hub.md` |
+| Learning settings page | `packages/app/src/components/settings-*.tsx` + tab in `dialog-settings.tsx` |
 | Add config option | `packages/agence/src/config/` + register in `config.ts` |
 
 ## Titlebar Icons (How-To)
@@ -244,7 +273,7 @@ Sidecar → imports virtual:agence-server → Server.listen()
         ↓
 Effect HTTP server → workspaceRouterMiddleware extracts directory
         ↓
-instanceContextLayer → store.load() → fromDirectory() → InstanceBootstrap
+assertProjectDirectory() → ensureHubBundle if new → InstanceStore.load() → InstanceBootstrap
         ↓
 Handler processes request → returns response → SDK → renderer updates UI
 ```

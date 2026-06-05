@@ -2693,6 +2693,8 @@ export type SessionPromptAsyncData = {
     tools?: {
       [key: string]: boolean
     }
+    chatMode?: "build" | "plan" | "research"
+    variant?: string
     parts: Array<TextPartInput | FilePartInput | AgentPartInput | SubtaskPartInput>
   }
   path: {

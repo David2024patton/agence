@@ -32,7 +32,10 @@ export class ProviderAuthApiError extends Schema.ErrorClass<ProviderAuthApiError
 
 export const ProviderApi = HttpApi.make("provider")
   .add(
-    HttpApiGroup.make("provider")
+    // list and auth do not need a project directory -- they read global provider state.
+    // They must NOT have InstanceContextMiddleware so the global provider query works
+    // before any project is opened.
+    HttpApiGroup.make("providerGlobal")
       .add(
         HttpApiEndpoint.get("list", root, {
           query: WorkspaceRoutingQuery,
@@ -54,6 +57,20 @@ export const ProviderApi = HttpApi.make("provider")
             description: "Retrieve available authentication methods for all AI providers.",
           }),
         ),
+      )
+      .annotateMerge(
+        OpenApi.annotations({
+          title: "provider",
+          description: "Experimental HttpApi provider routes.",
+        }),
+      )
+      .middleware(WorkspaceRoutingMiddleware)
+      .middleware(Authorization),
+  )
+  .add(
+    // OAuth flows need an instance context (they write auth state per-project).
+    HttpApiGroup.make("provider")
+      .add(
         HttpApiEndpoint.post("authorize", `${root}/:providerID/oauth/authorize`, {
           params: { providerID: ProviderID },
           query: WorkspaceRoutingQuery,
@@ -83,8 +100,8 @@ export const ProviderApi = HttpApi.make("provider")
       )
       .annotateMerge(
         OpenApi.annotations({
-          title: "provider",
-          description: "Experimental HttpApi provider routes.",
+          title: "provider oauth",
+          description: "Provider OAuth routes that require a project directory.",
         }),
       )
       .middleware(InstanceContextMiddleware)

@@ -27,6 +27,8 @@ import { LSP } from "@/lsp/lsp"
 import { MCP } from "@/mcp"
 import { Permission } from "@/permission"
 import { Installation } from "@/installation"
+import { InstanceRef } from "@/effect/instance-ref"
+import type { InstanceContext } from "@/project/instance-context"
 import { InstanceLayer } from "@/project/instance-layer"
 import { Plugin } from "@/plugin"
 import { Project } from "@/project/project"
@@ -73,7 +75,7 @@ import { mcpHandlers } from "./handlers/mcp"
 import { monitorHandlers } from "./handlers/monitor"
 import { permissionHandlers } from "./handlers/permission"
 import { projectHandlers } from "./handlers/project"
-import { providerHandlers } from "./handlers/provider"
+import { providerGlobalHandlers, providerHandlers } from "./handlers/provider"
 import { ptyConnectRoute, ptyHandlers } from "./handlers/pty"
 import { questionHandlers } from "./handlers/question"
 import { sessionHandlers } from "./handlers/session"
@@ -83,6 +85,10 @@ import { v2Handlers } from "./handlers/v2"
 import { workspaceHandlers } from "./handlers/workspace"
 import { memoryHandlers } from "./handlers/memory"
 import { libraryHandlers } from "./handlers/library"
+import { knowledgeHandlers } from "./handlers/knowledge"
+import { heartbeatHandlers } from "./handlers/heartbeat"
+import { hubHandlers } from "./handlers/hub"
+import { skillOptHandlers } from "./handlers/skill-opt"
 import { instanceContextLayer, instanceRouterMiddleware } from "./middleware/instance-context"
 import { workspaceRouterMiddleware, workspaceRoutingLayer } from "./middleware/workspace-routing"
 import { disposeMiddleware } from "./lifecycle"
@@ -117,9 +123,9 @@ const rootApiRoutes = HttpApiBuilder.layer(RootHttpApi).pipe(
   Layer.provide(schemaErrorLayer),
   Layer.provide(httpApiAuthLayer),
 )
-const instanceRouterLayer = authorizationRouterMiddleware
-  .combine(instanceRouterMiddleware)
-  .combine(workspaceRouterMiddleware)
+const instanceRouterLayer = (authorizationRouterMiddleware as any)
+  .combine(workspaceRouterMiddleware as any)
+  .combine(instanceRouterMiddleware as any)
   .layer.pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal), Layer.provide(ServerAuth.Config.defaultLayer))
 const eventApiRoutes = HttpApiBuilder.layer(EventApi).pipe(
   Layer.provide(eventHandlers),
@@ -137,6 +143,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     ptyHandlers,
     questionHandlers,
     permissionHandlers,
+    providerGlobalHandlers,
     providerHandlers,
     sessionHandlers,
     syncHandlers,
@@ -145,6 +152,10 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     workspaceHandlers,
     memoryHandlers,
     libraryHandlers,
+    knowledgeHandlers,
+    heartbeatHandlers,
+    hubHandlers,
+    skillOptHandlers,
   ]),
 )
 
@@ -188,10 +199,17 @@ type RouteRequirements =
   | HttpRouter.Request<"Requires", unknown>
   | HttpRouter.Request<"GlobalRequires", never>
 
+const startupInstanceRef = (): InstanceContext => ({
+  directory: process.cwd(),
+  worktree: process.cwd(),
+  project: { id: "startup", worktree: process.cwd(), vcs: "git" } as InstanceContext["project"],
+})
+
 export function createRoutes(
   corsOptions?: CorsOptions,
 ): Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements> {
   return Layer.mergeAll(rootApiRoutes, eventApiRoutes, instanceRoutes, docRoute, uiRoute).pipe(
+    Layer.provideMerge(Layer.succeed(InstanceRef)(startupInstanceRef())),
     Layer.provide([
       errorLayer,
       compressionLayer,
@@ -246,7 +264,7 @@ export function createRoutes(
     Layer.provide(Layer.succeed(CorsConfig)(corsOptions)),
     Layer.provide(InstanceLayer.layer),
     Layer.provide(Observability.layer),
-  )
+  ) as any
 }
 
 export const routes = createRoutes()

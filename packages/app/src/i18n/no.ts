@@ -465,6 +465,7 @@ export const dict = {
 
   "error.globalSync.connectFailed": "Kunne ikke koble til server. Kjører det en server på `{{url}}`?",
   "directory.error.invalidUrl": "Invalid directory in URL.",
+  "directory.error.projectRequired": "Open a project before using the agent, skills, MCPs, or personas.",
 
   "error.chain.unknown": "Ukjent feil",
   "error.chain.causedBy": "Forårsaket av:",

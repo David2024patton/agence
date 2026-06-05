@@ -29,6 +29,7 @@ import open from "open"
 import { Effect, Exit, Layer, Option, Context, Schema, Stream } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { InstanceState } from "@/effect/instance-state"
+import { loadGroupFilter } from "@/project/registry"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { CrossSpawnSpawner } from "@agence-ai/core/cross-spawn-spawner"
 
@@ -524,6 +525,11 @@ export const layer = Layer.effect(
       Effect.fn("MCP.state")(function* () {
         const cfg = yield* cfgSvc.get()
         const bridge = yield* EffectBridge.make()
+        const ctx = yield* InstanceState.context
+        const filter = yield* loadGroupFilter(ctx.directory).pipe(
+          Effect.provide(AppFileSystem.defaultLayer),
+          Effect.catch(() => Effect.succeed(undefined)),
+        )
         const config = cfg.mcp ?? {}
         const s: State = {
           status: {},
@@ -541,6 +547,11 @@ export const layer = Layer.effect(
               }
 
               if (mcp.enabled === false) {
+                s.status[key] = { status: "disabled" }
+                return
+              }
+
+              if (filter?.mcps && !filter.mcps.has(key)) {
                 s.status[key] = { status: "disabled" }
                 return
               }

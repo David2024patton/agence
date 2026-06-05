@@ -14,6 +14,8 @@ describe("Heartbeat Parser", () => {
     const tasks = parseHeartbeatTasks(markdown)
     expect(tasks.length).toBe(5)
 
+    expect(tasks[0].enabled).toBe(true)
+    expect(tasks[1].enabled).toBe(false)
     expect(tasks[0].interval).toBe("30m")
     expect(tasks[0].taskName).toBe("check-inbox")
     expect(tasks[0].prompt).toBe("check for new messages and respond to them")

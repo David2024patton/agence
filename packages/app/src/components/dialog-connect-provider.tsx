@@ -319,17 +319,34 @@ export function DialogConnectProvider(props: { provider: string }) {
     listRef?.onKeyDown(e)
   }
 
+  const zenProvider = () => props.provider === "agence" || props.provider === "opencode"
+
   let auto = false
   createEffect(() => {
     if (auto) return
     if (loading()) return
-    if (methods().length === 1) {
-      auto = true
-      void selectMethod(0)
-    }
+    if (methods().length !== 1) return
+    const only = methods()[0]
+    if (zenProvider() && only?.type === "oauth") return
+    auto = true
+    void selectMethod(0)
   })
 
   async function complete() {
+    const disabled = globalSync.data.config.disabled_providers ?? []
+    if (disabled.includes(props.provider)) {
+      const next = disabled.filter((id) => id !== props.provider)
+      await globalSync
+        .updateConfig({ disabled_providers: next.length > 0 ? next : [] })
+        .catch(() => undefined)
+      globalSync.set("config", "disabled_providers", next)
+    }
+    globalSync.set(
+      "provider_auth",
+      produce((draft: Record<string, ProviderAuthMethod[] | undefined>) => {
+        delete draft[props.provider]
+      }),
+    )
     await globalSDK.client.global.dispose()
     dialog.close()
     showToast({
@@ -420,13 +437,13 @@ export function DialogConnectProvider(props: { provider: string }) {
     return (
       <div class="flex flex-col gap-6">
         <Switch>
-          <Match when={provider().id === "agence"}>
+          <Match when={provider().id === "agence" || provider().id === "opencode"}>
             <div class="flex flex-col gap-4">
               <div class="text-14-regular text-text-base">{language.t("provider.connect.opencodeZen.line1")}</div>
               <div class="text-14-regular text-text-base">{language.t("provider.connect.opencodeZen.line2")}</div>
               <div class="text-14-regular text-text-base">
                 {language.t("provider.connect.opencodeZen.visit.prefix")}
-                <Link href="https://github.com/David2024patton/agence/zen" tabIndex={-1}>
+                <Link href="https://opencode.ai/zen" tabIndex={-1}>
                   {language.t("provider.connect.opencodeZen.visit.link")}
                 </Link>
                 {language.t("provider.connect.opencodeZen.visit.suffix")}

@@ -1,0 +1,1 @@
+Research mode: you have not saved the report yet. Call `write` now with the full markdown report to `${defaultReportPath}` (or another path under `${reportGlobs}`), then give a brief chat summary.

@@ -1,66 +1,152 @@
 import path from "path"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
-import { InstanceState } from "@/effect/instance-state"
+import { AppFileSystem } from "@agence-ai/core/filesystem"
+import {
+  defaultHeartbeatTemplate,
+  loadHeartbeatRuns,
+  parseHeartbeatTasks,
+  serializeHeartbeatContent,
+} from "@/background/heartbeat"
+import { ensureProjectWiki } from "@/learning/wiki-seed"
+import { listWikiArticlesForProject } from "@/learning/wiki"
 import { InstanceHttpApi } from "../api"
+import { withProjectDirectory } from "./instance-scope"
 
-function extractWikiLinks(content: string) {
-  const links: string[] = []
-  const pattern = /\[\[([^\]]+)\]\]/g
-  let match = pattern.exec(content)
-  while (match) {
-    const slug = match[1].trim().toLowerCase().replace(/\s+/g, "-")
-    if (!links.includes(slug)) links.push(slug)
-    match = pattern.exec(content)
-  }
-  return links
+function heartbeatPath(directory: string) {
+  return path.join(directory, "HEARTBEAT.md")
 }
 
-function listWikiFiles(wikiDir: string) {
-  return Effect.gen(function* () {
-    const dir = Bun.file(wikiDir)
-    if (!(yield* Effect.tryPromise(() => dir.exists()))) return []
-
-    const names: string[] = []
-    const glob = new Bun.Glob("*.md")
-    for (const rel of glob.scanSync({ cwd: wikiDir })) names.push(rel)
-
-    const files = yield* Effect.forEach(names, (name) =>
-      Effect.gen(function* () {
-        const filePath = path.join(wikiDir, name)
-        const content = yield* Effect.tryPromise(() => Bun.file(filePath).text())
-        return { name, content, links: extractWikiLinks(content) }
-      }),
-    )
-
-    const backlinks = new Map<string, string[]>()
-    for (const file of files) {
-      const source = file.name.replace(/\.md$/, "")
-      for (const link of file.links) {
-        const list = backlinks.get(link) ?? []
-        if (!list.includes(source)) list.push(source)
-        backlinks.set(link, list)
-      }
+function enrichTasks(
+  tasks: ReturnType<typeof parseHeartbeatTasks>,
+  runs: Record<string, number>,
+  now = Date.now(),
+) {
+  return tasks.map((task) => {
+    const lastRun = runs[task.taskName]
+    const nextRunInMs = lastRun === undefined ? 0 : Math.max(0, task.intervalMs - (now - lastRun))
+    return {
+      enabled: task.enabled,
+      interval: task.interval,
+      taskName: task.taskName,
+      prompt: task.prompt,
+      intervalMs: task.intervalMs,
+      lastRun,
+      nextRunInMs,
     }
-
-    return files.map((file) => ({
-      name: file.name,
-      content: file.content,
-      links: file.links,
-      backlinks: backlinks.get(file.name.replace(/\.md$/, "")) ?? [],
-    }))
   })
 }
+
+function readHeartbeatState(directory: string) {
+  return Effect.gen(function* () {
+    const fs = yield* AppFileSystem.Service
+    const file = heartbeatPath(directory)
+    const exists = yield* fs.existsSafe(file)
+    const content = exists
+      ? yield* fs.readFileString(file).pipe(Effect.catch(() => Effect.succeed("")))
+      : ""
+    const runs = yield* loadHeartbeatRuns(directory)
+    const tasks = enrichTasks(parseHeartbeatTasks(content), runs)
+    return { path: "HEARTBEAT.md", exists, content, tasks }
+  })
+}
+
+function listWiki(directory: string) {
+  return ensureProjectWiki(directory).pipe(
+    Effect.catch(() => Effect.void),
+    Effect.flatMap(() => listWikiArticlesForProject(directory)),
+    Effect.map((listed) => ({ path: listed.path, files: listed.files })),
+  )
+}
+
+import { InvalidRequestError } from "../errors"
 
 export const libraryHandlers = HttpApiBuilder.group(InstanceHttpApi, "library", (handlers) =>
   Effect.gen(function* () {
     const list = Effect.fn("LibraryHttpApi.list")(function* () {
-      const ctx = yield* InstanceState.context
-      const wikiDir = path.join(ctx.directory, ".agence", "knowledge", "wiki")
-      const files = yield* listWikiFiles(wikiDir)
-      return { path: wikiDir, files }
+      return yield* withProjectDirectory((directory) => listWiki(directory)).pipe(
+        Effect.catch((error) =>
+          Effect.fail(
+            new InvalidRequestError({
+              message: String(error),
+              kind: "Query",
+              field: "directory",
+            }),
+          ),
+        ),
+      )
     })
 
-    return handlers.handle("list", list)
+    const heartbeatState = Effect.fn("LibraryHttpApi.heartbeatState")(function* () {
+      return yield* withProjectDirectory((directory) => readHeartbeatState(directory)).pipe(
+        Effect.catch((error) =>
+          Effect.fail(
+            new InvalidRequestError({
+              message: String(error),
+              kind: "Query",
+              field: "directory",
+            }),
+          ),
+        ),
+      )
+    })
+
+    const heartbeatSave = Effect.fn("LibraryHttpApi.heartbeatSave")(function* (ctx: {
+      payload: {
+        tasks: readonly { enabled: boolean; interval: string; taskName: string; prompt: string }[]
+        preamble?: string
+      }
+    }) {
+      return yield* withProjectDirectory((directory) =>
+        Effect.gen(function* () {
+          const fs = yield* AppFileSystem.Service
+          const file = heartbeatPath(directory)
+          const existing = (yield* fs.existsSafe(file))
+            ? yield* fs.readFileString(file).pipe(Effect.catch(() => Effect.succeed("")))
+            : (ctx.payload.preamble ?? defaultHeartbeatTemplate)
+          const content = serializeHeartbeatContent(ctx.payload.tasks, ctx.payload.preamble ?? existing)
+          yield* fs.writeWithDirs(file, content)
+          return yield* readHeartbeatState(directory)
+        }),
+      ).pipe(
+        Effect.catch((error) =>
+          Effect.fail(
+            new InvalidRequestError({
+              message: String(error),
+              kind: "Query",
+              field: "directory",
+            }),
+          ),
+        ),
+      )
+    })
+
+    const heartbeatInit = Effect.fn("LibraryHttpApi.heartbeatInit")(function* () {
+      return yield* withProjectDirectory((directory) =>
+        Effect.gen(function* () {
+          const fs = yield* AppFileSystem.Service
+          const file = heartbeatPath(directory)
+          if (yield* fs.existsSafe(file)) return yield* readHeartbeatState(directory)
+          yield* fs.writeWithDirs(file, defaultHeartbeatTemplate)
+          return yield* readHeartbeatState(directory)
+        }),
+      ).pipe(
+        Effect.catch((error) =>
+          Effect.fail(
+            new InvalidRequestError({
+              message: String(error),
+              kind: "Query",
+              field: "directory",
+            }),
+          ),
+        ),
+      )
+    })
+
+    return handlers
+      .handle("list", list)
+      .handle("heartbeatState", heartbeatState)
+      .handle("heartbeatSave", heartbeatSave)
+      .handle("heartbeatInit", heartbeatInit)
   }),
 )

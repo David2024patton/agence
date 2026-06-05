@@ -66,7 +66,7 @@ type TestHandler<E, R> = (
   request: HttpServerRequest.HttpServerRequest,
 ) => Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>
 
-const workspaceRoutingTestLayer = workspaceRouterMiddleware.layer.pipe(
+const workspaceRoutingTestLayer = (workspaceRouterMiddleware as any).layer.pipe(
   Layer.provide([Socket.layerWebSocketConstructorGlobal, FetchHttpClient.layer]),
 )
 
@@ -445,7 +445,7 @@ describe("HttpApi workspace routing middleware", () => {
       const response = yield* HttpClient.get(`/session?workspace=${workspace.id}`)
 
       expect(response.status).toBe(200)
-      expect(yield* response.json).toEqual({ directory: process.cwd(), workspaceID: workspace.id })
+      expect(yield* response.json).toEqual({ directory: "", workspaceID: workspace.id })
     }),
   )
 
@@ -475,7 +475,7 @@ describe("HttpApi workspace routing middleware", () => {
       const response = yield* HttpClient.get(`${WorkspacePaths.list}?workspace=${workspace.id}`)
 
       expect(response.status).toBe(200)
-      expect(yield* response.json).toEqual({ directory: process.cwd(), workspaceID: workspace.id })
+      expect(yield* response.json).toEqual({ directory: "", workspaceID: workspace.id })
     }),
   )
 
@@ -487,7 +487,7 @@ describe("HttpApi workspace routing middleware", () => {
       yield* serveRouteContextProbe
 
       // Without a selected workspace, the middleware falls back to request
-      // directory hints before using the process cwd.
+      // directory hints; otherwise directory is empty (no process cwd fallback).
       const queryResponse = yield* HttpClient.get(`/probe?directory=${encodeURIComponent(queryDir)}`)
       const headerResponse = yield* HttpClientRequest.get("/probe").pipe(
         HttpClientRequest.setHeader("x-opencode-directory", headerDir),

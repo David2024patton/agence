@@ -416,6 +416,7 @@ export const dict = {
     "Nie znaleziono elementu głównego. Czy zapomniałeś dodać go do swojego index.html? A może atrybut id został błędnie wpisany?",
   "error.globalSync.connectFailed": "Nie można połączyć się z serwerem. Czy serwer działa pod adresem `{{url}}`?",
   "directory.error.invalidUrl": "Nieprawidłowy katalog w URL.",
+  "directory.error.projectRequired": "Otwórz projekt, zanim użyjesz agenta, skilli, MCP lub person.",
   "error.chain.unknown": "Nieznany błąd",
   "error.chain.causedBy": "Spowodowany przez:",
   "error.chain.apiError": "Błąd API",

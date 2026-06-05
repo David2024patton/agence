@@ -147,15 +147,21 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
     const migrate = (value: unknown) => {
       if (!isRecord(value)) return value
 
+      const sidebarCollapsedDefaultV7 = value.sidebarCollapseDefaultV7 === true
+
       const sidebar = value.sidebar
       const migratedSidebar = (() => {
         if (!isRecord(sidebar)) return sidebar
-        if (typeof sidebar.workspaces !== "boolean") return sidebar
-        return {
-          ...sidebar,
-          workspaces: {},
-          workspacesDefault: sidebar.workspaces,
+        let next = { ...sidebar }
+        if (typeof sidebar.workspaces === "boolean") {
+          next = {
+            ...next,
+            workspaces: {},
+            workspacesDefault: sidebar.workspaces,
+          }
         }
+        if (!sidebarCollapsedDefaultV7) next = { ...next, opened: false }
+        return next
       })()
 
       const review = value.review
@@ -211,6 +217,7 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
 
       if (
         migratedSidebar === sidebar &&
+        sidebarCollapsedDefaultV7 &&
         migratedReview === review &&
         migratedFileTree === fileTree &&
         migratedSessionTabs === sessionTabs
@@ -221,13 +228,14 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
       return {
         ...value,
         sidebar: migratedSidebar,
+        sidebarCollapseDefaultV7: true,
         review: migratedReview,
         fileTree: migratedFileTree,
         sessionTabs: migratedSessionTabs,
       }
     }
 
-    const target = Persist.global("layout", ["layout.v6"])
+    const target = Persist.global("layout", ["layout.v7", "layout.v6"])
     const [store, setStore, _, ready] = persisted(
       { ...target, migrate },
       createStore({
@@ -263,15 +271,6 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
         },
       }),
     )
-
-    onMount(() => {
-      const collapseOnLaunch = () => setStore("sidebar", "opened", false)
-      if (ready()) {
-        collapseOnLaunch()
-        return
-      }
-      void ready.promise?.then(collapseOnLaunch)
-    })
 
     const MAX_SESSION_KEYS = 50
     const PENDING_MESSAGE_TTL_MS = 2 * 60 * 1000

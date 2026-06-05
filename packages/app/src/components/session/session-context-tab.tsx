@@ -291,7 +291,7 @@ export function SessionContextTab() {
               href="/monitor"
               class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-raised-base hover:bg-surface-raised-base-hover rounded-md text-12-medium text-text-weak transition-colors"
             >
-              <Icon name="dashboard" size="small" />
+              <Icon name="status" size="small" />
               Monitor
             </A>
           </div>

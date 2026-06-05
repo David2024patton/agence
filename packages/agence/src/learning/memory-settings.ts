@@ -1,4 +1,4 @@
-import { Effect } from "effect"
+import { Effect, pipe } from "effect"
 import path from "path"
 import { AppFileSystem } from "@agence-ai/core/filesystem"
 import { InstanceState } from "@/effect/instance-state"
@@ -15,6 +15,8 @@ export const MemorySettings = Schema.Struct({
   exportOnMaintenance: Schema.optional(Schema.Boolean),
   globalRecall: Schema.optional(Schema.Boolean),
   minAutoImportance: Schema.optional(Schema.Literals(["low", "medium", "high"] as const)),
+  saveImportedDocuments: Schema.optional(Schema.Boolean),
+  defaultImportLayer: Schema.optional(Schema.Literals(["activity", "context", "experience", "identity", "preference"] as const)),
 })
 
 export type MemorySettings = Schema.Schema.Type<typeof MemorySettings>
@@ -30,6 +32,8 @@ export const defaultMemorySettings: MemorySettings = {
   exportOnMaintenance: false,
   globalRecall: true,
   minAutoImportance: "low",
+  saveImportedDocuments: true,
+  defaultImportLayer: "experience",
 }
 
 function settingsPath(directory: string) {
@@ -41,7 +45,10 @@ export const loadMemorySettings = (directory: string) =>
     const fs = yield* AppFileSystem.Service
     const file = settingsPath(directory)
     if (!(yield* fs.existsSafe(file))) return defaultMemorySettings
-    const raw = yield* fs.readFileString(file).pipe(Effect.catch(() => Effect.succeed("{}")))
+    const raw = yield* pipe(
+      fs.readFileString(file),
+      Effect.catch(() => Effect.succeed("{}"))
+    )
     const parsed = Schema.decodeUnknownOption(MemorySettings)(JSON.parse(raw))
     return parsed._tag === "Some" ? { ...defaultMemorySettings, ...parsed.value } : defaultMemorySettings
   })

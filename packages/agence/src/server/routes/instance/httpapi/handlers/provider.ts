@@ -1,6 +1,7 @@
 import { ProviderAuth } from "@/provider/auth"
 import { Config } from "@/config/config"
 import { ModelsDev } from "@agence-ai/core/models-dev"
+import { InstallationChannel } from "@agence-ai/core/installation/version"
 import { Provider } from "@/provider/provider"
 import { ProviderID } from "@/provider/schema"
 import { mapValues } from "remeda"
@@ -30,7 +31,7 @@ function mapProviderAuthError<A, R>(self: Effect.Effect<A, ProviderAuth.Error, R
   )
 }
 
-export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider", (handlers) =>
+export const providerGlobalHandlers = HttpApiBuilder.group(InstanceHttpApi, "providerGlobal", (handlers) =>
   Effect.gen(function* () {
     const cfg = yield* Config.Service
     const provider = yield* Provider.Service
@@ -50,16 +51,34 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         mapValues(filtered, (item) => Provider.fromModelsDevProvider(item)),
         connected,
       )
+      const isDevMode = ["dev", "main", "local"].includes(InstallationChannel)
+      const connectedKeys = Object.keys(connected)
+      if (isDevMode) {
+        if (providers["agence"] && !connectedKeys.includes("agence")) {
+          connectedKeys.push("agence")
+        }
+        if (providers["opencode"] && !connectedKeys.includes("opencode")) {
+          connectedKeys.push("opencode")
+        }
+      }
       return {
         all: Object.values(providers).map(Provider.toPublicInfo),
         default: Provider.defaultModelIDs(providers),
-        connected: Object.keys(connected),
+        connected: connectedKeys,
       }
     })
 
     const auth = Effect.fn("ProviderHttpApi.auth")(function* () {
       return yield* svc.methods()
     })
+
+    return handlers.handle("list", list).handle("auth", auth)
+  }),
+)
+
+export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider", (handlers) =>
+  Effect.gen(function* () {
+    const svc = yield* ProviderAuth.Service
 
     const authorize = Effect.fn("ProviderHttpApi.authorize")(function* (ctx: {
       params: { providerID: ProviderID }
@@ -103,10 +122,6 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
       return true
     })
 
-    return handlers
-      .handle("list", list)
-      .handle("auth", auth)
-      .handleRaw("authorize", authorizeRaw)
-      .handle("callback", callback)
+    return handlers.handleRaw("authorize", authorizeRaw).handle("callback", callback)
   }),
 )

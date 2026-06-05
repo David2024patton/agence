@@ -6,6 +6,7 @@ import { Snapshot } from "../snapshot"
 import * as Project from "./project"
 import * as Vcs from "./vcs"
 import { Bus } from "../bus"
+import { InstanceRef } from "@/effect/instance-ref"
 import { InstanceState } from "@/effect/instance-state"
 import { FileWatcher } from "@/file/watcher"
 import { ShareNext } from "@/share/share-next"
@@ -46,9 +47,19 @@ export const layer = Layer.effect(
       // its per-instance state scope. We just await materialization here.
       yield* Effect.forEach(
         [reference, lsp, shareNext, format, file, fileWatcher, vcs, snapshot, project],
-        (s) => s.init().pipe(Effect.catchCause((cause) => Effect.logWarning("init failed", { cause }))),
+        (s) =>
+          s.init().pipe(
+            Effect.provideService(InstanceRef, ctx),
+            Effect.catchCause((cause) => Effect.logWarning("init failed", { cause })),
+          ),
         { concurrency: "unbounded", discard: true },
       ).pipe(Effect.withSpan("InstanceBootstrap.init"))
+
+      const { ensureProjectWiki } = yield* Effect.promise(() => import("../learning/wiki-seed"))
+      yield* ensureProjectWiki(ctx.directory).pipe(Effect.catch(() => Effect.void))
+
+      const { ensureHubBundle } = yield* Effect.promise(() => import("./hub-bootstrap"))
+      yield* ensureHubBundle(ctx.directory).pipe(Effect.catch(() => Effect.void))
 
       const { startHeartbeatLoop } = yield* Effect.promise(() => import("../background/heartbeat"))
       yield* startHeartbeatLoop().pipe(
@@ -59,7 +70,7 @@ export const layer = Layer.effect(
       )
     }).pipe(Effect.withSpan("InstanceBootstrap"))
 
-    return Service.of({ run })
+    return Service.of({ run: run as any })
   }),
 )
 

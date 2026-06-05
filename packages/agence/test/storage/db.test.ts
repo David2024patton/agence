@@ -13,7 +13,9 @@ describe("Database.getChannelPath", () => {
       const flags = yield* RuntimeFlags.Service
       const expected = ["latest", "beta", "prod"].includes(InstallationChannel)
         ? path.join(Global.Path.data, "agence.db")
-        : path.join(Global.Path.data, `opencode-${InstallationChannel.replace(/[^a-zA-Z0-9._-]/g, "-")}.db`)
+        : ["dev", "main", "local"].includes(InstallationChannel)
+          ? path.join(Global.Path.data, "agence-local.db")
+          : path.join(Global.Path.data, `agence-${InstallationChannel.replace(/[^a-zA-Z0-9._-]/g, "-")}.db`)
 
       expect(Database.getChannelPath(flags)).toBe(expected)
     }).pipe(Effect.provide(RuntimeFlags.layer())),

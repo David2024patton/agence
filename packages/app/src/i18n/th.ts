@@ -461,6 +461,7 @@ export const dict = {
 
   "error.globalSync.connectFailed": "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ มีเซิร์ฟเวอร์ทำงานอยู่ที่ `{{url}}` หรือไม่?",
   "directory.error.invalidUrl": "ไดเรกทอรีใน URL ไม่ถูกต้อง",
+  "directory.error.projectRequired": "เปิดโปรเจกต์ก่อนใช้เอเจนต์ สกิล MCP หรือ persona",
 
   "error.chain.unknown": "ข้อผิดพลาดที่ไม่รู้จัก",
   "error.chain.causedBy": "สาเหตุ:",

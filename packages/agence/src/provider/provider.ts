@@ -13,7 +13,7 @@ import { type LanguageModelV3 } from "@ai-sdk/provider"
 import * as ModelsDev from "@agence-ai/core/models-dev"
 import { Auth } from "../auth"
 import { Env } from "../env"
-import { InstallationVersion } from "@agence-ai/core/installation/version"
+import { InstallationVersion, InstallationChannel } from "@agence-ai/core/installation/version"
 import { iife } from "@/util/iife"
 import { Global } from "@agence-ai/core/global"
 import path from "path"
@@ -243,29 +243,35 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
           },
         },
       }),
-    agence: Effect.fnUntraced(function* (input: Info) {
-      const env = yield* dep.env()
-      const hasKey = iife(() => {
-        if (input.env.some((item) => env[item])) return true
-        return false
-      })
-      const ok =
-        hasKey ||
-        Boolean(yield* dep.auth(input.id)) ||
-        Boolean((yield* dep.config()).provider?.["agence"]?.options?.apiKey)
+    ...Object.fromEntries(
+      (["agence", "opencode"] as const).map((id) => [
+        id,
+        Effect.fnUntraced(function* (input: Info) {
+          const env = yield* dep.env()
+          const cfg = yield* dep.config()
+          const hasKey = input.env.some((item) => env[item])
+          const ok =
+            hasKey ||
+            Boolean(yield* dep.auth(input.id)) ||
+            Boolean(cfg.provider?.agence?.options?.apiKey) ||
+            Boolean(cfg.provider?.opencode?.options?.apiKey)
 
-      if (!ok) {
-        for (const [key, value] of Object.entries(input.models)) {
-          if (value.cost.input === 0) continue
-          delete input.models[key]
-        }
-      }
+          // In dev/local mode, always show all models so developer can test and see models.
+          const isDevMode = ["dev", "main", "local"].includes(InstallationChannel)
+          if (!ok && !isDevMode) {
+            for (const [key, value] of Object.entries(input.models)) {
+              if (value.cost.input === 0) continue
+              delete input.models[key]
+            }
+          }
 
-      return {
-        autoload: Object.keys(input.models).length > 0,
-        options: ok ? {} : { apiKey: "public" },
-      }
-    }),
+          return {
+            autoload: Object.keys(input.models).length > 0,
+            options: ok || isDevMode ? {} : { apiKey: "public" },
+          }
+        }),
+      ]),
+    ),
     openai: () =>
       Effect.succeed({
         autoload: false,
@@ -1502,7 +1508,10 @@ export const layer = Layer.effect(
         // load apikeys
         const auths = yield* auth.all().pipe(Effect.orDie)
         for (const [id, provider] of Object.entries(auths)) {
-          const providerID = ProviderID.make(id)
+          let providerID = ProviderID.make(id)
+          if (providerID === ProviderID.agence && !database[providerID] && database[ProviderID.opencode]) {
+            providerID = ProviderID.opencode
+          }
           if (disabled.has(providerID)) continue
           if (provider.type === "api") {
             mergeProvider(providerID, {
@@ -1892,7 +1901,7 @@ export const layer = Layer.effect(
         "gemini-2.5-flash",
         "gpt-5-nano",
       ]
-      if (providerID.startsWith("agence")) {
+      if (providerID.startsWith("agence") || providerID === ProviderID.opencode) {
         priority = ["gpt-5-nano"]
       }
       if (providerID.startsWith("github-copilot")) {

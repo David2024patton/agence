@@ -415,6 +415,7 @@ export const dict = {
     "ルート要素が見つかりません。index.htmlに追加するのを忘れていませんか？またはid属性のスペルが間違っていませんか？",
   "error.globalSync.connectFailed": "サーバーに接続できませんでした。`{{url}}`でサーバーが実行されていますか？",
   "directory.error.invalidUrl": "URL内のディレクトリが無効です。",
+  "directory.error.projectRequired": "エージェント、スキル、MCP、ペルソナを使う前にプロジェクトを開いてください。",
   "error.chain.unknown": "不明なエラー",
   "error.chain.causedBy": "原因:",
   "error.chain.apiError": "APIエラー",

@@ -464,6 +464,7 @@ export const dict = {
 
   "error.globalSync.connectFailed": "No se pudo conectar al servidor. ¿Hay un servidor ejecutándose en `{{url}}`?",
   "directory.error.invalidUrl": "URL de directorio inválida.",
+  "directory.error.projectRequired": "Abre un proyecto antes de usar el agente, skills, MCPs o personas.",
 
   "error.chain.unknown": "Error desconocido",
   "error.chain.causedBy": "Causado por:",

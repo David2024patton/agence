@@ -467,6 +467,7 @@ export const dict = {
 
   "error.globalSync.connectFailed": "Sunucuya bağlanılamadı. `{{url}}` adresinde çalışan bir sunucu var mı?",
   "directory.error.invalidUrl": "URL'de geçersiz dizin.",
+  "directory.error.projectRequired": "Ajan, skill, MCP veya persona kullanmadan önce bir proje açın.",
 
   "error.chain.unknown": "Bilinmeyen hata",
   "error.chain.causedBy": "Nedeni:",

@@ -423,6 +423,7 @@ export const dict = {
     "Wurzelelement nicht gefunden. Haben Sie vergessen, es in Ihre index.html aufzunehmen? Oder wurde das id-Attribut falsch geschrieben?",
   "error.globalSync.connectFailed": "Verbindung zum Server fehlgeschlagen. Läuft ein Server unter `{{url}}`?",
   "directory.error.invalidUrl": "Ungültiges Verzeichnis in der URL.",
+  "directory.error.projectRequired": "Öffne ein Projekt, bevor du Agent, Skills, MCPs oder Personas verwendest.",
   "error.chain.unknown": "Unbekannter Fehler",
   "error.chain.causedBy": "Verursacht durch:",
   "error.chain.apiError": "API-Fehler",

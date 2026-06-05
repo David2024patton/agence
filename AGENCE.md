@@ -24,15 +24,18 @@ Upstream: `github.com/anomalyco/agence` (original agence)
 ### Package layout
 ```
 packages/
-  opencode/       — CLI + server + tools + agent loop
-  app/            — SolidJS web UI
-  desktop/        — Electron wrapper
+  agence/         — CLI + server + tools + agent loop + learning/
+  app/            — SolidJS web UI (desktop + dev)
+  desktop/        — Electron wrapper + sidecar
   core/           — Shared: filesystem, global paths, models-dev
   ui/             — Shared UI components (SolidJS)
   sdk/js/         — TypeScript SDK for REST API
   plugin/         — Plugin type definitions
   llm/            — LLM event types
+  web/            — Marketing/docs site (mostly upstream OpenCode MDX)
 ```
+
+**Agence-specific docs:** `docs/` (start at `docs/agence-vs-opencode.md`). **Architecture map:** `PROJECT-MAP.md`.
 
 ### Key architectural patterns
 - **Effect Services:** Every subsystem is an Effect `Context.Service` with Tag, Interface, layer, and defaultLayer
@@ -65,6 +68,21 @@ packages/
 - `browser_analyze` — Framework detection (React, Vue, Next.js, etc.)
 - `browser_screenshot` — Screenshot current browser page
 - `browser_close` — Clean browser session shutdown
+
+### Learning subsystem (Memory + wiki + heartbeat)
+
+Not in stock OpenCode — see `docs/learning/README.md`.
+
+| Piece | Location |
+| --- | --- |
+| SQLite memory + auto-capture | `src/learning/memory-intelligence.ts` |
+| Per-project toggles | `.agence/memory-settings.json` |
+| Wiki articles | `.agence/knowledge/wiki/*.md` |
+| Scheduled tasks | `HEARTBEAT.md`, `.agence/heartbeat.json` |
+| Desktop settings | Settings → Learning (Memory / Knowledge / Heartbeat) |
+| Library UI | `/library`, sidebar Knowledge (archive icon) |
+
+HTTP: `/memory/*`, `/library/*`, `/knowledge/*`, `/heartbeat/*` (see `docs/learning/`).
 
 ### Self-Learning Task System (7)
 - `todowrite` — Create/update tasks with subtasks, tags, dependencies
@@ -170,22 +188,23 @@ Env var override: `AGENCE_CHANNEL=dev|beta|prod` (was `AGENCE_CHANNEL`)
 ## Running
 
 ```powershell
-cd C:\Users\David\AI\smart-hub\opencode01
+cd C:\Users\David\AI\agence
 
-# Build node server (required before desktop dev)
-bun run --cwd packages/agence script/build-node.ts
-
-# Desktop dev mode
+# Desktop dev (rebuilds sidecar via predev)
 bun dev:desktop
 
-# CLI dev mode (terminal TUI)
+# CLI / TUI dev
 bun run --cwd packages/agence dev
 
-# Serve mode (REST API)
-.\packages\agence\dist\opencode-windows-x64\bin\agence.exe serve --port 9123
+# Build node bundle only (sidecar / CLI)
+bun run --cwd packages/agence script/build-node.ts
 
-# Typecheck
+# Serve mode (REST API)
+bun run --cwd packages/agence serve --port 9123
+
+# Typecheck (always from package dir, not repo root)
 bun run --cwd packages/agence typecheck
+bun run --cwd packages/app typecheck
 ```
 
 ---

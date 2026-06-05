@@ -1,6 +1,6 @@
 import { cmd } from "./cmd"
 import { effectCmd } from "../effect-cmd"
-import { Cause } from "effect"
+import { Cause, Effect } from "effect"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js"
@@ -18,7 +18,7 @@ import { Global } from "@agence-ai/core/global"
 import { modify, applyEdits } from "jsonc-parser"
 import { Filesystem } from "@/util/filesystem"
 import { Bus } from "../../bus"
-import { Effect } from "effect"
+import { McpServeCommand } from "./mcp-serve"
 
 function getAuthStatusIcon(status: MCP.AuthStatus): string {
   switch (status) {
@@ -101,6 +101,7 @@ export const McpCommand = cmd({
       .command(McpAuthCommand)
       .command(McpLogoutCommand)
       .command(McpDebugCommand)
+      .command(McpServeCommand)
       .demandCommand(),
   async handler() {},
 })

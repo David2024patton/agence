@@ -22,3 +22,12 @@ export function pasteMode(text: string) {
   if (text.includes("\n") || text.includes("\r")) return "manual"
   return "native"
 }
+
+export function pasteFilename() {
+  const stamp = new Date().toISOString().slice(0, 19).replace("T", "_").replace(/:/g, "")
+  return `paste-${stamp}.txt`
+}
+
+export function createPasteTextFile(text: string) {
+  return new File([text], pasteFilename(), { type: "text/plain" })
+}

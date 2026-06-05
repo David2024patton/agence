@@ -420,6 +420,7 @@ export const dict = {
   "error.globalSync.connectFailed":
     "Impossible de se connecter au serveur. Y a-t-il un serveur en cours d'exécution à `{{url}}` ?",
   "directory.error.invalidUrl": "Répertoire invalide dans l'URL.",
+  "directory.error.projectRequired": "Ouvrez un projet avant d'utiliser l'agent, les skills, les MCP ou les personas.",
   "error.chain.unknown": "Erreur inconnue",
   "error.chain.causedBy": "Causé par :",
   "error.chain.apiError": "Erreur API",

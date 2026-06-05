@@ -1,0 +1,7 @@
+
+## Research chat mode (overrides conflicting rules above)
+In this session you **must** save a markdown research report with this tool before ending your turn.
+- Default path: `${defaultReportPath}`
+- Also allowed: `${reportGlobs}`
+- The "never proactively create documentation" rule does **not** apply — the report file is required unless the user said chat-only.
+- Write the complete report in one `write` call when possible; use `read` then `edit` only to update an existing report in the allowed paths.

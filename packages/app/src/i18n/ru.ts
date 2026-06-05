@@ -463,6 +463,7 @@ export const dict = {
 
   "error.globalSync.connectFailed": "Не удалось подключиться к серверу. Запущен ли сервер по адресу `{{url}}`?",
   "directory.error.invalidUrl": "Недопустимая директория в URL.",
+  "directory.error.projectRequired": "Откройте проект, прежде чем использовать агента, skills, MCP или personas.",
 
   "error.chain.unknown": "Неизвестная ошибка",
   "error.chain.causedBy": "Причина:",

@@ -38,13 +38,12 @@ export function MemoryPanel() {
   const server = useServer()
   const platform = usePlatform()
   const params = useParams()
-  const directory = createMemo(() => decode64(params.dir) ?? projects()[0]?.worktree)
   const dialog = useDialog()
   const navigate = useNavigate()
+  const projects = createMemo(() => layout.projects.list())
+  const directory = createMemo(() => decode64(params.dir) ?? "")
   const [search, setSearch] = createSignal("")
   const [tab, setTab] = createSignal<PanelTab>("conversations")
-
-  const projects = createMemo(() => layout.projects.list())
   const projectDirs = createMemo(() => projects().flatMap((p) => [p.worktree, ...(p.sandboxes ?? [])]))
 
   const sessions = createMemo(() => {
@@ -97,7 +96,14 @@ export function MemoryPanel() {
 
   const dirName = (d: string) => d.split(/[/\\]/).pop() || d
 
-  const openMemorySettings = () => dialog.show(() => <DialogSettings initialTab="memory" />)
+  const openMemorySettings = () =>
+    dialog.show(() => (
+      <DialogSettings
+        initialTab={tab() === "knowledge" ? "knowledge" : "memory"}
+        memorySubTab={tab() === "knowledge" ? "knowledge" : "memories"}
+        projectDirectory={directory()}
+      />
+    ))
 
   return (
     <div class="flex flex-col h-full">

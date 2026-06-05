@@ -145,8 +145,7 @@ function upsertWiki(input: {
     const fs = fsOption.value
 
     const wikiDir = path.join(input.instance.directory, ".agence", "knowledge", "wiki")
-    const hasWiki = yield* fs.existsSafe(wikiDir)
-    if (!hasWiki) return
+    if (!(yield* fs.existsSafe(wikiDir))) yield* fs.ensureDir(wikiDir)
 
     const slug = slugify(input.subject) || "untitled"
     const pagePath = path.join(wikiDir, `${slug}.md`)

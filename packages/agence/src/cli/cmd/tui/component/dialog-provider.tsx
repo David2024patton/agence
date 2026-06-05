@@ -18,6 +18,7 @@ import { useBindings } from "../keymap"
 
 const PROVIDER_PRIORITY: Record<string, number> = {
   agence: 0,
+  opencode: 0,
   "opencode-go": 1,
   openai: 2,
   "github-copilot": 3,
@@ -56,6 +57,7 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
         providerID: provider.id,
         description: {
           agence: "(Recommended)",
+          opencode: "(Recommended)",
           anthropic: "(API key)",
           openai: "(ChatGPT Plus/Pro or API key)",
           "opencode-go": "Low cost subscription for everyone",
@@ -358,22 +360,31 @@ function ApiMethod(props: ApiMethodProps) {
           agence: (
             <box gap={1}>
               <text fg={theme.textMuted}>
-                Agence Zen gives you access to all the best coding models at the cheapest prices with a single API
-                key.
+                OpenCode Zen gives you access to all the best coding models at the cheapest prices with a single API key.
               </text>
               <text fg={theme.text}>
-                Go to <span style={{ fg: theme.primary }}>https://github.com/David2024patton/agence/zen</span> to get a key
+                Go to <span style={{ fg: theme.primary }}>https://opencode.ai/zen</span> to get a key
+              </text>
+            </box>
+          ),
+          opencode: (
+            <box gap={1}>
+              <text fg={theme.textMuted}>
+                OpenCode Zen gives you access to all the best coding models at the cheapest prices with a single API key.
+              </text>
+              <text fg={theme.text}>
+                Go to <span style={{ fg: theme.primary }}>https://opencode.ai/zen</span> to get a key
               </text>
             </box>
           ),
           "opencode-go": (
             <box gap={1}>
               <text fg={theme.textMuted}>
-                Agence Go is a $10 per month subscription that provides reliable access to popular open coding models
+                OpenCode Go is a $10 per month subscription that provides reliable access to popular open coding models
                 with generous usage limits.
               </text>
               <text fg={theme.text}>
-                Go to <span style={{ fg: theme.primary }}>https://github.com/David2024patton/agence/zen</span> and enable Agence Go
+                Go to <span style={{ fg: theme.primary }}>https://opencode.ai/zen</span> and enable OpenCode Go
               </text>
             </box>
           ),

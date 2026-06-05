@@ -415,6 +415,7 @@ export const dict = {
     "لم يتم العثور على العنصر الجذري. هل نسيت إضافته إلى index.html؟ أو ربما تمت كتابة سمة id بشكل خاطئ؟",
   "error.globalSync.connectFailed": "تعذر الاتصال بالخادم. هل هناك خادم يعمل في `{{url}}`؟",
   "directory.error.invalidUrl": "دليل غير صالح في عنوان URL.",
+  "directory.error.projectRequired": "افتح مشروعًا قبل استخدام الوكيل أو المهارات أو MCP أو الشخصيات.",
   "error.chain.unknown": "خطأ غير معروف",
   "error.chain.causedBy": "بسبب:",
   "error.chain.apiError": "خطأ API",

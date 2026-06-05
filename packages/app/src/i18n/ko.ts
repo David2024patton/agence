@@ -414,6 +414,7 @@ export const dict = {
     "루트 요소를 찾을 수 없습니다. index.html에 추가하는 것을 잊으셨나요? 또는 id 속성의 철자가 틀렸을 수 있습니다.",
   "error.globalSync.connectFailed": "서버에 연결할 수 없습니다. `{{url}}`에서 서버가 실행 중인가요?",
   "directory.error.invalidUrl": "URL에 유효하지 않은 디렉터리가 있습니다.",
+  "directory.error.projectRequired": "에이전트, 스킬, MCP, 페르소나를 사용하려면 먼저 프로젝트를 여세요.",
   "error.chain.unknown": "알 수 없는 오류",
   "error.chain.causedBy": "원인:",
   "error.chain.apiError": "API 오류",

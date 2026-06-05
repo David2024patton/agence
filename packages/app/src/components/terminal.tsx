@@ -16,6 +16,7 @@ import type { LocalPTY } from "@/context/terminal"
 import { disposeIfDisposable, getHoveredLinkText, setOptionIfSupported } from "@/utils/runtime-adapters"
 import { terminalWriter } from "@/utils/terminal-writer"
 import { terminalWebSocketURL } from "@/utils/terminal-websocket-url"
+import { isPtyNotFoundError } from "@/utils/pty-error"
 
 const TOGGLE_TERMINAL_ID = "terminal.toggle"
 const DEFAULT_TOGGLE_TERMINAL_KEYBIND = "ctrl+`"
@@ -203,6 +204,7 @@ export const Terminal = (props: TerminalProps) => {
   let drop: VoidFunction | undefined
   let reconn: ReturnType<typeof setTimeout> | undefined
   let tries = 0
+  let reportStale: ((err: unknown) => void) | undefined
 
   const cleanup = () => {
     if (!cleanups.length) return
@@ -223,6 +225,10 @@ export const Terminal = (props: TerminalProps) => {
         size: { cols, rows },
       })
       .catch((err) => {
+        if (isPtyNotFoundError(err)) {
+          reportStale?.(err)
+          return
+        }
         debugTerminal("failed to sync terminal size", err)
       })
   }
@@ -469,6 +475,7 @@ export const Terminal = (props: TerminalProps) => {
         once.value = true
         local.onConnectError?.(err)
       }
+      reportStale = fail
 
       const gone = () =>
         client.pty
@@ -502,6 +509,10 @@ export const Terminal = (props: TerminalProps) => {
 
       const retry = (err: unknown) => {
         if (disposed) return
+        if (isPtyNotFoundError(err)) {
+          fail(err)
+          return
+        }
         if (reconn !== undefined) return
 
         const ms = Math.min(250 * 2 ** Math.min(tries, 4), 4_000)
@@ -629,6 +640,7 @@ export const Terminal = (props: TerminalProps) => {
 
   onCleanup(() => {
     disposed = true
+    reportStale = undefined
     if (fitFrame !== undefined) cancelAnimationFrame(fitFrame)
     if (sizeTimer !== undefined) clearTimeout(sizeTimer)
     if (reconn !== undefined) clearTimeout(reconn)

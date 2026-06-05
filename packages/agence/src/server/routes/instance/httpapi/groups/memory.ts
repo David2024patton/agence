@@ -1,6 +1,8 @@
 import { Schema } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
-import { WorkspaceRoutingQuery, WorkspaceRoutingQueryFields } from "../middleware/workspace-routing"
+import { Authorization } from "../middleware/authorization"
+import { InstanceContextMiddleware } from "../middleware/instance-context"
+import { WorkspaceRoutingMiddleware, WorkspaceRoutingQuery, WorkspaceRoutingQueryFields } from "../middleware/workspace-routing"
 import { MemorySettings } from "@/learning/memory-settings"
 import { QueryBoolean } from "./query"
 
@@ -45,6 +47,20 @@ const MaintenanceResult = Schema.Struct({
 
 const DeletePayload = Schema.Struct({
   ids: Schema.Array(Schema.String),
+})
+
+const IngestPayload = Schema.Struct({
+  filename: Schema.String,
+  contentBase64: Schema.String,
+  layer: Schema.optional(Schema.String),
+  tags: Schema.optional(Schema.Array(Schema.String)),
+  scope: Schema.optional(Schema.Literals(["project", "global"] as const)),
+})
+
+const IngestResult = Schema.Struct({
+  chunks: Schema.Number,
+  filename: Schema.String,
+  savedPath: Schema.optional(Schema.String),
 })
 
 const MemoryListQuery = Schema.Struct({
@@ -126,5 +142,20 @@ export const MemoryApi = HttpApi.make("memory").add(
           summary: "Delete learnings by id",
         }),
       ),
-    ),
+    )
+    .add(
+      HttpApiEndpoint.post("ingest", "/memory/ingest", {
+        query: WorkspaceRoutingQuery,
+        payload: IngestPayload,
+        success: IngestResult,
+      }).annotateMerge(
+        OpenApi.annotations({
+          identifier: "memory.ingest",
+          summary: "Import a document into project or global memory",
+        }),
+      ),
+    )
+    .middleware(InstanceContextMiddleware)
+    .middleware(WorkspaceRoutingMiddleware)
+    .middleware(Authorization),
 )

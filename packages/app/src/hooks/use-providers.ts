@@ -5,6 +5,7 @@ import { Iterable, pipe } from "effect"
 import { createMemo } from "solid-js"
 
 export const popularProviders = [
+  "opencode",
   "agence",
   "opencode-go",
   "anthropic",
@@ -53,7 +54,8 @@ export function useProviders() {
           providers().all,
           ([id]) =>
             connected.has(id) &&
-            (id !== "agence" || Object.values(providers().all.get(id)?.models ?? {}).some((m) => m.cost?.input)),
+            ((id !== "agence" && id !== "opencode") ||
+              Object.values(providers().all.get(id)?.models ?? {}).some((m) => m.cost?.input)),
         ),
       ]
     },

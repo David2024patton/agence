@@ -13,7 +13,9 @@ import type { TaskPromptOps } from "@/tool/task"
 import { type Tool as AITool, tool, jsonSchema, type ToolExecutionOptions, asSchema } from "ai"
 import { Effect } from "effect"
 import { MessageV2 } from "./message-v2"
+import { ChatMode } from "./chat-mode"
 import * as Session from "./session"
+import { InstanceState } from "@/effect/instance-state"
 import { SessionProcessor } from "./processor"
 import { PartID } from "./schema"
 import * as Log from "@agence-ai/core/util/log"
@@ -38,6 +40,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const registry = yield* ToolRegistry.Service
   const mcp = yield* MCP.Service
   const truncate = yield* Truncate.Service
+  const ctx = yield* InstanceState.context
+  const lastUser = input.messages.findLast((msg) => msg.info.role === "user")
+  const chatMode = lastUser?.info.role === "user" ? lastUser.info.chatMode : undefined
 
   const context = (args: Record<string, unknown>, options: ToolExecutionOptions): Tool.Context => ({
     sessionID: input.session.id,
@@ -78,8 +83,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     agent: input.agent,
   })) {
     const schema = ProviderTransform.schema(input.model, ToolJsonSchema.fromTool(item))
+    const description = ChatMode.toolDescription(item.id, chatMode, { session: input.session, ctx }, item.description)
     tools[item.id] = tool({
-      description: item.description,
+      description,
       inputSchema: jsonSchema(schema),
       execute(args, options) {
         return run.promise(

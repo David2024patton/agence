@@ -59,6 +59,9 @@ import * as Database from "@/storage/db"
 import { SessionTable } from "./session.sql"
 import { referencePromptMetadata, referenceTextPart } from "./prompt/reference"
 import { SessionReminders } from "./reminders"
+import { SessionGoal } from "./goal"
+import { Default as CommandNames } from "../command"
+import { ChatMode } from "./chat-mode"
 import { SessionTools } from "./tools"
 import { LLMEvent } from "@agence-ai/llm"
 
@@ -128,7 +131,7 @@ export const layer = Layer.effect(
         cancel: (sessionID: SessionID) => cancel(sessionID),
         resolvePromptParts: (template: string) => resolvePromptParts(template),
         prompt: (input: PromptInput) => prompt(input).pipe(Effect.catch(Effect.die)),
-        loop: (input: LoopInput) => loop(input),
+        loop: (input: LoopInput) => loop(input) as any,
       } satisfies TaskPromptOps
     })
 
@@ -719,6 +722,7 @@ export const layer = Layer.effect(
         sessionID: input.sessionID,
         time: { created: Date.now() },
         tools: input.tools,
+        chatMode: input.chatMode,
         agent: ag.name,
         model: {
           providerID: model.providerID,
@@ -1088,6 +1092,20 @@ export const layer = Layer.effect(
           : Effect.succeed(part),
       )
 
+      const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
+      const ctx = yield* InstanceState.context
+      const modeReminder = ChatMode.syntheticReminder(input.chatMode, { session, ctx })
+      if (modeReminder) {
+        parts.unshift({
+          id: PartID.ascending(),
+          messageID: info.id,
+          sessionID: input.sessionID,
+          type: "text",
+          text: modeReminder,
+          synthetic: true,
+        })
+      }
+
       const parsed = decodeMessageInfo(info, { errors: "all", propertyOrder: "original" })
       if (Exit.isFailure(parsed)) {
         log.error("invalid user message before save", {
@@ -1207,7 +1225,7 @@ export const layer = Layer.effect(
       return { info, parts }
     }, Effect.scoped)
 
-    const prompt: (input: PromptInput) => Effect.Effect<MessageV2.WithParts, Image.Error> = Effect.fn(
+    const prompt = Effect.fn(
       "SessionPrompt.prompt",
     )(function* (input: PromptInput) {
       const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
@@ -1215,7 +1233,8 @@ export const layer = Layer.effect(
       const message = yield* createUserMessage(input)
       yield* sessions.touch(input.sessionID)
 
-      const permissions: Permission.Rule[] = []
+      const ctx = yield* InstanceState.context
+      const permissions: Permission.Rule[] = [...ChatMode.permissions(input.chatMode, { session, ctx })]
       for (const [t, enabled] of Object.entries(input.tools ?? {})) {
         permissions.push({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" })
       }
@@ -1235,7 +1254,7 @@ export const layer = Layer.effect(
 
       if (input.noReply === true) return message
       return yield* loop({ sessionID: input.sessionID })
-    })
+    }) as unknown as (input: PromptInput) => Effect.Effect<MessageV2.WithParts, Image.Error, never>
 
     const lastAssistant = Effect.fnUntraced(function* (sessionID: SessionID) {
       const match = yield* sessions.findMessage(sessionID, (m) => m.info.role !== "user").pipe(Effect.orDie)
@@ -1245,19 +1264,20 @@ export const layer = Layer.effect(
       throw new Error("Impossible")
     })
 
-    const runLoop = (sessionID: SessionID): Effect.Effect<MessageV2.WithParts> =>
+    const runLoop = (sessionID: SessionID): Effect.Effect<MessageV2.WithParts, any, any> =>
       Effect.gen(function* () {
         const ctx = yield* InstanceState.context
         const slog = elog.with({ sessionID })
         let structured: unknown
         let step = 0
         const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
+        let msgs: MessageV2.WithParts[] = []
 
         while (true) {
           yield* status.set(sessionID, { type: "busy" })
           yield* slog.info("loop", { step })
 
-          let msgs = yield* MessageV2.filterCompactedEffect(sessionID)
+          msgs = yield* MessageV2.filterCompactedEffect(sessionID)
 
           const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks } = MessageV2.latest(msgs)
 
@@ -1486,18 +1506,52 @@ export const layer = Layer.effect(
         }
 
         yield* compaction.prune({ sessionID }).pipe(Effect.ignore, Effect.forkIn(scope))
-        const { reflectAndLearn } = yield* Effect.promise(() => import("../learning/reflect"))
-        yield* reflectAndLearn(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
-        const { autoCaptureFromSession } = yield* Effect.promise(() => import("../learning/memory-intelligence"))
-        yield* autoCaptureFromSession(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
-        return yield* lastAssistant(sessionID)
+        
+        const lastUserMsg = msgs.findLast((m) => m.info.role === "user")
+        const isBuildMode = lastUserMsg?.info.role === "user" && lastUserMsg.info.chatMode === "build"
+
+        if (isBuildMode) {
+          yield* Effect.logInfo(`[Build Mode] Triggering automatic Build-time reflection and skill optimization for session ${sessionID}`)
+          const { reflectAndLearn } = yield* Effect.promise(() => import("../learning/reflect"))
+          yield* reflectAndLearn(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
+          const { autoCaptureFromSession } = yield* Effect.promise(() => import("../learning/memory-intelligence"))
+          yield* autoCaptureFromSession(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
+          const { optimizeSkillsFromSession } = yield* Effect.promise(() => import("../learning/skill-opt"))
+          yield* optimizeSkillsFromSession(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
+        } else {
+          // Keep lightweight memory capture in non-build modes
+          const { autoCaptureFromSession } = yield* Effect.promise(() => import("../learning/memory-intelligence"))
+          yield* autoCaptureFromSession(sessionID).pipe(Effect.ignore, Effect.forkIn(scope))
+        }
+        const assistant = yield* lastAssistant(sessionID)
+        msgs = yield* MessageV2.filterCompactedEffect(sessionID)
+        if (
+          yield* SessionGoal.shouldAutoContinue({
+            directory: ctx.directory,
+            worktree: ctx.worktree,
+            messages: msgs,
+            assistant,
+          })
+        ) {
+          if (assistant.info.role === "assistant") {
+            yield* SessionGoal.injectContinuation({
+              directory: ctx.directory,
+              worktree: ctx.worktree,
+              sessionID,
+              session,
+              assistant: assistant.info,
+            })
+            return yield* runLoop(sessionID)
+          }
+        }
+        return assistant
       }
     )
 
-    const loop: (input: LoopInput) => Effect.Effect<MessageV2.WithParts> = Effect.fn("SessionPrompt.loop")(function* (
+    const loop: (input: LoopInput) => Effect.Effect<MessageV2.WithParts, any, any> = Effect.fn("SessionPrompt.loop")(function* (
       input: LoopInput,
     ) {
-      return yield* state.ensureRunning(input.sessionID, lastAssistant(input.sessionID), runLoop(input.sessionID))
+      return yield* state.ensureRunning(input.sessionID, lastAssistant(input.sessionID), runLoop(input.sessionID) as any)
     })
 
     const shell: (input: ShellInput) => Effect.Effect<MessageV2.WithParts, Session.BusyError> = Effect.fn(
@@ -1509,6 +1563,76 @@ export const layer = Layer.effect(
 
     const command = Effect.fn("SessionPrompt.command")(function* (input: CommandInput) {
       yield* elog.info("command", { sessionID: input.sessionID, command: input.command, agent: input.agent })
+
+      if (input.command === CommandNames.GOAL) {
+        const ctx = yield* InstanceState.context
+        const action = SessionGoal.parseGoalArgs(input.arguments)
+        const result = yield* SessionGoal.applyAction({
+          directory: ctx.directory,
+          worktree: ctx.worktree,
+          action,
+        })
+        const userText = `/goal${input.arguments ? ` ${input.arguments}` : ""}`.trim()
+        if (result.startWork) {
+          return yield* prompt({
+            sessionID: input.sessionID,
+            messageID: input.messageID,
+            agent: input.agent,
+            model: input.model ? Provider.parseModel(input.model) : undefined,
+            variant: input.variant,
+            parts: [
+              { type: "text", text: userText },
+              {
+                type: "text",
+                text: `${result.message}\n\nBegin working toward the active Goal. Verify progress with concrete evidence each turn.`,
+                synthetic: true,
+              },
+              ...(input.parts ?? []),
+            ],
+          })
+        }
+
+        const message = yield* createUserMessage({
+          sessionID: input.sessionID,
+          messageID: input.messageID,
+          agent: input.agent,
+          model: input.model ? Provider.parseModel(input.model) : undefined,
+          variant: input.variant,
+          parts: [{ type: "text", text: userText }, ...(input.parts ?? [])],
+        })
+        const assistantMsg: MessageV2.Assistant = {
+          id: MessageID.ascending(),
+          role: "assistant",
+          sessionID: input.sessionID,
+          parentID: message.info.id,
+          agent: message.info.agent,
+          mode: message.info.agent,
+          modelID: message.info.model.modelID,
+          providerID: message.info.model.providerID,
+          variant: message.info.model.variant,
+          path: { cwd: ctx.directory, root: ctx.worktree },
+          cost: 0,
+          tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+          time: { created: Date.now(), completed: Date.now() },
+          finish: "stop",
+        }
+        yield* sessions.updateMessage(assistantMsg)
+        yield* sessions.updatePart({
+          id: PartID.ascending(),
+          messageID: assistantMsg.id,
+          sessionID: input.sessionID,
+          type: "text",
+          text: result.message,
+        })
+        yield* bus.publish(Command.Event.Executed, {
+          name: input.command,
+          sessionID: input.sessionID,
+          arguments: input.arguments,
+          messageID: message.info.id,
+        })
+        return message
+      }
+
       const cmd = yield* commands.get(input.command)
       if (!cmd) {
         const available = (yield* commands.list()).map((c) => c.name)
@@ -1626,10 +1750,10 @@ export const layer = Layer.effect(
 
     return Service.of({
       cancel,
-      prompt,
-      loop,
-      shell,
-      command,
+      prompt: prompt as any,
+      loop: loop as any,
+      shell: shell as any,
+      command: command as any,
       resolvePromptParts,
     })
   }),
@@ -1689,6 +1813,7 @@ export const PromptInput = Schema.Struct({
   format: Schema.optional(MessageV2.Format),
   system: Schema.optional(Schema.String),
   variant: Schema.optional(Schema.String),
+  chatMode: Schema.optional(ChatMode.Mode),
   parts: Schema.Array(
     Schema.Union([
       MessageV2.TextPartInput,

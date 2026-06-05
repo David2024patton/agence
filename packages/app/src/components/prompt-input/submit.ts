@@ -34,7 +34,7 @@ export type FollowupDraft = {
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
-  tools?: Record<string, boolean>
+  chatMode?: "plan" | "research"
 }
 
 type FollowupSendInput = {
@@ -160,7 +160,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       messageID,
       parts: requestParts,
       variant: input.draft.variant,
-      tools: input.draft.tools,
+      chatMode: input.draft.chatMode,
     })
     return true
   } catch (err) {
@@ -313,10 +313,18 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       return
     }
 
+    const projectDirectory = sdk.directory
+    if (!projectDirectory.trim()) {
+      showToast({
+        title: language.t("common.requestFailed"),
+        description: language.t("directory.error.projectRequired"),
+      })
+      return
+    }
+
     input.addToHistory(currentPrompt, mode)
     input.resetHistoryNavigation()
 
-    const projectDirectory = sdk.directory
     const isNewSession = !params.id
     const shouldAutoAccept = isNewSession && input.autoAccept()
     const worktreeSelection = input.newSessionWorktree?.() || "main"
@@ -397,18 +405,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       providerID: currentModel.provider.id,
     }
     const agent = currentAgent.name
-    const tools = (() => {
-      if (input.agentMode() === "plan") return { "*": false } as Record<string, boolean>
-      if (input.agentMode() === "research")
-        return {
-          edit: false,
-          shell: false,
-          task: false,
-          repo_clone: false,
-          external_directory: false,
-        } as Record<string, boolean>
-      return undefined
-    })()
+    const selectedChatMode = input.agentMode()
+    const chatMode = selectedChatMode === "build" ? undefined : selectedChatMode
     const context = prompt.context.items().slice()
     const draft: FollowupDraft = {
       sessionID: session.id,
@@ -418,7 +416,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       agent,
       model,
       variant,
-      tools,
+      chatMode,
     }
 
     const clearInput = () => {

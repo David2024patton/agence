@@ -1,6 +1,6 @@
-import { Effect } from "effect"
+import { Effect, pipe } from "effect"
 import { Database } from "@/storage/db"
-import { eq, asc } from "drizzle-orm"
+import { eq, asc, and } from "drizzle-orm"
 import { LearningTable, EmbeddingCacheTable } from "./learning.sql"
 import { inferMemoryTags, mergeMemoryTags, tagMatchBoost } from "./memory-tags"
 import crypto from "crypto"
@@ -168,12 +168,15 @@ export const storeLearning = (input: {
     )
 
     const { linkCrossLayer } = yield* Effect.promise(() => import("./memory-intelligence"))
-    yield* linkCrossLayer({
-      projectId: input.projectId,
-      memoryId: id,
-      layer: String(metadata.layer),
-      description: input.description,
-    }).pipe(Effect.catch(() => Effect.void))
+    yield* pipe(
+      linkCrossLayer({
+        projectId: input.projectId,
+        memoryId: id,
+        layer: String(metadata.layer),
+        description: input.description,
+      }),
+      Effect.catch(() => Effect.void)
+    )
 
     return id
   })
@@ -291,6 +294,16 @@ export const listLearnings = (params: {
 export const deleteLearning = (id: string) =>
   Effect.sync(() =>
     Database.use((db) => db.delete(LearningTable).where(eq(LearningTable.id, id)).run()),
+  )
+
+export const deleteLearningForProject = (id: string, projectId: string) =>
+  Effect.sync(() =>
+    Database.use((db) =>
+      db
+        .delete(LearningTable)
+        .where(and(eq(LearningTable.id, id), eq(LearningTable.project_id, pid(projectId))))
+        .run(),
+    ),
   )
 
 export const recentLearnings = (params: { projectId: string; source?: string; limit?: number }) =>

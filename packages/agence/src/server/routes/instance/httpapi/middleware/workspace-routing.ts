@@ -42,13 +42,12 @@ type RequestPlan = Data.TaggedEnum<{
 const RequestPlan = Data.taggedEnum<RequestPlan>()
 const InvalidWorkspaceID = Symbol("InvalidWorkspaceID")
 
-export class WorkspaceRouteContext extends Context.Service<
-  WorkspaceRouteContext,
-  {
-    readonly directory: string
-    readonly workspaceID?: WorkspaceID
-  }
->()("@agence/ExperimentalHttpApiWorkspaceRouteContext") {}
+export interface WorkspaceRouteContext {
+  readonly directory: string
+  readonly workspaceID?: WorkspaceID
+}
+
+export const WorkspaceRouteContext = Context.Service<WorkspaceRouteContext>("@agence/ExperimentalHttpApiWorkspaceRouteContext")
 
 export class WorkspaceRoutingMiddleware extends HttpApiMiddleware.Service<
   WorkspaceRoutingMiddleware,
@@ -83,8 +82,20 @@ function selectedV2WorkspaceID(
   return workspaceID.value
 }
 
+function decodeDirectory(input: string) {
+  try {
+    return decodeURIComponent(input)
+  } catch {
+    return input
+  }
+}
+
 function defaultDirectory(request: HttpServerRequest.HttpServerRequest, url: URL): string {
-  return url.searchParams.get("directory") || request.headers["x-opencode-directory"] || process.cwd()
+  const fromQuery = url.searchParams.get("directory")
+  if (fromQuery) return decodeDirectory(fromQuery)
+  const fromHeader = request.headers["x-opencode-directory"]
+  if (typeof fromHeader === "string" && fromHeader.length > 0) return decodeDirectory(fromHeader)
+  return ""
 }
 
 function shouldStayOnControlPlane(request: HttpServerRequest.HttpServerRequest, url: URL): boolean {
@@ -101,7 +112,7 @@ function resolveWorkspace(
 
 function missingWorkspaceResponse(id: WorkspaceID): HttpServerResponse.HttpServerResponse {
   return HttpServerResponse.text(`Workspace not found: ${id}`, {
-    status: 500,
+    status: 404,
     contentType: "text/plain; charset=utf-8",
   })
 }
@@ -182,11 +193,11 @@ function planRequest(
   })
 }
 
-function routeWorkspace<E>(
+function routeWorkspace<E, R>(
   client: HttpClient.HttpClient,
-  effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, WorkspaceRouteContext>,
+  effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
   plan: RequestPlan,
-): Effect.Effect<HttpServerResponse.HttpServerResponse, E, Socket.WebSocketConstructor | Workspace.Service> {
+) {
   return RequestPlan.$match(plan, {
     InvalidWorkspace: () =>
       Effect.succeed(
@@ -202,18 +213,14 @@ function routeWorkspace<E>(
     MissingWorkspace: ({ workspaceID }) => Effect.succeed(missingWorkspaceResponse(workspaceID)),
     Remote: ({ request, workspace, target, url }) => proxyRemote(client, request, workspace, target, url),
     Local: ({ directory, workspaceID }) =>
-      effect.pipe(Effect.provideService(WorkspaceRouteContext, WorkspaceRouteContext.of({ directory, workspaceID }))),
+      effect.pipe(Effect.provideService(WorkspaceRouteContext, { directory, workspaceID })),
   })
 }
 
-function routeHttpApiWorkspace<E>(
+function routeHttpApiWorkspace<E, R>(
   client: HttpClient.HttpClient,
-  effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, WorkspaceRouteContext>,
-): Effect.Effect<
-  HttpServerResponse.HttpServerResponse,
-  E,
-  Session.Service | Workspace.Service | HttpServerRequest.HttpServerRequest | Socket.WebSocketConstructor
-> {
+  effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+) {
   return Effect.gen(function* () {
     const request = yield* HttpServerRequest.HttpServerRequest
     const sessionID = getWorkspaceRouteSessionID(requestURL(request))
@@ -258,4 +265,4 @@ export const workspaceRouterMiddleware = HttpRouter.middleware<{ provides: Works
         Effect.provideService(Workspace.Service, workspace),
       )
   }),
-)
+) as HttpRouter.Middleware<{ provides: WorkspaceRouteContext; handles: never; error: any; requires: any; layerError: any; layerRequires: any; }>

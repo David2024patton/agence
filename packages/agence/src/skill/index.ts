@@ -14,6 +14,8 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Glob } from "@agence-ai/core/util/glob"
 import * as Log from "@agence-ai/core/util/log"
 import { Discovery } from "./discovery"
+import { MANIFEST_DIR } from "@/project/manifest"
+import { INSTALLS_DIR, loadGroupFilter } from "@/project/registry"
 import CUSTOMIZE_AGENCE_SKILL_BODY from "./prompt/customize-agence.md" with { type: "text" }
 import AGENCE_SKILL_BODY from "./prompt/agence.md" with { type: "text" }
 import { isRecord } from "@/util/record"
@@ -24,6 +26,7 @@ const AGENTS_EXTERNAL_DIR = ".agents"
 const EXTERNAL_SKILL_PATTERN = "skills/**/SKILL.md"
 const AGENCE_SKILL_PATTERN = "{skill,skills}/**/SKILL.md"
 const SKILL_PATTERN = "**/SKILL.md"
+const INSTALL_SKILL_PATTERN = "*/SKILL.md"
 const SELF_CONTAINED_SKILL_PATTERN = "skills/**/SKILL.md"
 
 // Built-in skill that ships with agence. The model's intuition for what an
@@ -260,6 +263,20 @@ const discoverSkills = Effect.fnUntraced(function* (
     }
   }
 
+  // Hub installs land as .agence/installs/{name}/SKILL.md. Scan one level only so
+  // raw GitHub clone trees under .agence/installs/owner-repo/ are not loaded twice.
+  yield* scan(state, path.join(directory, MANIFEST_DIR, INSTALLS_DIR), INSTALL_SKILL_PATTERN)
+
+  // Project-local custom and optimized skills under .agence/skills/
+  const localSkillsDir = path.join(directory, ".agence", "skills")
+  if (yield* fsys.isDir(localSkillsDir)) {
+    yield* scan(state, localSkillsDir, SKILL_PATTERN, { scope: "project-local-agence" })
+    const bestSkillsDir = path.join(localSkillsDir, "best")
+    if (yield* fsys.isDir(bestSkillsDir)) {
+      yield* scan(state, bestSkillsDir, "*.md", { scope: "project-local-best" })
+    }
+  }
+
   return {
     matches: Array.from(state.matches),
     dirs: Array.from(state.dirs),
@@ -345,12 +362,21 @@ export const layer = Layer.effect(
 
     const available = Effect.fn("Skill.available")(function* (agent?: Agent.Info) {
       const s = yield* InstanceState.get(state)
-      const list = Object.values(s.skills).toSorted((a, b) => a.name.localeCompare(b.name))
+      const ctx = yield* InstanceState.context
+      let list = Object.values(s.skills).toSorted((a, b) => a.name.localeCompare(b.name))
+      const filter = yield* loadGroupFilter(ctx.directory).pipe(Effect.catch(() => Effect.succeed(undefined)))
+      if (filter?.skills) list = list.filter((skill) => filter.skills!.has(skill.name))
       if (!agent) return list
       return list.filter((skill) => Permission.evaluate("skill", skill.name, agent.permission).action !== "deny")
     })
 
-    return Service.of({ get, require, all, dirs, available })
+    return Service.of({
+      get: get as any,
+      require: require as any,
+      all: all as any,
+      dirs: dirs as any,
+      available: available as any,
+    })
   }),
 )
 

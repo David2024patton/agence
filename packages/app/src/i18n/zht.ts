@@ -459,6 +459,7 @@ export const dict = {
 
   "error.globalSync.connectFailed": "無法連線到伺服器。是否有伺服器正在 `{{url}}` 執行?",
   "directory.error.invalidUrl": "URL 中的目錄無效。",
+  "directory.error.projectRequired": "使用代理、技能、MCP 或角色前請先開啟專案。",
 
   "error.chain.unknown": "未知錯誤",
   "error.chain.causedBy": "原因:",

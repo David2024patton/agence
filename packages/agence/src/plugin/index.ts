@@ -61,8 +61,8 @@ export class Service extends Context.Service<Service, Interface>()("@agence/Plug
 const INTERNAL_PLUGINS: PluginInstance[] = [
   CodexAuthPlugin,
   CopilotAuthPlugin,
-  GitlabAuthPlugin,
-  PoeAuthPlugin,
+  GitlabAuthPlugin as any,
+  PoeAuthPlugin as any,
   CloudflareWorkersAuthPlugin,
   CloudflareAIGatewayAuthPlugin,
   AzureAuthPlugin,

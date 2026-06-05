@@ -1314,56 +1314,17 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         <Show
           when={providers.paid().length > 0}
           fallback={
-            <TooltipKeybind
-              placement="top"
-              gutter={4}
-              title={language.t("command.model.choose")}
-              keybind={command.keybind("model.choose")}
-            >
-              <Button
-                data-action="prompt-model"
-                as="div"
-                variant="ghost"
-                size="normal"
-                class="min-w-0 max-w-[260px] justify-start text-[13px] font-[440] leading-4 text-v2-text-text-faint group"
-                style={control()}
-                onClick={() => {
-                  void import("@/components/dialog-select-model-unpaid").then((x) => {
-                    dialog.show(() => <x.DialogSelectModelUnpaid model={local.model} />)
-                  })
-                }}
-              >
-                <Show when={local.model.current()?.provider?.id}>
-                  <ProviderIcon
-                    id={local.model.current()?.provider?.id ?? ""}
-                    class="size-4 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity duration-150"
-                    style={{ "will-change": "opacity", transform: "translateZ(0)" }}
-                  />
-                </Show>
-                <span class="truncate">{local.model.current()?.name ?? language.t("dialog.model.select.title")}</span>
-                <Icon name="chevron-down" size="small" class="shrink-0 text-v2-icon-icon-muted" />
-              </Button>
-            </TooltipKeybind>
-          }
-        >
-          <TooltipKeybind
-            placement="top"
-            gutter={4}
-            title={language.t("command.model.choose")}
-            keybind={command.keybind("model.choose")}
-          >
-            <ModelSelectorPopover
-              model={local.model}
-              triggerAs={Button}
-              triggerProps={{
-                variant: "ghost",
-                size: "normal",
-                style: control(),
-                class:
-                  "min-w-0 max-w-[260px] justify-start text-[13px] font-[440] leading-4 text-v2-text-text-faint group",
-                "data-action": "prompt-model",
+            <Button
+              as="div"
+              variant="ghost"
+              size="normal"
+              class="min-w-0 max-w-[260px] justify-start text-[13px] font-[440] leading-4 text-v2-text-text-faint group"
+              style={control()}
+              onClick={() => {
+                void import("@/components/dialog-select-model-unpaid").then((x) => {
+                  dialog.show(() => <x.DialogSelectModelUnpaid model={local.model} />)
+                })
               }}
-              onClose={restoreFocus}
             >
               <Show when={local.model.current()?.provider?.id}>
                 <ProviderIcon
@@ -1374,33 +1335,48 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
               </Show>
               <span class="truncate">{local.model.current()?.name ?? language.t("dialog.model.select.title")}</span>
               <Icon name="chevron-down" size="small" class="shrink-0 text-v2-icon-icon-muted" />
-            </ModelSelectorPopover>
-          </TooltipKeybind>
+            </Button>
+          }
+        >
+          <ModelSelectorPopover
+            model={local.model}
+            triggerAs={Button}
+            triggerProps={{
+              variant: "ghost",
+              size: "normal",
+              style: control(),
+              class:
+                "min-w-0 max-w-[260px] justify-start text-[13px] font-[440] leading-4 text-v2-text-text-faint group",
+            }}
+            onClose={restoreFocus}
+          >
+            <Show when={local.model.current()?.provider?.id}>
+              <ProviderIcon
+                id={local.model.current()?.provider?.id ?? ""}
+                class="size-4 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity duration-150"
+                style={{ "will-change": "opacity", transform: "translateZ(0)" }}
+              />
+            </Show>
+            <span class="truncate">{local.model.current()?.name ?? language.t("dialog.model.select.title")}</span>
+            <Icon name="chevron-down" size="small" class="shrink-0 text-v2-icon-icon-muted" />
+          </ModelSelectorPopover>
         </Show>
 
         <Show when={store.mode !== "shell"}>
-          <TooltipKeybind
-            placement="top"
-            gutter={4}
-            title={language.t("command.model.variant.cycle")}
-            keybind={command.keybind("model.variant.cycle")}
-          >
-            <Select
-              size="normal"
-              options={variants().length > 1 ? variants() : (["default", "low", "medium", "high"] as const)}
-              current={local.model.variant.current() ?? "default"}
-              label={(x) => (x === "default" ? language.t("common.default") : x)}
-              onSelect={(value) => {
-                local.model.variant.set(value === "default" ? undefined : value)
-                restoreFocus()
-              }}
-              class="capitalize max-w-[120px] text-text-base"
-              valueClass="truncate text-13-regular text-text-base"
-              triggerStyle={control()}
-              triggerProps={{ "data-action": "prompt-model-variant" }}
-              variant="ghost"
-            />
-          </TooltipKeybind>
+          <Select
+            size="normal"
+            options={variants().length > 1 ? variants() : (["default", "low", "medium", "high"] as const)}
+            current={local.model.variant.current() ?? "default"}
+            label={(x) => (x === "default" ? language.t("common.default") : x)}
+            onSelect={(value) => {
+              local.model.variant.set(value === "default" ? undefined : value)
+              restoreFocus()
+            }}
+            class="capitalize max-w-[120px] text-text-base"
+            valueClass="truncate text-13-regular text-text-base"
+            triggerStyle={control()}
+            variant="ghost"
+          />
 
           <Select
             size="normal"
@@ -1415,7 +1391,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
             class="capitalize max-w-[120px] text-text-base"
             valueClass="truncate text-13-regular text-text-base"
             triggerStyle={control()}
-            triggerProps={{ "data-action": "prompt-chat-mode" }}
             variant="ghost"
           />
         </Show>
@@ -1439,7 +1414,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const USE_V2_INPUT = import.meta.env.VITE_AGENCE_CHANNEL !== "prod"
 
   return (
-    <div class="relative size-full flex flex-col gap-0">
+    <div class="relative size-full flex flex-col gap-0" data-prompt-composer="">
       {(promptReady(), null)}
       <PromptPopover
         popover={store.popover}
@@ -1459,6 +1434,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       <Switch>
         <Match when={USE_V2_INPUT}>
           <DockShellForm
+            data-prompt-composer=""
             data-component={newSession() ? "session-new-composer" : "session-composer"}
             onSubmit={handleSubmit}
             classList={{
@@ -1503,6 +1479,24 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                 editorRef?.focus()
               }}
             >
+              <div class="absolute top-3 right-3 z-10">
+                <Tooltip placement="top" inactive={!working() && blank()} value={tip()}>
+                  <IconButton
+                    data-action="prompt-submit"
+                    type="submit"
+                    disabled={!working() && blank()}
+                    tabIndex={store.mode === "normal" ? undefined : -1}
+                    icon={stopping() ? "stop" : store.mode === "shell" ? "arrow-undo-down" : "arrow-up"}
+                    variant="primary"
+                    class="size-7 rounded-md p-[6px] text-v2-icon-icon-muted shadow-[var(--v2-elevation-button-contrast)] disabled:opacity-50"
+                    style={{
+                      "background-image":
+                        "linear-gradient(180deg,var(--v2-alpha-light-20) 0%,var(--v2-alpha-light-0) 100%),linear-gradient(90deg,var(--v2-background-bg-contrast) 0%,var(--v2-background-bg-contrast) 100%)",
+                    }}
+                    aria-label={stopping() ? language.t("prompt.action.stop") : language.t("prompt.action.send")}
+                  />
+                </Tooltip>
+              </div>
               <div class="relative max-h-[180px] overflow-y-auto no-scrollbar" ref={(el) => (scrollRef = el)}>
                 <div
                   data-component="prompt-input"
@@ -1528,7 +1522,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   onKeyDown={handleKeyDown}
                   classList={{
                     "select-text": true,
-                    "min-h-[52px] w-full px-4 pt-4 pb-2 focus:outline-none whitespace-pre-wrap leading-5 text-[13px] font-[440] text-v2-text-text-faint [font-family:Inter,var(--font-family-sans)]": true,
+                    "min-h-[52px] w-full pl-4 pr-11 pt-4 pb-2 focus:outline-none whitespace-pre-wrap leading-5 text-[13px] font-[440] text-v2-text-text-faint [font-family:Inter,var(--font-family-sans)]": true,
                     "[&_[data-type=file]]:text-syntax-property": true,
                     "[&_[data-type=agent]]:text-syntax-type": true,
                     "font-mono!": store.mode === "shell",
@@ -1536,7 +1530,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                 />
                 <div
                   data-component={newSession() ? "session-new-design-text" : "session-composer-text"}
-                  class="absolute top-0 inset-x-0 px-4 pt-4 pointer-events-none whitespace-nowrap truncate leading-5 text-[13px] font-[440] text-v2-text-text-faint [font-family:Inter,var(--font-family-sans)]"
+                  class="absolute top-0 inset-x-0 pl-4 pr-11 pt-4 pointer-events-none whitespace-nowrap truncate leading-5 text-[13px] font-[440] text-v2-text-text-faint [font-family:Inter,var(--font-family-sans)]"
                   classList={{ "font-mono!": store.mode === "shell", hidden: prompt.dirty() }}
                 >
                   {designPlaceholder()}
@@ -1588,22 +1582,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                 </Show>
                 {modelControl()}
               </div>
-              <Tooltip placement="top" inactive={!working() && blank()} value={tip()}>
-                <IconButton
-                  data-action="prompt-submit"
-                  type="submit"
-                  disabled={!working() && blank()}
-                  tabIndex={store.mode === "normal" ? undefined : -1}
-                  icon={stopping() ? "stop" : store.mode === "shell" ? "arrow-undo-down" : "arrow-up"}
-                  variant="primary"
-                  class="size-7 rounded-md p-[6px] text-v2-icon-icon-muted shadow-[var(--v2-elevation-button-contrast)] disabled:opacity-50"
-                  style={{
-                    "background-image":
-                      "linear-gradient(180deg,var(--v2-alpha-light-20) 0%,var(--v2-alpha-light-0) 100%),linear-gradient(90deg,var(--v2-background-bg-contrast) 0%,var(--v2-background-bg-contrast) 100%)",
-                  }}
-                  aria-label={stopping() ? language.t("prompt.action.stop") : language.t("prompt.action.send")}
-                />
-              </Tooltip>
             </div>
           </DockShellForm>
         </Match>
@@ -1833,57 +1811,17 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                           <Show
                             when={providers.paid().length > 0}
                             fallback={
-                              <TooltipKeybind
-                                placement="top"
-                                gutter={4}
-                                title={language.t("command.model.choose")}
-                                keybind={command.keybind("model.choose")}
-                              >
-                                <Button
-                                  data-action="prompt-model"
-                                  as="div"
-                                  variant="ghost"
-                                  size="normal"
-                                  class="min-w-0 max-w-[260px] text-13-regular text-text-base group"
-                                  style={control()}
-                                  onClick={() => {
-                                    void import("@/components/dialog-select-model-unpaid").then((x) => {
-                                      dialog.show(() => <x.DialogSelectModelUnpaid model={local.model} />)
-                                    })
-                                  }}
-                                >
-                                  <Show when={local.model.current()?.provider?.id}>
-                                    <ProviderIcon
-                                      id={local.model.current()?.provider?.id ?? ""}
-                                      class="size-4 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity duration-150"
-                                      style={{ "will-change": "opacity", transform: "translateZ(0)" }}
-                                    />
-                                  </Show>
-                                  <span class="truncate">
-                                    {local.model.current()?.name ?? language.t("dialog.model.select.title")}
-                                  </span>
-                                  <Icon name="chevron-down" size="small" class="shrink-0" />
-                                </Button>
-                              </TooltipKeybind>
-                            }
-                          >
-                            <TooltipKeybind
-                              placement="top"
-                              gutter={4}
-                              title={language.t("command.model.choose")}
-                              keybind={command.keybind("model.choose")}
-                            >
-                              <ModelSelectorPopover
-                                model={local.model}
-                                triggerAs={Button}
-                                triggerProps={{
-                                  variant: "ghost",
-                                  size: "normal",
-                                  style: control(),
-                                  class: "min-w-0 max-w-[260px] text-13-regular text-text-base group",
-                                  "data-action": "prompt-model",
+                              <Button
+                                as="div"
+                                variant="ghost"
+                                size="normal"
+                                class="min-w-0 max-w-[260px] text-13-regular text-text-base group"
+                                style={control()}
+                                onClick={() => {
+                                  void import("@/components/dialog-select-model-unpaid").then((x) => {
+                                    dialog.show(() => <x.DialogSelectModelUnpaid model={local.model} />)
+                                  })
                                 }}
-                                onClose={restoreFocus}
                               >
                                 <Show when={local.model.current()?.provider?.id}>
                                   <ProviderIcon
@@ -1896,36 +1834,52 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                                   {local.model.current()?.name ?? language.t("dialog.model.select.title")}
                                 </span>
                                 <Icon name="chevron-down" size="small" class="shrink-0" />
-                              </ModelSelectorPopover>
-                            </TooltipKeybind>
+                              </Button>
+                            }
+                          >
+                            <ModelSelectorPopover
+                              model={local.model}
+                              triggerAs={Button}
+                              triggerProps={{
+                                variant: "ghost",
+                                size: "normal",
+                                style: control(),
+                                class: "min-w-0 max-w-[260px] text-13-regular text-text-base group",
+                              }}
+                              onClose={restoreFocus}
+                            >
+                              <Show when={local.model.current()?.provider?.id}>
+                                <ProviderIcon
+                                  id={local.model.current()?.provider?.id ?? ""}
+                                  class="size-4 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity duration-150"
+                                  style={{ "will-change": "opacity", transform: "translateZ(0)" }}
+                                />
+                              </Show>
+                              <span class="truncate">
+                                {local.model.current()?.name ?? language.t("dialog.model.select.title")}
+                              </span>
+                              <Icon name="chevron-down" size="small" class="shrink-0" />
+                            </ModelSelectorPopover>
                           </Show>
                         </div>
                         <div
                           data-component="prompt-variant-control"
                           style={providersShouldFadeIn() ? { animation: "fade-in 0.3s" } : undefined}
                         >
-                          <TooltipKeybind
-                            placement="top"
-                            gutter={4}
-                            title={language.t("command.model.variant.cycle")}
-                            keybind={command.keybind("model.variant.cycle")}
-                          >
-                            <Select
-                              size="normal"
-                              options={variants().length > 1 ? variants() : (["default", "low", "medium", "high"] as const)}
-                              current={local.model.variant.current() ?? "default"}
-                              label={(x) => (x === "default" ? language.t("common.default") : x)}
-                              onSelect={(value) => {
-                                local.model.variant.set(value === "default" ? undefined : value)
-                                restoreFocus()
-                              }}
-                              class="capitalize max-w-[120px] text-text-base"
-                              valueClass="truncate text-13-regular text-text-base"
-                              triggerStyle={control()}
-                              triggerProps={{ "data-action": "prompt-model-variant" }}
-                              variant="ghost"
-                            />
-                          </TooltipKeybind>
+                          <Select
+                            size="normal"
+                            options={variants().length > 1 ? variants() : (["default", "low", "medium", "high"] as const)}
+                            current={local.model.variant.current() ?? "default"}
+                            label={(x) => (x === "default" ? language.t("common.default") : x)}
+                            onSelect={(value) => {
+                              local.model.variant.set(value === "default" ? undefined : value)
+                              restoreFocus()
+                            }}
+                            class="capitalize max-w-[120px] text-text-base"
+                            valueClass="truncate text-13-regular text-text-base"
+                            triggerStyle={control()}
+                            variant="ghost"
+                          />
                         </div>
                         <div
                           data-component="prompt-chat-mode-control"
@@ -1944,7 +1898,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                             class="capitalize max-w-[120px] text-text-base"
                             valueClass="truncate text-13-regular text-text-base"
                             triggerStyle={control()}
-                            triggerProps={{ "data-action": "prompt-chat-mode" }}
                             variant="ghost"
                           />
                         </div>

@@ -17,7 +17,7 @@ import { TodoWriteTool, TodoReadTool, TaskSearchTool, TodoCarryTool, ReflectTool
 import { ImageDescribeTool } from "./image_describe"
 import { OpenClawGatewayTool } from "./openclaw_gateway"
 import { PluginMarketplaceTool, PluginInstallTool } from "./plugin_marketplace"
-import { MemoryAddTool, MemoryRecallTool, AgentGroupTool } from "./agent"
+import { MemoryAddTool, MemoryRecallTool, AgentGroupTool, GoalCompleteTool } from "./agent"
 import {
   BrowserInspectTool,
   BrowserTutorialTool,
@@ -39,6 +39,7 @@ import { EnvWriteTool } from "./env_write"
 import { LintTool } from "./lint"
 import { ScreenshotTool } from "./screenshot"
 import { PowerShellTool } from "./powershell"
+import { SpawnFromSkillTool } from "./spawn_from_skill"
 import * as Tool from "./tool"
 import { Config } from "@/config/config"
 import { type ToolContext as PluginToolContext, type ToolDefinition } from "@agence-ai/plugin"
@@ -171,6 +172,7 @@ export const layer: Layer.Layer<
     const imageDescribe = yield* ImageDescribeTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
+    const goalComplete = yield* GoalCompleteTool
     const webfetch = yield* WebFetchTool
     const websearch = yield* WebSearchTool
     const repoClone = yield* RepoCloneTool
@@ -192,6 +194,7 @@ export const layer: Layer.Layer<
     const lint = yield* LintTool
     const screenshot = yield* ScreenshotTool
     const powershell = yield* PowerShellTool
+    const spawnFromSkill = yield* SpawnFromSkillTool
 
     const state = yield* InstanceState.make<State>(
       Effect.fn("ToolRegistry.state")(function* (ctx) {
@@ -300,6 +303,7 @@ export const layer: Layer.Layer<
           model_learn: Tool.init(modelLearn),
           quality_gate: Tool.init(qualityGate),
           vector_search: Tool.init(vectorSearch),
+          kb_search: Tool.init(vectorSearch),
           browser_inspect: Tool.init(browserInspect),
           browser_tutorial: Tool.init(browserTutorial),
           browser_extract: Tool.init(browserExtract),
@@ -321,6 +325,7 @@ export const layer: Layer.Layer<
           question: Tool.init(question),
           lsp: Tool.init(lsptool),
           plan: Tool.init(plan),
+          goal_complete: Tool.init(goalComplete),
           system_info: Tool.init(systemInfo),
           weather: Tool.init(weather),
           drives: Tool.init(drives),
@@ -330,6 +335,7 @@ export const layer: Layer.Layer<
           lint: Tool.init(lint),
           screenshot: Tool.init(screenshot),
           powershell: Tool.init(powershell),
+          spawn_from_skill: Tool.init(spawnFromSkill),
         })
 
         return {
@@ -365,6 +371,7 @@ export const layer: Layer.Layer<
             tool.plugin_install,
             tool.memory_add,
             tool.memory_recall,
+            tool.goal_complete,
             tool.agent_group,
             tool.image_describe,
             tool.search,
@@ -382,6 +389,7 @@ export const layer: Layer.Layer<
             tool.lint,
             tool.screenshot,
             tool.powershell,
+            tool.spawn_from_skill,
           ],
           task: tool.task,
           read: tool.read,

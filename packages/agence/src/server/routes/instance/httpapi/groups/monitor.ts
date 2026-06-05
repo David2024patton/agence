@@ -1,8 +1,6 @@
 import { Schema } from "effect"
-// Monitor API: /monitor/state (JSON snapshot) and /monitor/events (SSE stream).
-// Designed for LLM agents to monitor server health, sessions, commands, and events.
-// Built-in GUI at /monitor route in the desktop app.
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
+import { Authorization } from "../middleware/authorization"
 import { WorkspaceRoutingQuery } from "../middleware/workspace-routing"
 
 const MonitorEvent = Schema.Struct({
@@ -72,6 +70,7 @@ export const MonitorApi = HttpApi.make("monitor").add(
         }),
       ),
     )
+    .middleware(Authorization)
     .annotateMerge(OpenApi.annotations({ title: "monitor", description: "Server monitoring routes." })),
 )
 

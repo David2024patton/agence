@@ -464,6 +464,7 @@ export const dict = {
 
   "error.globalSync.connectFailed": "Nije moguće povezati se na server. Da li server radi na `{{url}}`?",
   "directory.error.invalidUrl": "Nevažeći direktorij u URL-u.",
+  "directory.error.projectRequired": "Otvorite projekt prije korištenja agenta, skillova, MCP-ova ili persona.",
 
   "error.chain.unknown": "Nepoznata greška",
   "error.chain.causedBy": "Uzrok:",

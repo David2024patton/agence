@@ -6,7 +6,7 @@ import { useLanguage } from "@/context/language"
 import { uuid } from "@/utils/uuid"
 import { getCursorPosition } from "./editor-dom"
 import { attachmentMime } from "./files"
-import { normalizePaste, pasteMode } from "./paste"
+import { createPasteTextFile, normalizePaste } from "./paste"
 
 function dataUrl(file: File, mime: string) {
   return new Promise<string>((resolve) => {
@@ -122,22 +122,7 @@ export function createPromptAttachments(input: PromptAttachmentsInput) {
     if (!plainText) return
 
     const text = normalizePaste(plainText)
-
-    const put = () => {
-      if (input.addPart({ type: "text", content: text, start: 0, end: 0 })) return true
-      input.focusEditor()
-      return input.addPart({ type: "text", content: text, start: 0, end: 0 })
-    }
-
-    if (pasteMode(text) === "manual") {
-      put()
-      return
-    }
-
-    const inserted = typeof document.execCommand === "function" && document.execCommand("insertText", false, text)
-    if (inserted) return
-
-    put()
+    await addAttachment(createPasteTextFile(text))
   }
 
   const handleGlobalDragOver = (event: DragEvent) => {
