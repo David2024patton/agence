@@ -68,24 +68,30 @@ nix run nixpkgs#agence           # or github:anomalyco/agence for latest dev bra
 
 Agence ships as an Electron desktop app. Check `packages/desktop/package.json` for the current version (e.g. **v1.16.5+**) on branch **`main`**.
 
+<p align="left">
+  <a href="https://github.com/David2024patton/agence/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Windows%20Installer-blue?style=for-the-badge&logo=windows" alt="Download Windows Installer" />
+  </a>
+</p>
+
 > [!IMPORTANT]
 > This repository is **private**. The [releases page](https://github.com/David2024patton/agence/releases/latest) and direct download URLs return **404** unless you are signed into GitHub with access to `David2024patton/agence`. That is expected for private repos, not a missing build.
 
 #### Download (Windows, signed in to GitHub)
 
 1. Open **[Releases](https://github.com/David2024patton/agence/releases/latest)** while logged in.
-2. Download **`agence-desktop-win-x64.exe`** from the latest release (currently **v1.16.1**).
+2. Download **`agence-desktop-win-x64.exe`** from the latest release (currently **v1.16.5**).
 
 Or use the GitHub CLI (authenticated):
 
 ```powershell
 gh auth login
-gh release download v1.16.1 -R David2024patton/agence -p agence-desktop-win-x64.exe -D .
+gh release download v1.16.5 -R David2024patton/agence -p agence-desktop-win-x64.exe -D .
 ```
 
 Direct asset URL (same login requirement):
 
-`https://github.com/David2024patton/agence/releases/download/v1.16.1/agence-desktop-win-x64.exe`
+`https://github.com/David2024patton/agence/releases/download/v1.16.5/agence-desktop-win-x64.exe`
 
 #### Build the installer locally
 
