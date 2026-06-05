@@ -277,11 +277,18 @@ function createGlobalSync() {
             })
             .catch((err) => {
               console.error("Failed to load sessions", err)
+              const formatted = formatServerError(err, language.t)
+              if (
+                formatted.includes("Project directory not found") ||
+                formatted.includes("Open a project in Agence")
+              ) {
+                return
+              }
               const project = getFilename(directory)
               showToast({
                 variant: "error",
                 title: language.t("toast.session.listFailed.title", { project }),
-                description: formatServerError(err, language.t),
+                description: formatted,
               })
             })
             .then(() => null),
@@ -414,14 +421,18 @@ function createGlobalSync() {
     },
   }
 
+  const invalidateProviders = () => {
+    queryClient.invalidateQueries({ queryKey: [null, "providers"] })
+    queryClient.invalidateQueries({ predicate: (query) => query.queryKey[1] === "providers" })
+  }
+
   const updateConfigMutation = useMutation(() => ({
     mutationFn: (config: Config) => globalSDK.client.global.config.update({ config }),
     onSuccess: () => {
       bootstrap.refetch()
       // Invalidate all provider queries so newly configured custom providers
       // appear immediately in the available provider list across all directories.
-      queryClient.invalidateQueries({ queryKey: [null, "providers"] })
-      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[1] === "providers" })
+      invalidateProviders()
     },
   }))
 
@@ -442,6 +453,7 @@ function createGlobalSync() {
     queryOptions: queryOptionsApi,
     // bootstrap,
     updateConfig: updateConfigMutation.mutateAsync,
+    invalidateProviders,
     project: projectApi,
     todo: {
       set: setSessionTodo,

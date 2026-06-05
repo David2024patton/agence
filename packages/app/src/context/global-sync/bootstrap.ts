@@ -307,11 +307,18 @@ export async function bootstrapDirectory(input: {
       () => input.queryClient.fetchQuery(loadMcpQuery(input.directory, input.sdk)),
       () =>
         input.queryClient.fetchQuery(loadProvidersQuery(input.directory, input.sdk)).catch((err) => {
+          const formatted = formatServerError(err, input.translate)
+          if (
+            formatted.includes("Project directory not found") ||
+            formatted.includes("Open a project in Agence")
+          ) {
+            return
+          }
           const project = getFilename(input.directory)
           showToast({
             variant: "error",
             title: input.translate("toast.project.reloadFailed.title", { project }),
-            description: formatServerError(err, input.translate),
+            description: formatted,
           })
         }),
     ].filter(Boolean) as (() => Promise<any>)[]
@@ -320,12 +327,18 @@ export async function bootstrapDirectory(input: {
     const slowErrs = errors(await runAll(slow))
     if (slowErrs.length > 0) {
       console.error("Failed to finish bootstrap instance", slowErrs[0])
-      const project = getFilename(input.directory)
-      showToast({
-        variant: "error",
-        title: input.translate("toast.project.reloadFailed.title", { project }),
-        description: formatServerError(slowErrs[0], input.translate),
-      })
+      const formatted = formatServerError(slowErrs[0], input.translate)
+      if (
+        !formatted.includes("Project directory not found") &&
+        !formatted.includes("Open a project in Agence")
+      ) {
+        const project = getFilename(input.directory)
+        showToast({
+          variant: "error",
+          title: input.translate("toast.project.reloadFailed.title", { project }),
+          description: formatted,
+        })
+      }
     }
 
     if (loading && slowErrs.length === 0) input.setStore("status", "complete")

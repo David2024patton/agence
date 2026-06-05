@@ -559,18 +559,69 @@ export default function Layout(props: ParentProps) {
   const [autoselecting] = createResource(async () => {
     await ready.promise
     await layout.ready.promise
-    if (!untrack(() => state.autoselect)) return
 
     const list = layout.projects.list()
     const last = server.projects.last()
 
-    if (list.length === 0) {
-      if (!last) return
-      await openProject(last, true)
-    } else {
-      const next = list.find((project) => project.worktree === last) ?? list[0]
-      if (!next) return
-      await openProject(next.worktree, true)
+    const checkProjectDirectory = async (directory: string) => {
+      try {
+        const client = globalSDK.createClient({ directory, throwOnError: true })
+        await client.project.current()
+        return true
+      } catch (err) {
+        console.warn(`Project directory ${directory} is not valid or not found`, err)
+        return false
+      }
+    }
+
+    if (initialDirectory) {
+      const isValid = await checkProjectDirectory(initialDirectory)
+      if (!isValid) {
+        console.warn(`Initial directory ${initialDirectory} from URL is not valid. Finding fallback...`)
+        let fallbackDir: string | undefined
+        for (const project of list) {
+          if (project.worktree !== initialDirectory && await checkProjectDirectory(project.worktree)) {
+            fallbackDir = project.worktree
+            break
+          }
+        }
+        if (fallbackDir) {
+          await openProject(fallbackDir, true)
+        } else {
+          navigate("/", { replace: true })
+        }
+        return
+      }
+    }
+
+    if (untrack(() => state.autoselect)) {
+      let targetDir: string | undefined
+
+      if (last) {
+        if (await checkProjectDirectory(last)) {
+          targetDir = last
+        }
+      }
+
+      if (!targetDir && list.length > 0) {
+        for (const project of list) {
+          if (project.worktree !== last) {
+            if (await checkProjectDirectory(project.worktree)) {
+              targetDir = project.worktree
+              break
+            }
+          }
+        }
+        if (!targetDir && list[0]) {
+          if (await checkProjectDirectory(list[0].worktree)) {
+            targetDir = list[0].worktree
+          }
+        }
+      }
+
+      if (targetDir) {
+        await openProject(targetDir, true)
+      }
     }
   })
 
