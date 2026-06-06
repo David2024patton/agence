@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -53,10 +53,10 @@ curl -fsSL https://github.com/David2024patton/agence/install | bash
 npm i -g agence-ai@latest        # 也可使用 bun/pnpm/yarn
 scoop install agence             # Windows
 choco install agence             # Windows
-brew install anomalyco/tap/agence # macOS 和 Linux（推荐，始终保持最新）
+brew install David2024patton/tap/agence # macOS 和 Linux（推荐，始终保持最新）
 brew install agence              # macOS 和 Linux（官方 brew formula，更新频率较低）
 sudo pacman -S agence            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
+paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # 任意系统
 nix run nixpkgs#agence           # 或用 github:anomalyco/agence 获取最新 dev 分支
 ```
@@ -66,20 +66,20 @@ nix run nixpkgs#agence           # 或用 github:anomalyco/agence 获取最新 d
 
 ### 桌面应用程序 (BETA)
 
-Agence 也提供桌面版应用。可直接从 [发布页 (releases page)](https://github.com/anomalyco/opencode/releases) 或 [agence.ai/download](https://github.com/David2024patton/agence/download) 下载。
+Agence 也提供桌面版应用。可直接从 [发布页 (releases page)](https://github.com/David2024patton/agence/releases) 或 [agence.ai/download](https://github.com/David2024patton/agence/download) 下载。
 
 | 平台                  | 下载文件                           |
 | --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
+| macOS (Apple Silicon) | `agence-desktop-mac-arm64.dmg`   |
+| macOS (Intel)         | `agence-desktop-mac-x64.dmg`     |
+| Windows               | `agence-desktop-windows-x64.exe` |
 | Linux                 | `.deb`、`.rpm` 或 AppImage         |
 
 ```bash
 # macOS (Homebrew Cask)
-brew install --cask opencode-desktop
+brew install --cask agence-desktop
 # Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+scoop bucket add extras; scoop install extras/agence-desktop
 ```
 
 #### 安装目录
@@ -89,7 +89,7 @@ scoop bucket add extras; scoop install extras/opencode-desktop
 1. `$AGENCE_INSTALL_DIR` - 自定义安装目录
 2. `$XDG_BIN_DIR` - 符合 XDG 基础目录规范的路径
 3. `$HOME/bin` - 如果存在或可创建的用户二进制目录
-4. `$HOME/.opencode/bin` - 默认备用路径
+4. `$HOME/.agence/bin` - 默认备用路径
 
 ```bash
 # 示例
@@ -121,7 +121,7 @@ Agence 内置两种 Agent，可用 `Tab` 键快速切换：
 
 ### 基于 Agence 进行开发
 
-如果你在项目名中使用了 “agence”（如 “opencode-dashboard” 或 “opencode-mobile”），请在 README 里注明该项目不是 Agence 团队官方开发，且不存在隶属关系。
+如果你在项目名中使用了 “agence”（如 “agence-dashboard” 或 “agence-mobile”），请在 README 里注明该项目不是 Agence 团队官方开发，且不存在隶属关系。
 
 ---
 

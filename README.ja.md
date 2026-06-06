@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -53,10 +53,10 @@ curl -fsSL https://github.com/David2024patton/agence/install | bash
 npm i -g agence-ai@latest        # bun/pnpm/yarn でもOK
 scoop install agence             # Windows
 choco install agence             # Windows
-brew install anomalyco/tap/agence # macOS と Linux（推奨。常に最新）
+brew install David2024patton/tap/agence # macOS と Linux（推奨。常に最新）
 brew install agence              # macOS と Linux（公式 brew formula。更新頻度は低め）
 sudo pacman -S agence            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
+paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # どのOSでも
 nix run nixpkgs#agence           # または github:anomalyco/agence で最新 dev ブランチ
 ```
@@ -66,20 +66,20 @@ nix run nixpkgs#agence           # または github:anomalyco/agence で最新 d
 
 ### デスクトップアプリ (BETA)
 
-Agence はデスクトップアプリとしても利用できます。[releases page](https://github.com/anomalyco/opencode/releases) から直接ダウンロードするか、[agence.ai/download](https://github.com/David2024patton/agence/download) を利用してください。
+Agence はデスクトップアプリとしても利用できます。[releases page](https://github.com/David2024patton/agence/releases) から直接ダウンロードするか、[agence.ai/download](https://github.com/David2024patton/agence/download) を利用してください。
 
 | プラットフォーム      | ダウンロード                       |
 | --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
+| macOS (Apple Silicon) | `agence-desktop-mac-arm64.dmg`   |
+| macOS (Intel)         | `agence-desktop-mac-x64.dmg`     |
+| Windows               | `agence-desktop-windows-x64.exe` |
 | Linux                 | `.deb`、`.rpm`、または AppImage    |
 
 ```bash
 # macOS (Homebrew)
-brew install --cask opencode-desktop
+brew install --cask agence-desktop
 # Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+scoop bucket add extras; scoop install extras/agence-desktop
 ```
 
 #### インストールディレクトリ
@@ -89,7 +89,7 @@ scoop bucket add extras; scoop install extras/opencode-desktop
 1. `$AGENCE_INSTALL_DIR` - カスタムのインストールディレクトリ
 2. `$XDG_BIN_DIR` - XDG Base Directory Specification に準拠したパス
 3. `$HOME/bin` - 標準のユーザー用バイナリディレクトリ（存在する場合、または作成できる場合）
-4. `$HOME/.opencode/bin` - デフォルトのフォールバック
+4. `$HOME/.agence/bin` - デフォルトのフォールバック
 
 ```bash
 # 例
@@ -122,7 +122,7 @@ Agence に貢献したい場合は、Pull Request を送る前に [contributing 
 
 ### Agence の上に構築する
 
-Agence に関連するプロジェクトで、名前に "agence"（例: "opencode-dashboard" や "opencode-mobile"）を含める場合は、そのプロジェクトが Agence チームによって作られたものではなく、いかなる形でも関係がないことを README に明記してください。
+Agence に関連するプロジェクトで、名前に "agence"（例: "agence-dashboard" や "agence-mobile"）を含める場合は、そのプロジェクトが Agence チームによって作られたものではなく、いかなる形でも関係がないことを README に明記してください。
 
 ---
 

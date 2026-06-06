@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/David2024patton/agence/publish.yml?style=flat-square&branch=main" /></a>
 </p>
 
 <p align="center">
@@ -53,12 +53,12 @@ curl -fsSL https://github.com/David2024patton/agence/install | bash
 npm i -g agence-ai@latest        # or bun/pnpm/yarn
 scoop install agence             # Windows
 choco install agence             # Windows
-brew install anomalyco/tap/agence # macOS and Linux (recommended, always up to date)
+brew install David2024patton/tap/agence # macOS and Linux (recommended, always up to date)
 brew install agence              # macOS and Linux (official brew formula, updated less)
 sudo pacman -S agence            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
+paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # Any OS
-nix run nixpkgs#agence           # or github:anomalyco/agence for latest dev branch
+nix run nixpkgs#agence           # or github:David2024patton/agence for latest dev branch
 ```
 
 > [!TIP]
@@ -102,8 +102,14 @@ cd packages/desktop
 $env:AGENCE_CHANNEL = "prod"
 bun run prebuild
 bun run build
+# Packaging automatically generates a self-signed certificate, installs it to
+# local Trusted Root Certification Authorities (so Windows trusts the app),
+# and signs the executables.
 bun run package:win
 # Installer: packages/desktop/dist/agence-desktop-win-x64.exe
+
+# To manually sign/re-sign built executables locally:
+bun run sign:local
 ```
 
 #### Dev (live reload)
@@ -127,7 +133,7 @@ The install script respects the following priority order for the installation pa
 1. `$AGENCE_INSTALL_DIR` - Custom installation directory
 2. `$XDG_BIN_DIR` - XDG Base Directory Specification compliant path
 3. `$HOME/bin` - Standard user binary directory (if it exists or can be created)
-4. `$HOME/.opencode/bin` - Default fallback
+4. `$HOME/.agence/bin` - Default fallback
 
 ```bash
 # Examples
@@ -174,7 +180,7 @@ If you're interested in contributing to Agence, please read our [contributing do
 
 ### Building on Agence
 
-If you are working on a project that's related to Agence and is using "agence" as part of its name, for example "opencode-dashboard" or "opencode-mobile", please add a note to your README to clarify that it is not built by the Agence team and is not affiliated with us in any way.
+If you are working on a project that's related to Agence and is using "agence" as part of its name, for example "agence-dashboard" or "agence-mobile", please add a note to your README to clarify that it is not built by the Agence team and is not affiliated with us in any way.
 
 ---
 

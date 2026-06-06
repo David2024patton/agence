@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -53,10 +53,10 @@ curl -fsSL https://github.com/David2024patton/agence/install | bash
 npm i -g agence-ai@latest        # eller bun/pnpm/yarn
 scoop install agence             # Windows
 choco install agence             # Windows
-brew install anomalyco/tap/agence # macOS og Linux (anbefalet, altid up to date)
+brew install David2024patton/tap/agence # macOS og Linux (anbefalet, altid up to date)
 brew install agence              # macOS og Linux (officiel brew formula, opdateres sjældnere)
 sudo pacman -S agence            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
+paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # alle OS
 nix run nixpkgs#agence           # eller github:anomalyco/agence for nyeste dev-branch
 ```
@@ -66,20 +66,20 @@ nix run nixpkgs#agence           # eller github:anomalyco/agence for nyeste dev-
 
 ### Desktop-app (BETA)
 
-Agence findes også som desktop-app. Download direkte fra [releases-siden](https://github.com/anomalyco/opencode/releases) eller [agence.ai/download](https://github.com/David2024patton/agence/download).
+Agence findes også som desktop-app. Download direkte fra [releases-siden](https://github.com/David2024patton/agence/releases) eller [agence.ai/download](https://github.com/David2024patton/agence/download).
 
 | Platform              | Download                           |
 | --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
+| macOS (Apple Silicon) | `agence-desktop-mac-arm64.dmg`   |
+| macOS (Intel)         | `agence-desktop-mac-x64.dmg`     |
+| Windows               | `agence-desktop-windows-x64.exe` |
 | Linux                 | `.deb`, `.rpm`, eller AppImage     |
 
 ```bash
 # macOS (Homebrew)
-brew install --cask opencode-desktop
+brew install --cask agence-desktop
 # Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+scoop bucket add extras; scoop install extras/agence-desktop
 ```
 
 #### Installationsmappe
@@ -89,7 +89,7 @@ Installationsscriptet bruger følgende prioriteringsrækkefølge for installatio
 1. `$AGENCE_INSTALL_DIR` - Tilpasset installationsmappe
 2. `$XDG_BIN_DIR` - Sti der følger XDG Base Directory Specification
 3. `$HOME/bin` - Standard bruger-bin-mappe (hvis den findes eller kan oprettes)
-4. `$HOME/.opencode/bin` - Standard fallback
+4. `$HOME/.agence/bin` - Standard fallback
 
 ```bash
 # Eksempler
@@ -122,7 +122,7 @@ Hvis du vil bidrage til Agence, så læs vores [contributing docs](./CONTRIBUTIN
 
 ### Bygget på Agence
 
-Hvis du arbejder på et projekt der er relateret til Agence og bruger "agence" som en del af navnet; f.eks. "opencode-dashboard" eller "opencode-mobile", så tilføj en note i din README, der tydeliggør at projektet ikke er bygget af Agence-teamet og ikke er tilknyttet os på nogen måde.
+Hvis du arbejder på et projekt der er relateret til Agence og bruger "agence" som en del af navnet; f.eks. "agence-dashboard" eller "agence-mobile", så tilføj en note i din README, der tydeliggør at projektet ikke er bygget af Agence-teamet og ikke er tilknyttet os på nogen måde.
 
 ---
 

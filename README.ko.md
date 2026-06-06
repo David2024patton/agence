@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -53,10 +53,10 @@ curl -fsSL https://github.com/David2024patton/agence/install | bash
 npm i -g agence-ai@latest        # bun/pnpm/yarn 도 가능
 scoop install agence             # Windows
 choco install agence             # Windows
-brew install anomalyco/tap/agence # macOS 및 Linux (권장, 항상 최신)
+brew install David2024patton/tap/agence # macOS 및 Linux (권장, 항상 최신)
 brew install agence              # macOS 및 Linux (공식 brew formula, 업데이트 빈도 낮음)
 sudo pacman -S agence            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
+paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # 어떤 OS든
 nix run nixpkgs#agence           # 또는 github:anomalyco/agence 로 최신 dev 브랜치
 ```
@@ -66,20 +66,20 @@ nix run nixpkgs#agence           # 또는 github:anomalyco/agence 로 최신 dev
 
 ### 데스크톱 앱 (BETA)
 
-Agence 는 데스크톱 앱으로도 제공됩니다. [releases page](https://github.com/anomalyco/opencode/releases) 에서 직접 다운로드하거나 [agence.ai/download](https://github.com/David2024patton/agence/download) 를 이용하세요.
+Agence 는 데스크톱 앱으로도 제공됩니다. [releases page](https://github.com/David2024patton/agence/releases) 에서 직접 다운로드하거나 [agence.ai/download](https://github.com/David2024patton/agence/download) 를 이용하세요.
 
 | 플랫폼                | 다운로드                           |
 | --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
+| macOS (Apple Silicon) | `agence-desktop-mac-arm64.dmg`   |
+| macOS (Intel)         | `agence-desktop-mac-x64.dmg`     |
+| Windows               | `agence-desktop-windows-x64.exe` |
 | Linux                 | `.deb`, `.rpm`, 또는 AppImage      |
 
 ```bash
 # macOS (Homebrew)
-brew install --cask opencode-desktop
+brew install --cask agence-desktop
 # Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+scoop bucket add extras; scoop install extras/agence-desktop
 ```
 
 #### 설치 디렉터리
@@ -89,7 +89,7 @@ scoop bucket add extras; scoop install extras/opencode-desktop
 1. `$AGENCE_INSTALL_DIR` - 사용자 지정 설치 디렉터리
 2. `$XDG_BIN_DIR` - XDG Base Directory Specification 준수 경로
 3. `$HOME/bin` - 표준 사용자 바이너리 디렉터리 (존재하거나 생성 가능할 경우)
-4. `$HOME/.opencode/bin` - 기본 폴백
+4. `$HOME/.agence/bin` - 기본 폴백
 
 ```bash
 # 예시
@@ -122,7 +122,7 @@ Agence 에 기여하고 싶다면, Pull Request 를 제출하기 전에 [contrib
 
 ### Agence 기반으로 만들기
 
-Agence 와 관련된 프로젝트를 진행하면서 이름에 "agence"(예: "opencode-dashboard" 또는 "opencode-mobile") 를 포함한다면, README 에 해당 프로젝트가 Agence 팀이 만든 것이 아니며 어떤 방식으로도 우리와 제휴되어 있지 않다는 점을 명시해 주세요.
+Agence 와 관련된 프로젝트를 진행하면서 이름에 "agence"(예: "agence-dashboard" 또는 "agence-mobile") 를 포함한다면, README 에 해당 프로젝트가 Agence 팀이 만든 것이 아니며 어떤 방식으로도 우리와 제휴되어 있지 않다는 점을 명시해 주세요.
 
 ---
 

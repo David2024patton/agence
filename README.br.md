@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -53,10 +53,10 @@ curl -fsSL https://github.com/David2024patton/agence/install | bash
 npm i -g agence-ai@latest        # ou bun/pnpm/yarn
 scoop install agence             # Windows
 choco install agence             # Windows
-brew install anomalyco/tap/agence # macOS e Linux (recomendado, sempre atualizado)
+brew install David2024patton/tap/agence # macOS e Linux (recomendado, sempre atualizado)
 brew install agence              # macOS e Linux (fórmula oficial do brew, atualiza menos)
 sudo pacman -S agence            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
+paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # qualquer sistema
 nix run nixpkgs#agence           # ou github:anomalyco/agence para a branch dev mais recente
 ```
@@ -66,20 +66,20 @@ nix run nixpkgs#agence           # ou github:anomalyco/agence para a branch dev 
 
 ### App desktop (BETA)
 
-O Agence também está disponível como aplicativo desktop. Baixe diretamente pela [página de releases](https://github.com/anomalyco/opencode/releases) ou em [agence.ai/download](https://github.com/David2024patton/agence/download).
+O Agence também está disponível como aplicativo desktop. Baixe diretamente pela [página de releases](https://github.com/David2024patton/agence/releases) ou em [agence.ai/download](https://github.com/David2024patton/agence/download).
 
 | Plataforma            | Download                           |
 | --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
+| macOS (Apple Silicon) | `agence-desktop-mac-arm64.dmg`   |
+| macOS (Intel)         | `agence-desktop-mac-x64.dmg`     |
+| Windows               | `agence-desktop-windows-x64.exe` |
 | Linux                 | `.deb`, `.rpm` ou AppImage         |
 
 ```bash
 # macOS (Homebrew)
-brew install --cask opencode-desktop
+brew install --cask agence-desktop
 # Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+scoop bucket add extras; scoop install extras/agence-desktop
 ```
 
 #### Diretório de instalação
@@ -89,7 +89,7 @@ O script de instalação respeita a seguinte ordem de prioridade para o caminho 
 1. `$AGENCE_INSTALL_DIR` - Diretório de instalação personalizado
 2. `$XDG_BIN_DIR` - Caminho compatível com a especificação XDG Base Directory
 3. `$HOME/bin` - Diretório binário padrão do usuário (se existir ou puder ser criado)
-4. `$HOME/.opencode/bin` - Fallback padrão
+4. `$HOME/.agence/bin` - Fallback padrão
 
 ```bash
 # Exemplos
@@ -122,7 +122,7 @@ Se você tem interesse em contribuir com o Agence, leia os [contributing docs](.
 
 ### Construindo com Agence
 
-Se você estiver trabalhando em um projeto relacionado ao Agence e estiver usando "agence" como parte do nome (por exemplo, "opencode-dashboard" ou "opencode-mobile"), adicione uma nota no README para deixar claro que não foi construído pela equipe do Agence e não é afiliado a nós de nenhuma forma.
+Se você estiver trabalhando em um projeto relacionado ao Agence e estiver usando "agence" como parte do nome (por exemplo, "agence-dashboard" ou "agence-mobile"), adicione uma nota no README para deixar claro que não foi construído pela equipe do Agence e não é afiliado a nós de nenhuma forma.
 
 ---
 
