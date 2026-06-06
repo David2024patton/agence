@@ -2,7 +2,7 @@ import { Schema } from "effect"
 
 // Directories config: baseDir for self-contained installs, plus additional
 // watch directories for MCP servers, skills, and custom tools.
-// Configured in opencode.jsonc under the "directories" key.
+// Configured in agence.jsonc under the "directories" key.
 
 export const Info = Schema.Struct({
   baseDir: Schema.optional(Schema.String).annotate({

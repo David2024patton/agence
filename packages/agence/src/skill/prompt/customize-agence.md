@@ -23,14 +23,14 @@ shape before writing config, **fetch that URL and read the schema directly**
 rather than guessing. agence hard-fails on invalid config, so the cost of a
 wrong shape is a broken startup.
 
-Independently, every `opencode.json` should declare
+Independently, every `agence.json` should declare
 `"$schema": "https://github.com/David2024patton/agence/config.json"` so the user's editor catches
 mistakes as they type.
 
 ## Applying changes
 
 Config is loaded once when agence starts and is not hot-reloaded. After
-saving changes to `opencode.json`, an agent file, a skill, a plugin, or any
+saving changes to `agence.json`, an agent file, a skill, a plugin, or any
 other config-time file, **tell the user to quit and restart agence** for
 the changes to take effect. The running session will keep using the
 already-loaded config until then.
@@ -39,18 +39,18 @@ already-loaded config until then.
 
 | Scope                         | Path                                                                                                                      |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Project config                | `./opencode.json`, `./opencode.jsonc`, or `.opencode/opencode.json` (agence walks up from the cwd to the worktree root) |
-| Global config                 | `~/.config/opencode/opencode.json` (NOT `~/.opencode/`)                                                                   |
-| Project agents                | `.opencode/agent/<name>.md` or `.opencode/agents/<name>.md`                                                               |
-| Global agents                 | `~/.config/opencode/agent(s)/<name>.md`                                                                                   |
-| Project skills                | `.opencode/skill(s)/<name>/SKILL.md`                                                                                      |
-| Global skills                 | `~/.config/opencode/skill(s)/<name>/SKILL.md`                                                                             |
+| Project config                | `./agence.json`, `./agence.jsonc`, or `.agence/agence.json` (agence walks up from the cwd to the worktree root) |
+| Global config                 | `~/.config/agence/agence.json` (NOT `~/.agence/`)                                                                   |
+| Project agents                | `.agence/agent/<name>.md` or `.agence/agents/<name>.md`                                                               |
+| Global agents                 | `~/.config/agence/agent(s)/<name>.md`                                                                                   |
+| Project skills                | `.agence/skill(s)/<name>/SKILL.md`                                                                                      |
+| Global skills                 | `~/.config/agence/skill(s)/<name>/SKILL.md`                                                                             |
 | External skills (auto-loaded) | `~/.claude/skills/<name>/SKILL.md`, `~/.agents/skills/<name>/SKILL.md`                                                    |
 
 Configs from each scope are deep-merged. Project overrides global. Unknown
-top-level keys in `opencode.json` are rejected with `ConfigInvalidError`.
+top-level keys in `agence.json` are rejected with `ConfigInvalidError`.
 
-## opencode.json
+## agence.json
 
 Every field is optional.
 
@@ -69,7 +69,7 @@ Every field is optional.
   "instructions": ["AGENTS.md", "docs/style.md"],
 
   "skills": {
-    "paths": [".opencode/skills", "/abs/path/to/skills"],
+    "paths": [".agence/skills", "/abs/path/to/skills"],
     "urls": ["https://example.com/.well-known/skills/"]
   },
 
@@ -107,10 +107,10 @@ Every field is optional.
   },
 
   "plugin": [
-    "opencode-gemini-auth",
-    "opencode-foo@1.2.3",
+    "agence-gemini-auth",
+    "agence-foo@1.2.3",
     "./local-plugin.ts",
-    ["opencode-bar", { "option": "value" }]
+    ["agence-bar", { "option": "value" }]
   ],
 
   "permission": {
@@ -148,7 +148,7 @@ file is named `SKILL.md` exactly, and lives in its own folder named after the
 skill:
 
 ```
-.opencode/skills/my-skill/SKILL.md
+.agence/skills/my-skill/SKILL.md
 ```
 
 Frontmatter:
@@ -176,7 +176,7 @@ skills).
 
 Two ways to define an agent. Use the file form for anything non-trivial.
 
-### Inline (in `opencode.json`)
+### Inline (in `agence.json`)
 
 ```json
 {
@@ -195,7 +195,7 @@ Two ways to define an agent. Use the file form for anything non-trivial.
 ### File
 
 ```
-.opencode/agent/my-reviewer.md      OR     .opencode/agents/my-reviewer.md
+.agence/agent/my-reviewer.md      OR     .agence/agents/my-reviewer.md
 ```
 
 ```markdown
@@ -238,16 +238,16 @@ same key in `agent: { <name>: { ... } }`.
 
 ```json
 "plugin": [
-  "opencode-gemini-auth",            // npm spec, latest
-  "opencode-foo@1.2.3",              // npm spec, pinned
+  "agence-gemini-auth",            // npm spec, latest
+  "agence-foo@1.2.3",              // npm spec, pinned
   "./local-plugin.ts",               // file path, relative to the declaring config
   "file:///abs/path/plugin.js",      // file URL
-  ["opencode-bar", { "key": "val" }] // tuple form with options
+  ["agence-bar", { "key": "val" }] // tuple form with options
 ]
 ```
 
 Auto-discovered plugins (no config entry needed): any `*.ts` or `*.js` file in
-`.opencode/plugin/` or `.opencode/plugins/`.
+`.agence/plugin/ or .agence/plugins/`.
 
 A plugin module exports `default` (or any named export) of type
 `Plugin = (input: PluginInput, options?) => Promise<Hooks>`. The export is a
@@ -350,7 +350,7 @@ the `plan` agent's permission ruleset (`edit: deny *`).
 
 When a user's config is broken and agence won't start, these env vars help:
 
-- `AGENCE_DISABLE_PROJECT_CONFIG=1`: skip the project's local `opencode.json`
+- `AGENCE_DISABLE_PROJECT_CONFIG=1`: skip the project's local `agence.json`
   and start from globals only. Run from the project directory, agence loads,
   the user edits the broken file, then they restart without the flag.
 - `AGENCE_CONFIG=/path/to/file.json`: load an additional explicit config.
@@ -369,7 +369,7 @@ When a user's config is broken and agence won't start, these env vars help:
   `https://github.com/David2024patton/agence/config.json` and read the schema rather than guessing.
 - Preserve `$schema` and any existing fields the user did not ask to change.
 - For agent, skill, and plugin definitions, prefer creating new files in the
-  correct location over inlining everything in `opencode.json`.
+  correct location over inlining everything in `agence.json`.
 - If the user's existing config is malformed, point them at the env-var escape
   hatches above so they can edit from inside agence without breaking their
   session.

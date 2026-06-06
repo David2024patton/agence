@@ -1,4 +1,4 @@
-This is a plugin to simulate a remote environment locally. Add this to `.opencode/opencode.jsonc`:
+This is a plugin to simulate a remote environment locally. Add this to `.agence/agence.jsonc`:
 
 ```json
   "plugin": ["../packages/agence/src/control-plane/dev/debug-workspace-plugin.ts"],

@@ -20,6 +20,7 @@
     "package:mac": "electron-builder --mac --config electron-builder.config.ts",
     "package:win": "electron-builder --win --config electron-builder.config.ts",
     "package:linux": "electron-builder --linux --config electron-builder.config.ts",
+    "sign:local": "powershell -ExecutionPolicy Bypass -File ./scripts/sign-local.ps1",
     "native:build": "bun install --cwd native"
   },
   "main": "./out/main/index.js",

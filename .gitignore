@@ -19,7 +19,8 @@ ts-dist
 /result
 refs
 Session.vim
-/opencode.json
+/agence.json
+/agence.jsonc
 a.out
 target
 .scripts

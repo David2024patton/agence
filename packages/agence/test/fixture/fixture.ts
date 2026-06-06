@@ -82,13 +82,13 @@ type TmpDirOptions<T> = {
   dispose?: (dir: string) => Promise<T>
 }
 export async function tmpdir<T>(options?: TmpDirOptions<T>) {
-  const dirpath = sanitizePath(path.join(os.tmpdir(), "opencode-test-" + Math.random().toString(36).slice(2)))
+  const dirpath = sanitizePath(path.join(os.tmpdir(), "agence-test-" + Math.random().toString(36).slice(2)))
   await fs.mkdir(dirpath, { recursive: true })
   if (options?.git) {
     await $`git init`.cwd(dirpath).quiet()
     await $`git config core.fsmonitor false`.cwd(dirpath).quiet()
     await $`git config commit.gpgsign false`.cwd(dirpath).quiet()
-    await $`git config user.email "test@opencode.test"`.cwd(dirpath).quiet()
+    await $`git config user.email "test@agence.test"`.cwd(dirpath).quiet()
     await $`git config user.name "Test"`.cwd(dirpath).quiet()
     await $`git commit --allow-empty -m "root commit ${dirpath}"`.cwd(dirpath).quiet()
   }
@@ -97,9 +97,9 @@ export async function tmpdir<T>(options?: TmpDirOptions<T>) {
       $schema: "https://github.com/David2024patton/agence/config.json",
       ...options.config,
     })
-    await Bun.write(path.join(dirpath, "opencode.json"), content)
-    await fs.mkdir(path.join(dirpath, ".opencode"), { recursive: true })
-    await Bun.write(path.join(dirpath, ".opencode", "opencode.json"), content)
+    await Bun.write(path.join(dirpath, "agence.json"), content)
+    await fs.mkdir(path.join(dirpath, ".agence"), { recursive: true })
+    await Bun.write(path.join(dirpath, ".agence", "agence.json"), content)
   }
   const realpath = sanitizePath(await fs.realpath(dirpath))
   const extra = await options?.init?.(realpath)
@@ -125,7 +125,7 @@ export function tmpdirScoped(options?: {
 }) {
   return Effect.gen(function* () {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
-    const dirpath = sanitizePath(path.join(os.tmpdir(), "opencode-test-" + Math.random().toString(36).slice(2)))
+    const dirpath = sanitizePath(path.join(os.tmpdir(), "agence-test-" + Math.random().toString(36).slice(2)))
     yield* Effect.promise(() => fs.mkdir(dirpath, { recursive: true }))
     const dir = sanitizePath(yield* Effect.promise(() => fs.realpath(dirpath)))
 
@@ -143,7 +143,7 @@ export function tmpdirScoped(options?: {
       yield* git("init")
       yield* git("config", "core.fsmonitor", "false")
       yield* git("config", "commit.gpgsign", "false")
-      yield* git("config", "user.email", "test@opencode.test")
+      yield* git("config", "user.email", "test@agence.test")
       yield* git("config", "user.name", "Test")
       yield* git("commit", "--allow-empty", "-m", `root commit ${dir}`)
     }
@@ -152,9 +152,9 @@ export function tmpdirScoped(options?: {
       const resolved = typeof options.config === "function" ? options.config() : options.config
       const content = JSON.stringify({ $schema: "https://github.com/David2024patton/agence/config.json", ...resolved })
       yield* Effect.promise(async () => {
-        await fs.writeFile(path.join(dir, "opencode.json"), content)
-        await fs.mkdir(path.join(dir, ".opencode"), { recursive: true })
-        await fs.writeFile(path.join(dir, ".opencode", "opencode.json"), content)
+        await fs.writeFile(path.join(dir, "agence.json"), content)
+        await fs.mkdir(path.join(dir, ".agence"), { recursive: true })
+        await fs.writeFile(path.join(dir, ".agence", "agence.json"), content)
       })
     }
 

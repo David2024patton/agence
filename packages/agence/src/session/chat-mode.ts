@@ -51,7 +51,7 @@ export function permissions(mode: Mode | undefined, input: { session: Session.In
       todowrite: "deny",
       edit: {
         "*": "deny",
-        ".opencode/plans/*.md": "allow",
+        ".agence/plans/*.md": "allow",
         [relPlan]: "allow",
         [path.relative(input.ctx.worktree, path.join(Global.Path.data, "plans", "*.md"))]: "allow",
       },

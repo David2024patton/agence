@@ -52,7 +52,7 @@ export const Info = Schema.Struct({
 export type Info = Schema.Schema.Type<typeof Info>
 
 export function userAgent(client = "cli") {
-  return `opencode/${InstallationChannel}/${InstallationVersion}/${client}`
+  return `agence/${InstallationChannel}/${InstallationVersion}/${client}`
 }
 
 export const USER_AGENT = userAgent()
@@ -178,7 +178,7 @@ export const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProce
         }
       }),
       method: Effect.fn("Installation.method")(function* () {
-        if (process.execPath.includes(path.join(".opencode", "bin"))) return "curl" as Method
+        if (process.execPath.includes(path.join(".agence", "bin"))) return "curl" as Method
         if (process.execPath.includes(path.join(".local", "bin"))) return "curl" as Method
         const exec = process.execPath.toLowerCase()
 
@@ -222,7 +222,7 @@ export const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProce
             return info.formulae[0].versions.stable
           }
           const response = yield* httpOk.execute(
-            HttpClientRequest.get("https://formulae.brew.sh/api/formula/opencode.json").pipe(
+            HttpClientRequest.get("https://formulae.brew.sh/api/formula/agence.json").pipe(
               HttpClientRequest.acceptJson,
             ),
           )
@@ -252,16 +252,16 @@ export const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProce
 
         if (detectedMethod === "scoop") {
           const response = yield* httpOk.execute(
-            HttpClientRequest.get(
-              "https://raw.githubusercontent.com/ScoopInstaller/Main/master/bucket/opencode.json",
-            ).pipe(HttpClientRequest.setHeaders({ Accept: "application/json" })),
+            HttpClientRequest.get("https://raw.githubusercontent.com/ScoopInstaller/Main/master/bucket/agence.json").pipe(
+              HttpClientRequest.setHeaders({ Accept: "application/json" }),
+            ),
           )
           const data = yield* HttpClientResponse.schemaBodyJson(ScoopManifest)(response)
           return data.version
         }
 
         const response = yield* httpOk.execute(
-          HttpClientRequest.get("https://api.github.com/repos/anomalyco/opencode/releases/latest").pipe(
+          HttpClientRequest.get("https://api.github.com/repos/David2024patton/agence/releases/latest").pipe(
             HttpClientRequest.acceptJson,
           ),
         )

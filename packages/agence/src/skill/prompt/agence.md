@@ -60,7 +60,7 @@ agence/                          # Monorepo root (Bun workspaces)
 │           ├── windows.ts       # Window creation (frame: false, titleBarStyle: hidden)
 │           └── index.ts         # App entry, needsMigration check
 ├── vendor/                      # Git submodules
-├── .opencode/skills/            # Auto-discovered skills
+├── .agence/skills/            # Auto-discovered skills
 └── PROJECT-MAP.md               # Full project map
 ```
 
@@ -68,11 +68,11 @@ agence/                          # Monorepo root (Bun workspaces)
 
 | What | Path |
 |------|------|
-| Global config | `~/.config/agence/opencode.jsonc` |
+| Global config | `~/.config/agence/agence.jsonc` |
 | Database (dev) | `~/.local/share/agence/agence-dev.db` |
 | Server logs | `~/.local/share/agence/log/dev.log` |
 | Desktop logs | `%APPDATA%/ai.agence.desktop.dev/logs/` |
-| Project store | `.git/agence` (falls back to `.git/opencode`) |
+| Project store | `.git/agence` |
 
 ## UI Component Map — Where Icons Live
 

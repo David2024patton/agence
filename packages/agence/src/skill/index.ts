@@ -30,13 +30,13 @@ const INSTALL_SKILL_PATTERN = "*/SKILL.md"
 const SELF_CONTAINED_SKILL_PATTERN = "skills/**/SKILL.md"
 
 // Built-in skill that ships with agence. The model's intuition for what an
-// opencode.json should look like is often wrong, and agence hard-fails on
+// agence.json should look like is often wrong, and agence hard-fails on
 // invalid config, so users hit cryptic startup errors. Loading this skill
 // when the model is asked to touch agence's own config files gives it the
 // actual schemas instead of guesses.
 const CUSTOMIZE_AGENCE_SKILL_NAME = "customize-agence"
 const CUSTOMIZE_AGENCE_SKILL_DESCRIPTION =
-  "Use ONLY when the user is editing or creating agence's own configuration: opencode.json, opencode.jsonc, files under .opencode/, or files under ~/.config/agence/. Also use when creating or fixing agence agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring agence itself."
+  "Use ONLY when the user is editing or creating agence's own configuration: agence.json, agence.jsonc, files under .agence/, or files under ~/.config/agence/. Also use when creating or fixing agence agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring agence itself."
 
 // Built-in skill that teaches any LLM the full Agence architecture,
 // extension points, UI patterns, and known bug fixes.

@@ -67,6 +67,7 @@ const names: Record<string, string> = {
   "one-dark": "One Dark",
   onedarkpro: "One Dark Pro",
   agence: "Agence",
+  "agence-techno": "Agence Techno",
   orng: "Orng",
   "osaka-jade": "Osaka Jade",
   palenight: "Palenight",

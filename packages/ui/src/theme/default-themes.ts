@@ -24,7 +24,8 @@ import nightowlThemeJson from "./themes/nightowl.json"
 import nordThemeJson from "./themes/nord.json"
 import oneDarkThemeJson from "./themes/one-dark.json"
 import oneDarkProThemeJson from "./themes/onedarkpro.json"
-import opencodeThemeJson from "./themes/opencode.json"
+import agenceThemeJson from "./themes/agence.json"
+import agenceTechnoThemeJson from "./themes/agence-techno.json"
 import orngThemeJson from "./themes/orng.json"
 import osakaJadeThemeJson from "./themes/osaka-jade.json"
 import palenightThemeJson from "./themes/palenight.json"
@@ -62,7 +63,8 @@ export const nightowlTheme = nightowlThemeJson as DesktopTheme
 export const nordTheme = nordThemeJson as DesktopTheme
 export const oneDarkTheme = oneDarkThemeJson as DesktopTheme
 export const oneDarkProTheme = oneDarkProThemeJson as DesktopTheme
-export const opencodeTheme = opencodeThemeJson as DesktopTheme
+export const agenceTheme = agenceThemeJson as DesktopTheme
+export const agenceTechnoTheme = agenceTechnoThemeJson as DesktopTheme
 export const orngTheme = orngThemeJson as DesktopTheme
 export const osakaJadeTheme = osakaJadeThemeJson as DesktopTheme
 export const palenightTheme = palenightThemeJson as DesktopTheme
@@ -101,7 +103,8 @@ export const DEFAULT_THEMES: Record<string, DesktopTheme> = {
   nord: nordTheme,
   "one-dark": oneDarkTheme,
   onedarkpro: oneDarkProTheme,
-  agence: opencodeTheme,
+  agence: agenceTheme,
+  "agence-techno": agenceTechnoTheme,
   orng: orngTheme,
   "osaka-jade": osakaJadeTheme,
   palenight: palenightTheme,

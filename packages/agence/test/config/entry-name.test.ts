@@ -42,7 +42,7 @@ describe("configEntryNameFromPath", () => {
   // path is always rooted at `agent/` or `agents/`.
   test("regression #25713: caller passes relative path; parent /agent/ segment is irrelevant", () => {
     const dir = "/home/agent/.config/agence"
-    const item = "/home/agent/.config/opencode/agents/build.md"
+    const item = "/home/agent/.config/agence/agents/build.md"
     const relative = posix.relative(dir, item)
     expect(relative).toBe("agents/build.md")
     expect(configEntryNameFromPath(relative, AGENT_PREFIXES)).toBe("build")
@@ -50,7 +50,7 @@ describe("configEntryNameFromPath", () => {
 
   test("regression #25713: parent /agents/ segment is irrelevant", () => {
     const dir = "/srv/agents/team/.config/agence"
-    const item = "/srv/agents/team/.config/opencode/agents/build.md"
+    const item = "/srv/agents/team/.config/agence/agents/build.md"
     const relative = posix.relative(dir, item)
     expect(configEntryNameFromPath(relative, AGENT_PREFIXES)).toBe("build")
   })
