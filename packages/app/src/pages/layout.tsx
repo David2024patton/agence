@@ -3,6 +3,7 @@ import {
   createEffect,
   createMemo,
   createResource,
+  createSignal,
   For,
   on,
   onCleanup,
@@ -88,10 +89,12 @@ import {
 } from "./layout/sidebar-workspace"
 import { ProjectDragOverlay, SortableProject, type ProjectSidebarContext } from "./layout/sidebar-project"
 import { SidebarContent } from "./layout/sidebar-shell"
+import { OnboardingWizard } from "@/components/onboarding-wizard"
 
 const USE_NEW_DESIGN = import.meta.env.VITE_AGENCE_CHANNEL !== "prod"
 
 export default function Layout(props: ParentProps) {
+  const [isOnboarded, setIsOnboarded] = createSignal(localStorage.getItem("agence.onboarded") === "true")
   const [store, setStore, , ready] = persisted(
     Persist.global("layout.page", ["layout.page.v1"]),
     createStore({
@@ -2617,8 +2620,9 @@ export default function Layout(props: ParentProps) {
   }
 
   return (
-    <div class="relative bg-background-base flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text">
-      {autoselecting() ?? ""}
+    <Show when={isOnboarded()} fallback={<OnboardingWizard onComplete={() => setIsOnboarded(true)} />}>
+      <div class="relative bg-background-base flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text">
+        {autoselecting() ?? ""}
       <Titlebar update={titlebarUpdate} />
       <Show when={updateVersion() !== undefined}>
         <UpdateAvailableToast version={updateVersion() ?? ""} install={installUpdate} language={language} />
@@ -2775,6 +2779,7 @@ export default function Layout(props: ParentProps) {
       </div>
       <Toast.Region />
     </div>
+    </Show>
   )
 }
 
