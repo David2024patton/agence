@@ -44,7 +44,7 @@ if ($filesToSign.Count -eq 0) {
 
 foreach ($file in $filesToSign) {
     Write-Host "Signing: $file"
-    Set-AuthenticodeSignature -FilePath $file -Certificate $cert -TimestampServer "http://timestamp.digicert.com"
+    Set-AuthenticodeSignature -FilePath $file -Certificate $cert
 }
 
 Write-Host "Local signing complete! Windows will now trust the installer on this machine."
