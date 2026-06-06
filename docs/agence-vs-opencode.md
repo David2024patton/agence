@@ -13,8 +13,8 @@ CLI + TUI                   Same + custom tools
 HTTP instance API           Same + Memory / Knowledge / Library / Heartbeat APIs
 Solid web UI (optional)     packages/app (desktop + dev web)
 Electron desktop            packages/desktop (sidecar bundles agence)
-opencode.json(c)            Still used (by design)
-.opencode/skills            Still used (by design)
+agence.json(c)              Used instead of opencode.json(c)
+.agence/skills              Used instead of .opencode/skills
 ~/.config/opencode/         ~/.config/agence/ (rebranded data paths)
 ```
 
@@ -28,9 +28,9 @@ opencode.json(c)            Still used (by design)
 | --- | --- |
 | Agent loop | Session processor, tool registry, permissions |
 | Providers | 75+ providers, local discovery (Ollama, LM Studio, vLLM, etc.) |
-| MCP | Configure in `opencode.jsonc` → `mcp` |
-| Skills | `.opencode/skills/*/SKILL.md` auto-discovery |
-| Config merge | Global + project `opencode.json(c)` |
+| MCP | Configure in `agence.jsonc` → `mcp` |
+| Skills | `.agence/skills/*/SKILL.md` auto-discovery |
+| Config merge | Global + project `agence.json(c)` |
 | SDK / headers | `x-opencode-directory`, `createOpencodeClient` naming kept for compatibility |
 | TUI | `packages/agence` CLI TUI |
 | Monitor | `/monitor/state` + `/monitor` page (reference implementation in PROJECT-MAP) |

@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/David2024patton/agence/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@ brew install agence              # macOS 및 Linux (공식 brew formula, 업데�
 sudo pacman -S agence            # Arch Linux (Stable)
 paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # 어떤 OS든
-nix run nixpkgs#agence           # 또는 github:anomalyco/agence 로 최신 dev 브랜치
+nix run nixpkgs#agence           # 또는 github:David2024patton/agence 로 최신 dev 브랜치
 ```
 
 > [!TIP]

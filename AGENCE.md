@@ -42,7 +42,7 @@ packages/
 - **InstanceState:** Per-project state via ScopedCache; auto-cleaned on project close
 - **Tool Registry:** All tools defined via `Tool.define(id, Effect.gen(...))` and registered in `tool/registry.ts`
 - **Session Processor:** Agent loop in `session/processor.ts` streams LLM events → tool calls → results
-- **Config:** `opencode.json` / `opencode.jsonc` — global at `~/.config/agence/`, project-level
+- **Config:** `agence.json` / `agence.jsonc` — global at `~/.config/agence/`, project-level
 
 ---
 

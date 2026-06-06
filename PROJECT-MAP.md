@@ -12,7 +12,7 @@ agence/                          # Monorepo root (Bun workspaces)
 │   │       ├── bus/             # In-process event bus (PubSub)
 │   │       ├── cli/             # CLI framework (yargs + Effect)
 │   │       │   └── cmd/tui/     # Terminal UI (SolidJS-based)
-│   │       ├── config/          # Config loading (opencode.json, multi-source merge)
+│   │       ├── config/          # Config loading (agence.json, multi-source merge)
 │   │       ├── effect/          # Effect runtime integration
 │   │       │   ├── app-runtime.ts    # ManagedRuntime with all services
 │   │       │   ├── instance-state.ts # Per-project scoped state cache
@@ -67,7 +67,7 @@ agence/                          # Monorepo root (Bun workspaces)
 │   ├── openclaw/                # 137 messaging plugins (Telegram, Discord, etc.)
 │   └── lobehub/                 # Multi-agent platform
 ├── scripts/                     # Utility scripts (DB migration, rename, tests)
-├── .opencode/                   # Agent config (skills, commands, plugins, tools)
+├── .agence/                     # Agent config (skills, commands, plugins, tools)
 │   ├── skills/                  # Auto-discovered SKILL.md files
 │   ├── command/                 # Custom agent commands
 │   ├── plugins/                 # Agent plugins
@@ -129,13 +129,13 @@ Services are initialized lazily — only when first used. The `InstanceState` sy
 | Feature Type | What to Do | Example |
 |-------------|-----------|---------|
 | **Tool** | Add `packages/agence/src/tool/mytool.ts` containing `export const definition = Tool.define({...})`. Register in `src/tool/registry.ts`. Optionally add `mytool.txt` prompt template in same directory. | `browser.ts`, `screenshot.ts`, `weather.ts` |
-| **MCP Server** | Add to the `mcp` section of `~/.config/agence/opencode.jsonc`. 50+ tools from Desktop Commander instantly become available. | `"desktop-commander": {"type": "local", "command": ["npx", "-y", "@wonderwhy-er/desktop-commander@latest"]}` |
-| **Skill** | Drop a `SKILL.md` in `.opencode/skills/<name>/`. YAML frontmatter for metadata, Markdown body for instructions. Auto-discovered on startup. Also scanned from `directories.skills` paths and binary parent directory. | `.opencode/skills/tool-tester/SKILL.md` |
+| **MCP Server** | Add to the `mcp` section of `~/.config/agence/agence.jsonc`. 50+ tools from Desktop Commander instantly become available. | `"desktop-commander": {"type": "local", "command": ["npx", "-y", "@wonderwhy-er/desktop-commander@latest"]}` |
+| **Skill** | Drop a `SKILL.md` in `.agence/skills/<name>/`. YAML frontmatter for metadata, Markdown body for instructions. Auto-discovered on startup. Also scanned from `directories.skills` paths and binary parent directory. | `.agence/skills/tool-tester/SKILL.md` |
 | **Provider Plugin** | Add file to `core/src/plugin/provider/myprovider.ts`. Must export a `PluginV2.define({...})` object with provider configuration (base URL, headers, models). Register in `core/src/plugin/provider/index.ts`. | `openai.ts`, `anthropic.ts`, `groq.ts` |
-| **Custom Command** | Drop a `.md` file in `.opencode/command/`. The filename becomes the command name. Uses Markdown frontmatter for metadata. | `.opencode/command/deploy.md` |
-| **UI Theme** | Drop a `.json` in `.opencode/themes/`. Must match the theme JSON schema. | `.opencode/themes/mytheme.json` |
+| **Custom Command** | Drop a `.md` file in `.agence/command/`. The filename becomes the command name. Uses Markdown frontmatter for metadata. | `.agence/command/deploy.md` |
+| **UI Theme** | Drop a `.json` in `.agence/themes/`. Must match the theme JSON schema. | `.agence/themes/mytheme.json` |
 | **Desktop Menu Item** | Add `{ type: "item", label: "My Feature", command: "myfeature.open" }` to `packages/app/src/desktop-menu.ts`. Handle the command in the renderer. | Monitor menu item (`monitor.open`) |
-| **Config Section** | Create `src/config/myconfig.ts` with a `Schema.Struct({...})`. Import and add field to the `Info` struct in `src/config/config.ts`. Users configure it in `opencode.jsonc`. | `directories.ts`, `skills.ts` |
+| **Config Section** | Create `src/config/myconfig.ts` with a `Schema.Struct({...})`. Import and add field to the `Info` struct in `src/config/config.ts`. Users configure it in `agence.jsonc`. | `directories.ts`, `skills.ts` |
 
 ### Level 2: Follow a Pattern (add 2-3 files in specific places)
 
@@ -152,7 +152,7 @@ Services are initialized lazily — only when first used. The `InstanceState` sy
 
 | Feature Type | How |
 |-------------|-----|
-| **Desktop Commander** | External MCP server installed via npm. Configured in `opencode.jsonc` `mcp` field. Provides 50+ file/terminal/process tools. |
+| **Desktop Commander** | External MCP server installed via npm. Configured in `agence.jsonc` `mcp` field. Provides 50+ file/terminal/process tools. |
 | **OpenClaw Plugin** | Drop a directory in `vendor/openclaw/extensions/`. Provides messaging gateway plugins (Telegram, Discord, WhatsApp, etc.). Discovered by `openclaw_gateway.ts`. |
 | **Agent Browser** | Binary dependency in `vendor/agent-browser/`. Provides browser automation (CDP). Called via `tool/browser.ts`. |
 
@@ -203,13 +203,13 @@ Here's exactly what we added to create the monitoring system:
 
 | What | Path |
 |------|------|
-| Global config | `~/.config/agence/opencode.jsonc` |
+| Global config | `~/.config/agence/agence.jsonc` |
 | Database (dev) | `~/.local/share/agence/agence-dev.db` |
 | Database (prod) | `~/.local/share/agence/agence.db` |
 | Server logs | `~/.local/share/agence/log/dev.log` |
 | Desktop logs | `%APPDATA%/ai.agence.desktop.dev/logs/` |
 | Desktop data | `%APPDATA%/ai.agence.desktop.dev/` |
-| Project config | `.opencode/opencode.jsonc` |
+| Project config | `.agence/agence.jsonc` |
 | Project store | `.git/agence` (project ID cache) |
 
 ## Critical Files Cheat Sheet
@@ -217,7 +217,7 @@ Here's exactly what we added to create the monitoring system:
 | Task | File |
 |------|------|
 | Change app name/paths | `packages/core/src/global.ts` |
-| Add MCP server | `~/.config/agence/opencode.jsonc` → `mcp` field |
+| Add MCP server | `~/.config/agence/agence.jsonc` → `mcp` field |
 | Add tool | `packages/agence/src/tool/` + `registry.ts` |
 | Add API endpoint | `groups/` + `handlers/` + `api.ts` + `server.ts` |
 | Add database table | `*.sql.ts` + `migration/<timestamp>_<name>/` |

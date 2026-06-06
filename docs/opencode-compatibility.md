@@ -9,8 +9,8 @@ Agence intentionally keeps several **OpenCode names** in config, HTTP headers, a
 | Global config dir | `~/.config/opencode/` | `~/.config/agence/` |
 | Data | `~/.local/share/opencode/` | `~/.local/share/agence/` |
 | Cache | `~/.cache/opencode/` | `~/.cache/agence/` |
-| Project config file | `opencode.json` / `opencode.jsonc` | **Same filenames** |
-| Skills directory | `.opencode/skills/` | **Same** |
+| Project config file | `opencode.json` / `opencode.jsonc` | `agence.json` / `agence.jsonc` |
+| Skills directory | `.opencode/skills/` | `.agence/skills/` |
 | Desktop app id | `ai.opencode.desktop` | `ai.agence.desktop` |
 | Channel env | `OPENCODE_CHANNEL` | `AGENCE_CHANNEL` (also accepts legacy) |
 

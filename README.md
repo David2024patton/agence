@@ -163,6 +163,12 @@ Upstream-style agent docs may still live under `packages/web/src/content/docs/`.
 | **Knowledge wiki** | `.agence/knowledge/wiki/`, sidebar **Knowledge** → Library |
 | **Heartbeat** | `HEARTBEAT.md` scheduled tasks, Settings → Learning → Heartbeat |
 
+### Key Custom Features (Agence vs Upstream)
+
+- **Local Self-Signed Installer Signing**: PowerShell tooling (`bun run sign:local` in `packages/desktop`) that generates a local certificate, installs it to the Windows Trusted Root certification store, and signs the installer, bypassing Windows SmartScreen warnings.
+- **Project-Scoped Config and Resources**: Configuration is isolated to the active project folder via `.agence/` (rebranded from `.opencode/`), including project-local plugins and skills.
+- **Custom Themes**: Visual UI styling can be configured via JSON theme files registered under `.agence/themes/` (such as the custom "Techno" theme).
+
 Docs: [**docs/README.md**](docs/README.md) · [**Agence vs OpenCode**](docs/agence-vs-opencode.md)
 
 ### Documentation

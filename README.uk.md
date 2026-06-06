@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/David2024patton/agence/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/agence-ai"><img alt="npm" src="https://img.shields.io/npm/v/agence-ai?style=flat-square" /></a>
-  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/David2024patton/agence/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/David2024patton/agence/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@ brew install agence              # macOS і Linux (офіційна формул
 sudo pacman -S agence            # Arch Linux (Stable)
 paru -S agence-bin               # Arch Linux (Latest from AUR)
 mise use -g agence               # Будь-яка ОС
-nix run nixpkgs#agence           # або github:anomalyco/agence для найновішої dev-гілки
+nix run nixpkgs#agence           # або github:David2024patton/agence для найновішої dev-гілки
 ```
 
 > [!TIP]
