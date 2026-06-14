@@ -209,8 +209,8 @@ const LOCAL_SERVERS: Record<string, { name: string; probeUrl: string; apiUrl: st
   },
   vllm: {
     name: "vLLM (local)",
-    probeUrl: "http://127.0.0.1:8000/v1/models",
-    apiUrl: "http://127.0.0.1:8000/v1",
+    probeUrl: "http://127.0.0.1:8001/v1/models",
+    apiUrl: "http://127.0.0.1:8001/v1",
     modelParser: (data: unknown) => ((data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => ({ id: m.id, name: m.id })),
   },
   localai: {
@@ -1297,7 +1297,7 @@ export const layer = Layer.effect(
         const LOCAL_PROVIDERS = {
           ollama: { name: "Ollama (local)", url: "http://127.0.0.1:11434/v1" },
           lmstudio: { name: "LM Studio (local)", url: "http://127.0.0.1:1234/v1" },
-          vllm: { name: "vLLM (local)", url: "http://127.0.0.1:8000/v1" },
+          vllm: { name: "vLLM (local)", url: "http://127.0.0.1:8001/v1" },
           localai: { name: "LocalAI (local)", url: "http://127.0.0.1:8080/v1" },
           llamacpp: { name: "llama.cpp (local)", url: "http://127.0.0.1:8081/v1" },
         }

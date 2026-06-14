@@ -45,8 +45,8 @@ const SERVERS: LocalServer[] = [
   },
   {
     name: "vLLM",
-    port: 8000,
-    url: "http://127.0.0.1:8000/v1",
+    port: 8001,
+    url: "http://127.0.0.1:8001/v1",
     providerID: "vllm",
     probeEndpoint: "/v1/models",
     modelParser: (data: unknown) => {
