@@ -155,6 +155,67 @@ function selectAzureLanguageModel(sdk: any, modelID: string, useChat: boolean) {
   return sdk.languageModel(modelID)
 }
 
+// Models whose names indicate they are embedding-only or lack tool-calling ability.
+// Everything else defaults to toolcall: true — modern Ollama supports tools broadly.
+const NO_TOOL_CALL_PATTERNS = [
+  "embed", "embedding", "nomic-embed", "mxbai-embed", "all-minilm",
+  "snowflake-arctic-embed", "bge-m3", "bge-large", "e5-",
+  "tts", "whisper", "rerank",
+]
+
+// Vision-capable model name fragments
+const VISION_PATTERNS = [
+  "llava", "minicpm", "bakllava", "vision", "moondream", "cogvlm",
+  "llama3.2-vision", "llama-3.2-vision", "pixtral", "qwen-vl", "qwen2-vl",
+  "internvl", "phi3-vision", "phi-3-vision", "phi4-vision",
+]
+
+function localModelSupportsToolcall(modelID: string): boolean {
+  const lower = modelID.toLowerCase()
+  // Embedding / TTS / rerank models definitely don't do tool calling
+  if (NO_TOOL_CALL_PATTERNS.some((p) => lower.includes(p))) return false
+  // Everything else is assumed capable (Ollama supports tools for all instruct/chat templates)
+  return true
+}
+
+function localModelSupportsVision(modelID: string): boolean {
+  const lower = modelID.toLowerCase()
+  return VISION_PATTERNS.some((p) => lower.includes(p))
+}
+
+// Try to fetch Ollama's /api/show to get authoritative capability info.
+// Returns undefined on any error (non-Ollama providers won't have this endpoint).
+async function ollamaShowCapabilities(
+  baseUrl: string,
+  modelName: string,
+): Promise<{ toolcall: boolean; vision: boolean } | undefined> {
+  try {
+    const apiBase = baseUrl.replace("/v1", "")
+    const res = await fetch(`${apiBase}/api/show`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: modelName }),
+      signal: AbortSignal.timeout(2000),
+    })
+    if (!res.ok) return undefined
+    const data = (await res.json()) as {
+      capabilities?: string[]
+      details?: { families?: string[] }
+    }
+    const caps = data.capabilities ?? []
+    // Ollama >=0.5 surfaces "tools" directly in the capabilities array
+    if (caps.length > 0) {
+      return {
+        toolcall: caps.includes("tools"),
+        vision: caps.includes("vision"),
+      }
+    }
+    return undefined
+  } catch {
+    return undefined
+  }
+}
+
 function makeLocalProvider(id: string, name: string, cfg: { probeUrl: string; apiUrl: string; modelParser: (data: unknown) => LocalModel[] }): CustomLoader {
   return Effect.fnUntraced(function* (_input: Info) {
     return {
@@ -169,12 +230,20 @@ function makeLocalProvider(id: string, name: string, cfg: { probeUrl: string; ap
           const localModels = cfg.modelParser(data)
           if (localModels.length === 0) return {}
           const models: Record<string, Model> = {}
-          for (const m of localModels) {
+          // Probe capabilities in parallel (cap concurrency to avoid hammering local server)
+          const capResults = await Promise.all(
+            localModels.map((m) => ollamaShowCapabilities(cfg.apiUrl, m.id)),
+          )
+          for (let i = 0; i < localModels.length; i++) {
+            const m = localModels[i]
             const modelID = ModelID.make(`${id}/${m.id}`)
+            const probedCaps = capResults[i]
+            const toolcall = probedCaps ? probedCaps.toolcall : localModelSupportsToolcall(modelID)
+            const vision = probedCaps ? probedCaps.vision : localModelSupportsVision(modelID)
             const caps = {
               temperature: true, reasoning: false, attachment: false,
-              toolcall: modelID.includes("llama3") || modelID.includes("mistral") || modelID.includes("qwen") || modelID.includes("command-r") || modelID.includes("hermes"),
-              input: { text: true, image: modelID.includes("llava") || modelID.includes("minicpm") || modelID.includes("bakllava") || modelID.includes("vision"), audio: false, video: false, pdf: false },
+              toolcall,
+              input: { text: true, image: vision, audio: false, video: false, pdf: false },
               output: { text: true, image: false, audio: false, video: false, pdf: false },
               interleaved: false,
             }

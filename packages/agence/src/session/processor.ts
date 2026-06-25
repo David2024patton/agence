@@ -28,6 +28,7 @@ import { ProviderV2 } from "@agence-ai/core/provider"
 import * as DateTime from "effect/DateTime"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Usage, type LLMEvent } from "@agence-ai/llm"
+import { parseToolCalls, stripToolCalls } from "./llm/prompt-tools"
 
 const DOOM_LOOP_THRESHOLD = 3
 const log = Log.create({ service: "session.processor" })
@@ -782,6 +783,12 @@ export const layer = Layer.effect(
         ctx.needsCompaction = false
         ctx.shouldBreak = (yield* config.get()).experimental?.continue_loop_on_deny !== true
 
+        // Determine whether this model uses prompt-injection tool calling.
+        // This mirrors the logic in LLMRequestPrep.prepare so we don't need
+        // a round-trip through the prepared object.
+        const usePromptTools = streamInput.model.capabilities.toolcall === false
+          && Object.keys(streamInput.tools).length > 0
+
         return yield* Effect.gen(function* () {
           yield* Effect.gen(function* () {
             ctx.currentText = undefined
@@ -844,6 +851,75 @@ export const layer = Layer.effect(
 
           if (ctx.needsCompaction) return "compact"
           if (ctx.blocked || ctx.assistantMessage.error) return "stop"
+
+          // Prompt-tool mode: parse <tool_call> blocks from the model's text
+          // response and execute them via the normal tool machinery.
+          if (usePromptTools && !ctx.assistantMessage.error) {
+            const textParts = MessageV2.parts(ctx.assistantMessage.id).filter((p) => p.type === "text")
+            const fullText = textParts.map((p: any) => p.text ?? "").join("")
+            const toolCalls = parseToolCalls(fullText)
+            if (toolCalls.length > 0) {
+              // Strip <tool_call> blocks from the displayed text
+              const cleanText = stripToolCalls(fullText)
+              for (const tp of textParts) {
+                const part = tp as any
+                if (part.text) {
+                  const originalText = part.text as string
+                  // Update the last text part with the cleaned text, others get empty
+                  part.text = tp === textParts[textParts.length - 1] ? cleanText : ""
+                  if (part.text !== originalText) {
+                    yield* session.updatePart(part)
+                  }
+                }
+              }
+              // Execute each parsed tool call and surface results as session tool parts
+              for (const call of toolCalls) {
+                const tool = streamInput.tools[call.name]
+                if (!tool || !tool.execute) {
+                  slog.warn("prompt-tool: unknown tool", { name: call.name })
+                  continue
+                }
+                const toolPartID = PartID.ascending()
+                const startTime = Date.now()
+                const toolPart: MessageV2.ToolPart = {
+                  id: toolPartID,
+                  messageID: ctx.assistantMessage.id,
+                  sessionID: ctx.sessionID,
+                  type: "tool",
+                  callID: call.id,
+                  tool: call.name,
+                  state: { status: "running", input: call.args, time: { start: startTime } },
+                  metadata: { promptToolMode: true },
+                }
+                yield* session.updatePart(toolPart)
+                type ToolResult = { output?: string; title?: string; metadata?: Record<string, unknown> }
+                const rawResult = yield* Effect.promise<ToolResult | string>(() =>
+                  ((tool.execute as any)(call.args, {
+                    toolCallId: call.id,
+                    messages: streamInput.messages,
+                    abortSignal: new AbortController().signal,
+                  }) as Promise<ToolResult | string>).catch((e: unknown) => ({ output: `Error: ${errorMessage(e)}`, title: "", metadata: {} }))
+                )
+                const out = typeof rawResult === "string"
+                  ? { output: rawResult, title: call.name, metadata: {} }
+                  : { output: rawResult.output ?? "", title: rawResult.title ?? call.name, metadata: rawResult.metadata ?? {} }
+                yield* session.updatePart({
+                  ...toolPart,
+                  state: {
+                    status: "completed",
+                    input: call.args,
+                    output: out.output,
+                    title: out.title,
+                    metadata: out.metadata,
+                    time: { start: startTime, end: Date.now() },
+                  },
+                })
+              }
+              // Signal the outer loop to continue so the model can process tool results
+              return "continue" as const
+            }
+          }
+
           return "continue"
         })
       })

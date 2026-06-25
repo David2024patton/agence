@@ -12,8 +12,9 @@ import { Effect, Record } from "effect"
 import { jsonSchema, tool as aiTool, type ModelMessage, type Tool } from "ai"
 import type { Plugin } from "@/plugin"
 import { mergeDeep } from "remeda"
+import { buildToolSystemPrompt } from "./prompt-tools"
 
-const USER_AGENT = `opencode/${InstallationVersion}`
+const USER_AGENT = `agence/${InstallationVersion}`
 
 type PrepareInput = {
   readonly user: MessageV2.User
@@ -37,6 +38,12 @@ export type Prepared = {
   readonly system: string[]
   readonly messages: ModelMessage[]
   readonly tools: Record<string, Tool>
+  /**
+   * True when the model does not support native tool calling and tools have
+   * been injected into the system prompt as XML instead. The processor must
+   * parse the model's text response for <tool_call> blocks in this mode.
+   */
+  readonly promptToolMode: boolean
   readonly params: {
     readonly temperature?: number
     readonly topP?: number
@@ -137,6 +144,18 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
   )
 
   const tools = resolveTools(input)
+  // Prompt-tool mode: model doesn't support native tool calling.
+  // Inject all tool schemas as XML into the system prompt, and return
+  // an empty tools object so the AI SDK doesn't try to send tool schemas
+  // to an endpoint that can't handle them.
+  const useNativeTools = input.model.capabilities.toolcall !== false
+  let promptToolMode = false
+  if (!useNativeTools && Object.keys(tools).length > 0) {
+    promptToolMode = true
+    const toolPromptBlock = buildToolSystemPrompt(tools)
+    if (toolPromptBlock) system.push(toolPromptBlock)
+  }
+
   if (
     input.model.providerID.includes("github-copilot") &&
     Object.keys(tools).length === 0 &&
@@ -162,7 +181,11 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
   return {
     system,
     messages,
-    tools: Object.fromEntries(Object.entries(tools).toSorted(([a], [b]) => a.localeCompare(b))),
+    // In prompt-tool mode pass no tools to the AI SDK to avoid errors
+    tools: promptToolMode
+      ? {}
+      : Object.fromEntries(Object.entries(tools).toSorted(([a], [b]) => a.localeCompare(b))),
+    promptToolMode,
     params,
     messageTransformOptions: options,
     headers: {
