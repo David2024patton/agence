@@ -1,0 +1,168 @@
+name: release-desktop
+run-name: "release desktop ${{ inputs.channel }} v${{ inputs.version }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.17.0)"
+        required: true
+        type: string
+      channel:
+        description: "Release channel"
+        required: true
+        type: choice
+        default: prod
+        options:
+          - prod
+          - beta
+
+# Only one release at a time
+concurrency: release-desktop-${{ inputs.channel }}
+
+permissions:
+  contents: write   # needed to create GitHub Releases and upload assets
+
+jobs:
+  # ── Build the sidecar CLI bundle ─────────────────────────────────────────────
+  build-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build CLI bundle
+        run: bun ./packages/agence/script/build.ts
+        env:
+          AGENCE_VERSION: ${{ inputs.version }}
+          AGENCE_RELEASE: "true"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agence-cli-linux
+          path: |
+            packages/agence/dist/opencode-linux*
+          if-no-files-found: warn
+
+  # ── Build Electron desktop for each platform ─────────────────────────────────
+  build-electron:
+    needs: build-cli
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform_flag: --linux
+            artifact_suffix: linux
+
+          - os: windows-latest
+            platform_flag: --win
+            artifact_suffix: windows
+
+          # macOS builds require Apple certificates - disable if you don't have them
+          # - os: macos-latest
+          #   platform_flag: --mac
+          #   artifact_suffix: mac
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Download the pre-built CLI sidecar for this platform
+      - uses: actions/download-artifact@v4
+        with:
+          name: agence-cli-linux
+          path: packages/agence/dist
+        if: runner.os == 'Linux'
+
+      - name: Install apt dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Prepare desktop sidecar
+        run: bun ./scripts/prepare.ts
+        working-directory: packages/desktop
+        env:
+          AGENCE_VERSION: ${{ inputs.version }}
+          AGENCE_CHANNEL: ${{ inputs.channel }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      - name: Build frontend
+        run: bun run build
+        working-directory: packages/desktop
+        env:
+          AGENCE_CHANNEL: ${{ inputs.channel }}
+
+      - name: Package and publish to GitHub Releases
+        run: npx electron-builder ${{ matrix.platform_flag }} --publish always --config electron-builder.config.ts
+        working-directory: packages/desktop
+        timeout-minutes: 30
+        env:
+          AGENCE_CHANNEL: ${{ inputs.channel }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Skip code signing — Windows will show a SmartScreen warning but
+          # the app will still install fine. Run sign:local after install if you
+          # want to trust it on your machine.
+          WIN_CSC_LINK: ""
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agence-desktop-${{ matrix.artifact_suffix }}
+          path: packages/desktop/dist/*
+          if-no-files-found: warn
+
+  # ── Create / finalize the GitHub Release ─────────────────────────────────────
+  finalize-release:
+    needs: build-electron
+    runs-on: ubuntu-latest
+    if: always() && !cancelled()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mark GitHub Release as published
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          # Create tag if it doesn't exist yet
+          git tag "$TAG" || true
+          git push origin "$TAG" || true
+
+          # Create or update the release (draft=false makes it live and triggers auto-updater)
+          gh release create "$TAG" \
+            --title "Agence $TAG" \
+            --notes "## Agence $TAG
+
+          ### What's new
+          - Fix tool calling for local models (Ollama, LM Studio, vLLM, llama.cpp)
+            - All models now default to tool-capable (phi4, gemma3, deepseek, granite, etc.)
+            - Ollama /api/show capability probing for accurate detection
+            - XML prompt-injection fallback for models without native tool-call support
+          - Web fetch, file read, shell, and all other tools now work with local models
+
+          ### Installation
+          Download the installer for your platform below.
+          " \
+            --latest \
+            || gh release edit "$TAG" --draft=false --latest
