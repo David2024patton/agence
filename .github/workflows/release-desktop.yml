@@ -60,6 +60,7 @@ jobs:
 
   # ── Build CLI sidecar ─────────────────────────────────────────────────────────
   build-cli:
+    needs: create-release
     runs-on: ubuntu-latest
     steps:
       - name: Configure git to skip symlinks
@@ -79,6 +80,8 @@ jobs:
         env:
           AGENCE_VERSION: ${{ inputs.version }}
           AGENCE_RELEASE: "true"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
 
       - uses: actions/upload-artifact@v4
         with:
