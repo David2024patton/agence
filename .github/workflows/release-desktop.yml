@@ -22,21 +22,17 @@ concurrency: release-desktop-${{ inputs.channel }}
 permissions:
   contents: write
 
-# ── Reusable step: checkout without symlink errors ────────────────────────────
-# The repo contains symlinks (favicon.ico etc). On Linux these fail unless we
-# configure git to treat them as plain files before checkout.
-
 jobs:
-  # ── Create the GitHub Release tag (runs in parallel with builds) ──────────────
+  # ── Step 1: Create the GitHub Release tag ─────────────────────────────────────
   create-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Configure git to skip symlinks
+      - name: Disable symlinks (repo has symlinked favicons)
         run: git config --global core.symlinks false
 
       - uses: actions/checkout@v4
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release (draft)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -51,19 +47,19 @@ jobs:
             --notes "## Agence $TAG
 
           ### What's new
-          - Local model tool calling (Ollama, LM Studio, vLLM, llama.cpp) now works
+          - Local model tool calling now works (Ollama, LM Studio, vLLM, llama.cpp)
           - All models default to tool-capable: phi4, gemma3, deepseek, granite, etc.
-          - Ollama /api/show API probing for accurate capability detection
+          - Ollama /api/show probing for accurate capability detection
           - XML prompt-injection fallback for models without native tool-call support
-          - Web fetch, file read, shell, search, and all other tools now work with local models
-          " || echo "Release already exists"
+          - Web fetch, file read, shell, search all work with local models
+          " || echo "Release already exists — continuing"
 
-  # ── Build CLI sidecar ─────────────────────────────────────────────────────────
+  # ── Step 2: Build CLI sidecar (waits for release tag to exist) ────────────────
   build-cli:
     needs: create-release
     runs-on: ubuntu-latest
     steps:
-      - name: Configure git to skip symlinks
+      - name: Disable symlinks
         run: git config --global core.symlinks false
 
       - uses: actions/checkout@v4
@@ -83,17 +79,24 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
 
-      - uses: actions/upload-artifact@v4
+      # The build script names outputs agence-linux-* (rebranded from opencode-linux-*)
+      - name: Upload Linux CLI artifact
+        uses: actions/upload-artifact@v4
         with:
           name: agence-cli-linux
-          path: packages/agence/dist/opencode-linux*
-          if-no-files-found: warn
+          path: packages/agence/dist/agence-linux*
+          if-no-files-found: error
 
-  # ── Build Electron (Windows) ──────────────────────────────────────────────────
+  # ── Step 3a: Build Electron for Windows ───────────────────────────────────────
   build-electron-windows:
     needs: [build-cli, create-release]
     runs-on: windows-latest
     steps:
+      # Windows also needs symlinks disabled — do it before checkout via env
+      - name: Disable symlinks (Windows)
+        shell: pwsh
+        run: git config --global core.symlinks false
+
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
@@ -122,29 +125,29 @@ jobs:
         env:
           AGENCE_CHANNEL: ${{ inputs.channel }}
 
-      - name: Package and publish
+      - name: Package and publish to GitHub Release
         run: npx electron-builder --win --publish always --config electron-builder.config.ts
         working-directory: packages/desktop
         timeout-minutes: 30
         env:
           AGENCE_CHANNEL: ${{ inputs.channel }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # No code signing cert — Windows will show SmartScreen but app works fine
           WIN_CSC_LINK: ""
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Windows installer artifact
+        uses: actions/upload-artifact@v4
         with:
           name: agence-desktop-windows
           path: packages/desktop/dist/*.exe
           if-no-files-found: warn
 
-  # ── Build Electron (Linux) ────────────────────────────────────────────────────
+  # ── Step 3b: Build Electron for Linux ─────────────────────────────────────────
   build-electron-linux:
     needs: [build-cli, create-release]
     runs-on: ubuntu-latest
     steps:
-      - name: Configure git to skip symlinks
+      - name: Disable symlinks
         run: git config --global core.symlinks false
 
       - uses: actions/checkout@v4
@@ -162,7 +165,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends rpm
 
-      - uses: actions/download-artifact@v4
+      - name: Download Linux CLI artifact
+        uses: actions/download-artifact@v4
         with:
           name: agence-cli-linux
           path: packages/agence/dist
@@ -185,7 +189,7 @@ jobs:
         env:
           AGENCE_CHANNEL: ${{ inputs.channel }}
 
-      - name: Package and publish
+      - name: Package and publish to GitHub Release
         run: npx electron-builder --linux --publish always --config electron-builder.config.ts
         working-directory: packages/desktop
         timeout-minutes: 30
@@ -193,7 +197,8 @@ jobs:
           AGENCE_CHANNEL: ${{ inputs.channel }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Linux desktop artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: agence-desktop-linux
           path: |
@@ -202,13 +207,13 @@ jobs:
             packages/desktop/dist/*.rpm
           if-no-files-found: warn
 
-  # ── Publish (un-draft the release when all builds succeed) ────────────────────
+  # ── Step 4: Un-draft the release so electron-updater sees it ─────────────────
   publish-release:
     needs: [build-electron-windows, build-electron-linux]
     runs-on: ubuntu-latest
     if: always() && !cancelled()
     steps:
-      - name: Configure git to skip symlinks
+      - name: Disable symlinks
         run: git config --global core.symlinks false
 
       - uses: actions/checkout@v4
@@ -219,5 +224,5 @@ jobs:
         run: |
           TAG="v${{ inputs.version }}"
           gh release edit "$TAG" --draft=false --latest
-          echo "Release $TAG is now live!"
+          echo "✅ Release $TAG is now live!"
           gh release view "$TAG"
