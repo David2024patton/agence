@@ -98,6 +98,8 @@ jobs:
         run: git config --global core.symlinks false
 
       - uses: actions/checkout@v4
+        env:
+          GIT_CONFIG_PARAMETERS: "'core.symlinks=false'"
 
       - uses: oven-sh/setup-bun@v2
         with:
