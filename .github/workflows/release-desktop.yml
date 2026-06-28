@@ -17,17 +17,54 @@ on:
           - prod
           - beta
 
-# Only one release at a time
 concurrency: release-desktop-${{ inputs.channel }}
 
 permissions:
-  contents: write   # needed to create GitHub Releases and upload assets
+  contents: write
+
+# ── Reusable step: checkout without symlink errors ────────────────────────────
+# The repo contains symlinks (favicon.ico etc). On Linux these fail unless we
+# configure git to treat them as plain files before checkout.
 
 jobs:
-  # ── Build the sidecar CLI bundle ─────────────────────────────────────────────
+  # ── Create the GitHub Release tag (runs in parallel with builds) ──────────────
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure git to skip symlinks
+        run: git config --global core.symlinks false
+
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git tag "$TAG" || echo "Tag already exists"
+          git push origin "$TAG" || echo "Tag already pushed"
+          gh release create "$TAG" \
+            --title "Agence $TAG" \
+            --draft \
+            --notes "## Agence $TAG
+
+          ### What's new
+          - Local model tool calling (Ollama, LM Studio, vLLM, llama.cpp) now works
+          - All models default to tool-capable: phi4, gemma3, deepseek, granite, etc.
+          - Ollama /api/show API probing for accurate capability detection
+          - XML prompt-injection fallback for models without native tool-call support
+          - Web fetch, file read, shell, search, and all other tools now work with local models
+          " || echo "Release already exists"
+
+  # ── Build CLI sidecar ─────────────────────────────────────────────────────────
   build-cli:
     runs-on: ubuntu-latest
     steps:
+      - name: Configure git to skip symlinks
+        run: git config --global core.symlinks false
+
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
@@ -46,31 +83,13 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: agence-cli-linux
-          path: |
-            packages/agence/dist/opencode-linux*
+          path: packages/agence/dist/opencode-linux*
           if-no-files-found: warn
 
-  # ── Build Electron desktop for each platform ─────────────────────────────────
-  build-electron:
-    needs: build-cli
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform_flag: --linux
-            artifact_suffix: linux
-
-          - os: windows-latest
-            platform_flag: --win
-            artifact_suffix: windows
-
-          # macOS builds require Apple certificates - disable if you don't have them
-          # - os: macos-latest
-          #   platform_flag: --mac
-          #   artifact_suffix: mac
-
-    runs-on: ${{ matrix.os }}
+  # ── Build Electron (Windows) ──────────────────────────────────────────────────
+  build-electron-windows:
+    needs: [build-cli, create-release]
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -81,19 +100,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      # Download the pre-built CLI sidecar for this platform
-      - uses: actions/download-artifact@v4
-        with:
-          name: agence-cli-linux
-          path: packages/agence/dist
-        if: runner.os == 'Linux'
-
-      - name: Install apt dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends rpm
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -113,56 +119,102 @@ jobs:
         env:
           AGENCE_CHANNEL: ${{ inputs.channel }}
 
-      - name: Package and publish to GitHub Releases
-        run: npx electron-builder ${{ matrix.platform_flag }} --publish always --config electron-builder.config.ts
+      - name: Package and publish
+        run: npx electron-builder --win --publish always --config electron-builder.config.ts
         working-directory: packages/desktop
         timeout-minutes: 30
         env:
           AGENCE_CHANNEL: ${{ inputs.channel }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Skip code signing — Windows will show a SmartScreen warning but
-          # the app will still install fine. Run sign:local after install if you
-          # want to trust it on your machine.
+          # No code signing cert — Windows will show SmartScreen but app works fine
           WIN_CSC_LINK: ""
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: agence-desktop-${{ matrix.artifact_suffix }}
-          path: packages/desktop/dist/*
+          name: agence-desktop-windows
+          path: packages/desktop/dist/*.exe
           if-no-files-found: warn
 
-  # ── Create / finalize the GitHub Release ─────────────────────────────────────
-  finalize-release:
-    needs: build-electron
+  # ── Build Electron (Linux) ────────────────────────────────────────────────────
+  build-electron-linux:
+    needs: [build-cli, create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure git to skip symlinks
+        run: git config --global core.symlinks false
+
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install apt dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: agence-cli-linux
+          path: packages/agence/dist
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Prepare desktop sidecar
+        run: bun ./scripts/prepare.ts
+        working-directory: packages/desktop
+        env:
+          AGENCE_VERSION: ${{ inputs.version }}
+          AGENCE_CHANNEL: ${{ inputs.channel }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      - name: Build frontend
+        run: bun run build
+        working-directory: packages/desktop
+        env:
+          AGENCE_CHANNEL: ${{ inputs.channel }}
+
+      - name: Package and publish
+        run: npx electron-builder --linux --publish always --config electron-builder.config.ts
+        working-directory: packages/desktop
+        timeout-minutes: 30
+        env:
+          AGENCE_CHANNEL: ${{ inputs.channel }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agence-desktop-linux
+          path: |
+            packages/desktop/dist/*.AppImage
+            packages/desktop/dist/*.deb
+            packages/desktop/dist/*.rpm
+          if-no-files-found: warn
+
+  # ── Publish (un-draft the release when all builds succeed) ────────────────────
+  publish-release:
+    needs: [build-electron-windows, build-electron-linux]
     runs-on: ubuntu-latest
     if: always() && !cancelled()
     steps:
+      - name: Configure git to skip symlinks
+        run: git config --global core.symlinks false
+
       - uses: actions/checkout@v4
 
-      - name: Mark GitHub Release as published
+      - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ inputs.version }}"
-          # Create tag if it doesn't exist yet
-          git tag "$TAG" || true
-          git push origin "$TAG" || true
-
-          # Create or update the release (draft=false makes it live and triggers auto-updater)
-          gh release create "$TAG" \
-            --title "Agence $TAG" \
-            --notes "## Agence $TAG
-
-          ### What's new
-          - Fix tool calling for local models (Ollama, LM Studio, vLLM, llama.cpp)
-            - All models now default to tool-capable (phi4, gemma3, deepseek, granite, etc.)
-            - Ollama /api/show capability probing for accurate detection
-            - XML prompt-injection fallback for models without native tool-call support
-          - Web fetch, file read, shell, and all other tools now work with local models
-
-          ### Installation
-          Download the installer for your platform below.
-          " \
-            --latest \
-            || gh release edit "$TAG" --draft=false --latest
+          gh release edit "$TAG" --draft=false --latest
+          echo "Release $TAG is now live!"
+          gh release view "$TAG"
